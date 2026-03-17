@@ -1,0 +1,30 @@
+name: Create branch on new issue
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write
+
+jobs:
+  create-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create issue branch
+        run: |
+          ISSUE_NUMBER=${{ github.event.issue.number }}
+          # Slugify the issue title: lowercase, replace non-alphanumeric with hyphens, trim
+          ISSUE_TITLE=$(echo "${{ github.event.issue.title }}" \
+            | tr '[:upper:]' '[:lower:]' \
+            | sed 's/[^a-z0-9]/-/g' \
+            | sed 's/--*/-/g' \
+            | sed 's/^-//;s/-$//' \
+            | cut -c1-50)
+          BRANCH_NAME="issue-${ISSUE_NUMBER}/${ISSUE_TITLE}"
+          git checkout -b "$BRANCH_NAME"
+          git push origin "$BRANCH_NAME"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
