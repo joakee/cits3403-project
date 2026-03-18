@@ -1,0 +1,42 @@
+name: Create branch on new issue
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write
+
+jobs:
+  create-branch:
+    if: >-
+      github.event.issue.author_association == 'MEMBER' ||
+      github.event.issue.author_association == 'OWNER' ||
+      github.event.issue.author_association == 'COLLABORATOR'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create issue branch
+        run: |
+          ISSUE_NUMBER=${{ github.event.issue.number }}
+          ISSUE_TITLE=$(echo "${{ github.event.issue.title }}" \
+            | tr '[:upper:]' '[:lower:]' \
+            | sed 's/[^a-z0-9]/-/g' \
+            | sed 's/--*/-/g' \
+            | sed 's/^-//;s/-$//' \
+            | cut -c1-50)
+
+          if [ -z "$ISSUE_TITLE" ]; then
+            ISSUE_TITLE="untitled"
+          fi
+
+          BRANCH_NAME="issue-${ISSUE_NUMBER}/${ISSUE_TITLE}"
+
+          if git ls-remote --exit-code --heads origin "$BRANCH_NAME" >/dev/null 2>&1; then
+            echo "Branch '$BRANCH_NAME' already exists. Skipping."
+            exit 0
+          fi
+
+          git checkout -b "$BRANCH_NAME"
+          git push origin "$BRANCH_NAME"
