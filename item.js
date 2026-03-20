@@ -10,7 +10,7 @@ class SellableContainer extends HTMLElement {
         const itemImageSrc = this.getAttribute('itemImageSrc');
         const sellerName = this.getAttribute('sellerName');
         this.innerHTML = `
-            <div id=${itemId} class="flex flex-col items-center justify-center bg-slate-200 p-6 rounded-xl shadow-lg">
+            <div id=${itemId} class="flex flex-col items-center justify-center bg-slate-300 hover:bg-slate-200 p-6 rounded-xl shadow-lg">
                 <img src="${itemImageSrc}" class="bg-white rounded-xl mb-3">
                 <div class="flex flex-row gap-10">
                     <div class="font-bold">${itemName}</div>
