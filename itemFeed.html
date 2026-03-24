@@ -6,26 +6,30 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="item.js"></script>
+    <script src="filterButton.js"></script>
+    <script src="dropdown.js"></script>
   </head>
   <body>
     <div class="">
-        <div class="flex items-center justify-between header">
-            <div class="p-5 text-3xl font-bold">for sale</div>
-            <svg class="w-6 h-6 text-gray-800" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 17 14">
+        <!-- HEADER -->
+        <div class="flex items-center justify-between bg-slate-200 py-3 px-6 mb-5 shadow-lg rounded-xl my-3">
+            <div class="text-3xl text-slate-800 font-bold">for sale</div>
+
+            <svg class="w-6 h-6 text-slate-800 hover:text-slate-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 17 14">
                 <path d="M16 2H1a1 1 0 0 1 0-2h15a1 1 0 1 1 0 2Zm0 6H1a1 1 0 0 1 0-2h15a1 1 0 1 1 0 2Zm0 6H1a1 1 0 0 1 0-2h15a1 1 0 0 1 0 2Z"/>
             </svg>
         </div>
+
+        <!-- SEARCH BAR -->
         <div class="flex gap-4 items-center justify-center">
             <input
                 class="bg-slate-200 rounded-xl shadow-inner py-2 px-7 font-bold text-slate-500 focus:text-slate-700 hover:bg-slate-300"
                 placeholder="Search"
                 id="search"
-            />
-            <svg class="w-6 h-6 text-slate-400 hover:text-slate-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
-                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7.75 4H19M7.75 4a2.25 2.25 0 0 1-4.5 0m4.5 0a2.25 2.25 0 0 0-4.5 0M1 4h2.25m13.5 6H19m-2.25 0a2.25 2.25 0 0 1-4.5 0m4.5 0a2.25 2.25 0 0 0-4.5 0M1 10h11.25m-4.5 6H19M7.75 16a2.25 2.25 0 0 1-4.5 0m4.5 0a2.25 2.25 0 0 0-4.5 0M1 16h2.25"/>
-            </svg>
+            >
+            <filter-button/>
         </div>
-        <!--item containers-->
+        <!-- ITEMS -->
         <div class="grid xs:grid-cols-2 sm:grid-cols-3 grid-cols-2 justify-center items-center gap-4 p-4">
             <div>
                 <sellable-container
