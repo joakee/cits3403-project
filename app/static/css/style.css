@@ -1,0 +1,289 @@
+/* ─── Design tokens ───────────────────────────────────────────── */
+:root {
+    --navy:        #1d3557;
+    --navy-dark:   #16324f;
+    --navy-light:  #e8eef4;
+    --text-muted:  #6b7280;
+    --bg:          #f3f4f6;
+    --white:       #ffffff;
+    --success:     #198754;
+    --radius-card: 14px;
+    --radius-input: 8px;
+    --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.07);
+}
+
+/* ─── Global reset ────────────────────────────────────────────── */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--bg);
+    font-family: Arial, sans-serif;
+    color: #1f2937;
+}
+
+/* ─── Cards ───────────────────────────────────────────────────── */
+.card {
+    border: none;
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+}
+
+.card-img-top {
+    border-top-left-radius: var(--radius-card);
+    border-top-right-radius: var(--radius-card);
+}
+
+/* ─── Form controls ───────────────────────────────────────────── */
+.form-control,
+.form-select {
+    border-radius: var(--radius-input);
+    font-size: 14px;
+    padding: 12px;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--navy);
+    box-shadow: 0 0 0 0.2rem rgba(29, 53, 87, 0.2);
+}
+
+/* ─── Buttons ─────────────────────────────────────────────────── */
+.btn-primary {
+    background-color: var(--navy);
+    border-color: var(--navy);
+    border-radius: var(--radius-input);
+    font-weight: 600;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background-color: var(--navy-dark);
+    border-color: var(--navy-dark);
+}
+
+.btn-outline-primary {
+    color: var(--navy);
+    border-color: var(--navy);
+    border-radius: var(--radius-input);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--navy);
+    border-color: var(--navy);
+}
+
+/* ─── Auth pages (centered card layout) ──────────────────────── */
+.auth-page-container {
+    min-height: calc(100vh - 66px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 24px;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 420px;
+    background-color: var(--white);
+    padding: 36px 32px;
+    border-radius: var(--radius-card);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.auth-card h1 {
+    text-align: center;
+    color: var(--navy);
+    margin-bottom: 8px;
+}
+
+.auth-card .subtitle {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 15px;
+    margin-bottom: 24px;
+}
+
+.auth-form label {
+    font-weight: 600;
+    margin-top: 12px;
+    margin-bottom: 6px;
+    display: block;
+}
+
+.auth-form .btn {
+    margin-top: 20px;
+    width: 100%;
+    padding: 12px;
+    font-size: 15px;
+}
+
+.switch-text {
+    text-align: center;
+    margin-top: 18px;
+    font-size: 14px;
+    color: #4b5563;
+}
+
+.switch-text a {
+    color: var(--navy);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.switch-text a:hover {
+    text-decoration: underline;
+}
+
+.forgot-password {
+    font-size: 13px;
+    text-align: right;
+    margin-top: 4px;
+}
+
+.forgot-password a {
+    color: var(--navy);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+/* ─── Profile page ────────────────────────────────────────────── */
+.profile-header {
+    background: var(--white);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    padding: 32px;
+    margin-bottom: 28px;
+}
+
+.avatar-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: var(--navy);
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.avatar-circle img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.profile-stat {
+    text-align: center;
+    padding: 12px 16px;
+    background: var(--navy-light);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.profile-stat:hover {
+    background: #d0dcea;
+}
+
+.stat-active {
+    background: var(--navy) !important;
+}
+
+.stat-active .stat-value,
+.stat-active .stat-label {
+    color: var(--white) !important;
+}
+
+
+.profile-stat .stat-value {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--navy);
+    line-height: 1;
+}
+
+.profile-stat .stat-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+/* ─── Listing cards ───────────────────────────────────────────── */
+.listing-card {
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    height: 100%;
+}
+
+.listing-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
+    color: inherit;
+}
+
+.listing-card .listing-img {
+    height: 160px;
+    object-fit: cover;
+    width: 100%;
+    border-top-left-radius: var(--radius-card);
+    border-top-right-radius: var(--radius-card);
+}
+
+.listing-img-placeholder {
+    height: 160px;
+    background: var(--navy-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    color: #aab4c0;
+    border-top-left-radius: var(--radius-card);
+    border-top-right-radius: var(--radius-card);
+}
+
+.listing-price {
+    color: var(--success);
+    font-weight: 700;
+    font-size: 1.05rem;
+}
+
+.category-badge {
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    background-color: var(--navy-light);
+    color: var(--navy);
+    font-weight: 600;
+}
+
+/* ─── Section headings ────────────────────────────────────────── */
+.section-heading {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--navy-light);
+}
+
+/* ─── Empty state ─────────────────────────────────────────────── */
+.empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--text-muted);
+}
+
+.empty-state i {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 12px;
+    opacity: 0.4;
+}

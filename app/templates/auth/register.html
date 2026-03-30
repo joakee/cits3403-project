@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Sign Up | UWA Marketplace{% endblock %}
+
+{% block content %}
+<div class="auth-page-container">
+    <div class="auth-card">
+        <h1>UWA Marketplace</h1>
+        <p class="subtitle">Create your account to start buying and selling.</p>
+
+        <form class="auth-form" method="POST" action="{{ url_for('auth.register') }}">
+            {{ form.hidden_tag() }}
+
+            {{ form.username.label }}
+            {{ form.username(class_="form-control", placeholder="Enter your full name") }}
+            {% for error in form.username.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+
+            {{ form.email.label }}
+            {{ form.email(class_="form-control", placeholder="Enter your email") }}
+            {% for error in form.email.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+
+            {{ form.password.label }}
+            {{ form.password(class_="form-control", placeholder="Create a password (min. 8 characters)") }}
+            {% for error in form.password.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+
+            {{ form.confirm_password.label }}
+            {{ form.confirm_password(class_="form-control", placeholder="Confirm your password") }}
+            {% for error in form.confirm_password.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+
+            {{ form.submit(class_="btn btn-primary") }}
+        </form>
+
+        <p class="switch-text">
+            Already have an account?
+            <a href="{{ url_for('auth.login') }}">Log in</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

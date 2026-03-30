@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Log In | UWA Marketplace{% endblock %}
+
+{% block content %}
+<div class="auth-page-container">
+    <div class="auth-card">
+        <h1>UWA Marketplace</h1>
+        <p class="subtitle">Welcome back. Log in to your account.</p>
+
+        <form class="auth-form" method="POST" action="{{ url_for('auth.login') }}">
+            {{ form.hidden_tag() }}
+
+            {{ form.email.label }}
+            {{ form.email(class_="form-control", placeholder="Enter your email") }}
+            {% for error in form.email.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+
+            {{ form.password.label }}
+            {{ form.password(class_="form-control", placeholder="Enter your password") }}
+            {% for error in form.password.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+
+            <p class="forgot-password mt-2"><a href="#">Forgot password?</a></p>
+
+            <div class="form-check mt-2">
+                {{ form.remember(class_="form-check-input") }}
+                <label class="form-check-label text-muted" for="remember">Remember me</label>
+            </div>
+
+            {{ form.submit(class_="btn btn-primary") }}
+        </form>
+
+        <p class="switch-text">
+            Don't have an account?
+            <a href="{{ url_for('auth.register') }}">Sign up</a>
+        </p>
+    </div>
+</div>
+{% endblock %}
