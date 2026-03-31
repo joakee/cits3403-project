@@ -1,13 +1,22 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
+
+@font-face {
+    font-family: 'UWA Slab';
+    src: url('fonts/uwa-slab-regular.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+}
+
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    font-family: Arial, sans-serif;
+    font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
 body {
     background-color: #f3f4f6;
-    color: #1f2937;
+    color: #27348B;
 }
 
 .page-container {
@@ -28,6 +37,7 @@ body {
 }
 
 .form-card h1 {
+    font-family: 'UWA Slab';
     text-align: center;
     margin-bottom: 10px;
     color: #1d3557;
@@ -46,6 +56,7 @@ body {
 }
 
 .auth-form label {
+    font-family: 'UWA Slab', sans-serif;
     margin-bottom: 8px;
     margin-top: 12px;
     font-weight: 600;
@@ -60,7 +71,7 @@ body {
 }
 
 .auth-form input:focus {
-    border-color: #1d3557;
+    border-color: #27348B;
 }
 
 .forgot-password {
@@ -71,7 +82,7 @@ body {
 }
 
 .forgot-password a {
-    color: #1d3557;
+    color: #27348B;
     text-decoration: none;
     font-weight: 600;
 }
@@ -92,15 +103,17 @@ body {
     padding: 12px;
     border: none;
     border-radius: 8px;
-    background-color: #1d3557;
+    background-color: #27348B;
     color: white;
+    font-family: 'UWA Slab', sans-serif;
     font-size: 15px;
     font-weight: 600;
     cursor: pointer;
 }
 
 .auth-form button:hover {
-    background-color: #16324f;
+    background-color: #1e296e;
+    color: #E2B600
 }
 
 .switch-text {
@@ -111,7 +124,7 @@ body {
 }
 
 .switch-text a {
-    color: #1d3557;
+    color: #27348B;
     text-decoration: none;
     font-weight: 600;
 }
