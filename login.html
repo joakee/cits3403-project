@@ -19,6 +19,11 @@
                 <label for="login-password">Password</label>
                 <input type="password" id="login-password" name="password" placeholder="Enter your password" />
 
+                <div class="show-password-row">
+                    <input type="checkbox" id="show-login-password" />
+                    <label for="show-login-password">Show password</label>
+                </div>
+
                 <p class="forgot-password"><a href="#">Forgot password?</a></p>
                 <p class="helper-text">Use your marketplace account details to log in.</p>
 
@@ -31,5 +36,14 @@
             </p>
         </div>
     </div>
+
+    <script>
+        const loginPasswordInput = document.getElementById("login-password");
+        const showLoginPassword = document.getElementById("show-login-password");
+
+        showLoginPassword.addEventListener("change", function () {
+            loginPasswordInput.type = this.checked ? "text" : "password";
+        });
+    </script>
 </body>
 </html>

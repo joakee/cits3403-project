@@ -63,6 +63,28 @@ body {
     border-color: #1d3557;
 }
 
+.show-password-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    margin-bottom: 6px;
+    font-size: 14px;
+    color: #4b5563;
+}
+
+.show-password-row input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.show-password-row label {
+    margin: 0;
+    font-weight: 500;
+    cursor: pointer;
+}
+
 .forgot-password {
     margin-top: 8px;
     margin-bottom: 8px;
