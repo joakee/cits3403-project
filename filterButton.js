@@ -39,10 +39,11 @@ class FilterButton extends HTMLElement {
                     <span class="text-sm text-body absolute start-0 bottom-2">$${min_price}</span>
                     <span class="text-sm text-body absolute end-0 bottom-2">$${max_price}</span>
                 </div>
-                <div class="font-bold relative">
-                    Pickup at Uni
-                    <input type="checkbox" class="text-sm text-body ml-2"/>
-                </div>
+                <label class="font-bold inline-flex items-center cursor-pointer">
+                    <input type="checkbox" value="" class="sr-only peer">
+                    <div class="relative w-9 h-5 bg-neutral-quaternary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-brand-soft dark:peer-focus:ring-brand-soft rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-buffer after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand"></div>
+                    <span class="select-none ms-3 text-sm font-medium text-heading">Pickup at Uni</span>
+                </label>
             </div>
             </div>
 
