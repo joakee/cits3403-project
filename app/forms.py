@@ -52,6 +52,8 @@ class ListingForm(FlaskForm):
         Optional(),
         FileAllowed(['jpg', 'jpeg', 'png', 'gif', 'webp'], 'Images only.')
     ])
+    submit = SubmitField('')
+
 class EditListingForm(FlaskForm):
     title = StringField('Title', validators=[DataRequired(), Length(max=120)])
     description = TextAreaField('Description', validators=[DataRequired()])
