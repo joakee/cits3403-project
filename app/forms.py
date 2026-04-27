@@ -1,9 +1,13 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
-from wtforms import (StringField, PasswordField, BooleanField, SubmitField,
-                     TextAreaField, DecimalField, SelectField)
-from wtforms.validators import (DataRequired, Email, EqualTo, Length,
-                                NumberRange, Optional, ValidationError)
+from wtforms import (
+    StringField, PasswordField, BooleanField, SubmitField,
+    TextAreaField, DecimalField, SelectField
+)
+from wtforms.validators import (
+    DataRequired, Email, EqualTo, Length,
+    NumberRange, Optional, ValidationError
+)
 from app.models import User
 
 
@@ -18,8 +22,10 @@ class RegisterForm(FlaskForm):
     username = StringField('Full Name', validators=[DataRequired(), Length(3, 64)])
     email = StringField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[DataRequired(), Length(min=8)])
-    confirm_password = PasswordField('Confirm Password',
-                                     validators=[DataRequired(), EqualTo('password')])
+    confirm_password = PasswordField(
+        'Confirm Password',
+        validators=[DataRequired(), EqualTo('password')]
+    )
     submit = SubmitField('Sign Up')
 
     def validate_email(self, field):
@@ -52,6 +58,8 @@ class ListingForm(FlaskForm):
         Optional(),
         FileAllowed(['jpg', 'jpeg', 'png', 'gif', 'webp'], 'Images only.')
     ])
+
+
 class EditListingForm(FlaskForm):
     title = StringField('Title', validators=[DataRequired(), Length(max=120)])
     description = TextAreaField('Description', validators=[DataRequired()])
@@ -70,3 +78,16 @@ class EditListingForm(FlaskForm):
     show_history = BooleanField('Show edit history publicly')
     submit = SubmitField('Save Changes')
 
+
+class ForgotPasswordForm(FlaskForm):
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    submit = SubmitField('Continue')
+
+
+class ResetPasswordForm(FlaskForm):
+    password = PasswordField('New Password', validators=[DataRequired(), Length(min=8)])
+    confirm_password = PasswordField(
+        'Confirm Password',
+        validators=[DataRequired(), EqualTo('password')]
+    )
+    submit = SubmitField('Reset Password')
