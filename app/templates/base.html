@@ -26,10 +26,16 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarMain">
+
+                {% if request.endpoint and not request.endpoint.startswith('auth.') %}
                 <form class="d-flex mx-auto" style="width: 320px;" action="{{ url_for('listings.index') }}" method="get">
                     <input id="nav-search" class="form-control me-2" type="search" name="q"
                            placeholder="Search listings..." value="{{ request.args.get('q', '') }}" />
                 </form>
+                {% else %}
+                <div class="mx-auto"></div>
+                {% endif %}
+
                 <div class="ms-auto d-flex gap-2 align-items-center">
                     {% if current_user.is_authenticated %}
                         <a href="{{ url_for('listings.new') }}" class="btn btn-sm btn-light">

@@ -1,6 +1,6 @@
 from flask import Flask, redirect, url_for
+from flask_login import LoginManager, current_user
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager
 from flask_wtf.csrf import CSRFProtect
 from config import Config
 
@@ -29,6 +29,8 @@ def create_app(config_class=Config):
 
     @app.route('/')
     def index():
-        return redirect(url_for('listings.index'))
+        if current_user.is_authenticated:
+            return redirect(url_for('listings.index'))
+        return redirect(url_for('auth.login'))
 
     return app
