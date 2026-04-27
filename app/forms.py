@@ -58,6 +58,7 @@ class ListingForm(FlaskForm):
         Optional(),
         FileAllowed(['jpg', 'jpeg', 'png', 'gif', 'webp'], 'Images only.')
     ])
+    submit = SubmitField('Create Listing')
 
 
 class EditListingForm(FlaskForm):

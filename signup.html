@@ -25,6 +25,11 @@
                 <label for="signup-confirm-password">Confirm Password</label>
                 <input type="password" id="signup-confirm-password" name="confirm-password" placeholder="Confirm your password" />
 
+                <div class="show-password-row">
+                    <input type="checkbox" id="show-signup-password" />
+                    <label for="show-signup-password">Show password</label>
+                </div>
+
                 <button type="submit">Sign Up</button>
             </form>
 
@@ -34,5 +39,17 @@
             </p>
         </div>
     </div>
+
+    <script>
+        const signupPasswordInput = document.getElementById("signup-password");
+        const signupConfirmPasswordInput = document.getElementById("signup-confirm-password");
+        const showSignupPassword = document.getElementById("show-signup-password");
+
+        showSignupPassword.addEventListener("change", function () {
+            const type = this.checked ? "text" : "password";
+            signupPasswordInput.type = type;
+            signupConfirmPasswordInput.type = type;
+        });
+    </script>
 </body>
 </html>
