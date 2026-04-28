@@ -1,7 +1,14 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="container">
-    <h3><strong>{% if conversation.listing.seller_id == current_user.id %}Selling:{% else %}Buying:{% endif %}</strong> {{ conversation.listing.title }}</h3>
+    
+    <h3>
+        <strong>{% if conversation.listing.seller_id == current_user.id %}Selling:{% else %}Buying:{% endif %}</strong> 
+        <a class="text-dark font-weight-bold" href="{{ url_for('listings.detail', listing_id=conversation.listing.id) }}">
+            {{ conversation.listing.title }}
+        </a>
+    </h3>
+
     <hr>
     <div id="chat-box"
         style="height: 400px; overflow-y: scroll; border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; display: flex; flex-direction: column-reverse;">
