@@ -3,7 +3,15 @@
 <div class="container">
     
     <h3>
-        <strong>{% if conversation.listing.seller_id == current_user.id %}Selling:{% else %}Buying:{% endif %}</strong> 
+        <strong>
+            {% if not conversation.listing.is_active %}
+            Sold:
+            {% elif conversation.listing.seller_id == current_user.id %}
+            Selling:
+            {% else %}
+            Buying:
+            {% endif %}
+        </strong> 
         <a class="text-dark font-weight-bold" href="{{ url_for('listings.detail', listing_id=conversation.listing.id) }}">
             {{ conversation.listing.title }}
         </a>
@@ -17,10 +25,14 @@
         {% endfor %}
     </div>
 
+    {% if conversation.listing.is_active %}
     <form class="input-group" id="message">
         <input type="text" id="message-input" class="form-control" placeholder="Type a message..." autofocus>
         <button id="submit" class="btn btn-primary">Send</button>
     </form>
+    {% else %}
+    <p>this item has now been sold</p>
+    {% endif %}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
