@@ -18,7 +18,7 @@
             id="conv-{{ conv.id }}">
 
             <div>
-                <h5 class="mb-1">{{ conv.listing.title }}</h5>
+                <h5 class="mb-1"><strong>{% if conv.listing.seller_id == current_user.id %}Selling:{% else %}Buying:{% endif %}</strong> {{ conv.listing.title }}</h5>
                 <p class="mb-1 text-muted" style="font-size: 0.9em;">
                     Chatting with <strong>{{ User.query.get(partner).username }}</strong>
                 </p>

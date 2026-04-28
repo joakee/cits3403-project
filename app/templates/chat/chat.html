@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="container">
-    <h3>Chat: {{ conversation.listing.title }}</h3>
+    <h3><strong>{% if conversation.listing.seller_id == current_user.id %}Selling:{% else %}Buying:{% endif %}</strong> {{ conversation.listing.title }}</h3>
     <hr>
     <div id="chat-box"
         style="height: 400px; overflow-y: scroll; border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; display: flex; flex-direction: column-reverse;">
@@ -10,10 +10,10 @@
         {% endfor %}
     </div>
 
-    <div class="input-group">
-        <input type="text" id="message-input" class="form-control" placeholder="Type a message...">
-        <button id="send-btn" class="btn btn-primary">Send</button>
-    </div>
+    <form class="input-group" id="message">
+        <input type="text" id="message-input" class="form-control" placeholder="Type a message..." autofocus>
+        <button id="submit" class="btn btn-primary">Send</button>
+    </form>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
@@ -22,7 +22,7 @@
     const room = "{{ conversation.id }}";
     socket.emit('join', { room: room });
 
-    document.getElementById('send-btn').onclick = function () {
+    document.getElementById('message').onsubmit = function () {
         const input = document.getElementById('message-input');
         if (input.value) {
             socket.emit('send_message', {
@@ -31,6 +31,8 @@
             });
             input.value = '';
         }
+
+        document.getElementById('message-input').focus();
     };
 
     socket.on('receive_message', function (data) {
