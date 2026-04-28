@@ -43,11 +43,10 @@ class Listing(db.Model):
 
 
 class ListingEdit(db.Model):
-    """One row per save; records a single changed field."""
     id = db.Column(db.Integer, primary_key=True)
     listing_id = db.Column(db.Integer, db.ForeignKey('listing.id'), nullable=False)
     edited_at = db.Column(db.DateTime, default=datetime.utcnow)
-    field_name = db.Column(db.String(64), nullable=False)   # e.g. 'title', 'price'
+    field_name = db.Column(db.String(64), nullable=False)
     old_value = db.Column(db.Text, nullable=True)
     new_value = db.Column(db.Text, nullable=True)
 

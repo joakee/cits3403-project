@@ -4,7 +4,7 @@ from app import db, socketio
 from app.models import User, Message, Listing, Conversation
 from app.forms import EditProfileForm
 from flask_socketio import emit, join_room
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 bp = Blueprint('chat', __name__, url_prefix='/chat')
 
@@ -45,40 +45,6 @@ def chat_room(conversation_id):
     messages = conversation.messages.order_by(Message.timestamp.asc()).all()
     return render_template('chat/chat.html', conversation=conversation, messages=messages,User=User)
 
-# --- SOCKET.IO EVENTS ---
-
-@socketio.on('join')
-def on_join(data):
-    room = data['room']
-    join_room(room)
-
-@socketio.on('send_message')
-def handle_message(data):
-    room = data['room']
-    msg_content = data['message']
-    
-    # Save to DB
-    new_msg = Message(
-        conversation_id=room,
-        sender_id=current_user.id,
-        content=msg_content
-    )
-    db.session.add(new_msg)
-    db.session.commit()
-
-    # Broadcast to both users in the room
-    emit('receive_message', {
-        'message': msg_content,
-        'sender': current_user.username,
-        'timestamp': datetime.now(timezone.utc).strftime('%H:%M')
-    }, room=room)
-
-    emit('update_inbox', {
-        'conversation_id': room,
-        'message': msg_content,
-        'timestamp': datetime.now(timezone.utc).strftime('%H:%M')
-    }, broadcast=True)
-
 @bp.route('/inbox')
 @login_required
 def inbox():
@@ -92,3 +58,35 @@ def inbox():
     conversations.sort(key=lambda x: x.messages.order_by(Message.timestamp.desc()).first().timestamp if x.messages.first() else x.created_at, reverse=True)
     
     return render_template('chat/inbox.html', conversations=conversations,Message=Message,User=User)
+
+# --- SOCKET.IO EVENTS ---
+
+@socketio.on('join')
+def on_join(data):
+    room = data['room']
+    join_room(room)
+
+@socketio.on('send_message')
+def handle_message(data):
+    room = data['room']
+    msg_content = data['message']
+    
+    new_msg = Message(
+        conversation_id=room,
+        sender_id=current_user.id,
+        content=msg_content
+    )
+    db.session.add(new_msg)
+    db.session.commit()
+
+    emit('receive_message', {
+        'message': msg_content,
+        'sender': current_user.username,
+        'timestamp': datetime.now(timezone.utc).strftime('%H:%M')
+    }, room=room)
+
+    emit('update_inbox', {
+        'conversation_id': room,
+        'message': msg_content,
+        'timestamp': datetime.now(timezone.utc).strftime('%H:%M')
+    }, broadcast=True)

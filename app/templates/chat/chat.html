@@ -4,8 +4,8 @@
     <h3>Chat: {{ conversation.listing.title }}</h3>
     <hr>
     <div id="chat-box"
-        style="height: 400px; overflow-y: scroll; border: 1px solid #ccc; padding: 15px; margin-bottom: 20px;">
-        {% for msg in messages %}
+        style="height: 400px; overflow-y: scroll; border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; display: flex; flex-direction: column-reverse;">
+        {% for msg in messages[::-1] %}
         <p><strong>{{ User.query.get(msg.sender_id).username }}:</strong> {{ msg.content }}</p>
         {% endfor %}
     </div>
@@ -37,8 +37,7 @@
         const chatBox = document.getElementById('chat-box');
         const msgElement = document.createElement('p');
         msgElement.innerHTML = `<strong>${data.sender}:</strong> ${data.message}`;
-        chatBox.appendChild(msgElement);
-        chatBox.scrollTop = chatBox.scrollHeight;
+        chatBox.prepend(msgElement);
     });
 </script>
 {% endblock %}
