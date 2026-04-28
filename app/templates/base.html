@@ -39,6 +39,9 @@
                            class="btn btn-sm btn-outline-light">
                             <i class="bi bi-person-circle me-1"></i>{{ current_user.username.split()[0] }}
                         </a>
+                        <a href="{{ url_for('chat.inbox') }}" class="btn btn-sm btn-outline-light">
+                            Messages <span id="global-unread-dot" style="display:none; color:red;">●</span>
+                        </a>
                         <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-outline-light">
                             Logout
                         </a>
