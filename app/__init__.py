@@ -1,5 +1,5 @@
 from datetime import timedelta
-from flask import Flask, redirect, url_for
+from flask import Flask, redirect, url_for, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, current_user
 from flask_wtf.csrf import CSRFProtect
@@ -31,8 +31,42 @@ def create_app(config_class=Config):
 
     @app.route('/')
     def index():
-        if current_user.is_authenticated:
-            return redirect(url_for('listings.index'))
-        return redirect(url_for('auth.login'))
+        from app.models import Listing, User
+        from sqlalchemy import func
+
+        recent_listings = (Listing.query
+                           .filter_by(is_active=True)
+                           .order_by(Listing.created_at.desc())
+                           .limit(8).all())
+
+        category_counts_raw = (db.session.query(Listing.category, func.count(Listing.id))
+                               .filter_by(is_active=True)
+                               .group_by(Listing.category).all())
+        category_counts = {cat: count for cat, count in category_counts_raw}
+
+        total_listings = Listing.query.filter_by(is_active=True).count()
+        total_users    = User.query.count()
+
+        events = [
+            {'title': 'O-Week Market Day',        'organizer': 'UWA Student Guild',         'date_day': '28', 'date_mon': 'Apr', 'location': 'Oak Lawn',             'icon': 'bi-balloon-heart'},
+            {'title': 'CS Study Swap',             'organizer': 'UWA Computing Society',     'date_day': '3',  'date_mon': 'May', 'location': 'Reid Library Level 2', 'icon': 'bi-laptop'},
+            {'title': 'Textbook Exchange',         'organizer': 'UWA Academic Association',  'date_day': '10', 'date_mon': 'May', 'location': 'Winthrop Hall Foyer',  'icon': 'bi-book'},
+            {'title': 'End-of-Semester Clear-Out', 'organizer': 'UWA Residential Colleges',  'date_day': '31', 'date_mon': 'May', 'location': 'UniHall Common Room',  'icon': 'bi-house-heart'},
+        ]
+
+        sponsors = [
+            {'name': 'UWA Student Guild',  'tagline': 'Your student union since 1913',    'icon': 'bi-mortarboard',      'url': '#'},
+            {'name': 'UniPrint',           'tagline': 'Fast, affordable campus printing', 'icon': 'bi-printer',          'url': '#'},
+            {'name': 'Campus Books Co-op', 'tagline': 'Buy & sell textbooks on campus',   'icon': 'bi-journal-bookmark', 'url': '#'},
+        ]
+
+        return render_template('home.html',
+            recent_listings=recent_listings,
+            category_counts=category_counts,
+            total_listings=total_listings,
+            total_users=total_users,
+            events=events,
+            sponsors=sponsors,
+        )
 
     return app
