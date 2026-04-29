@@ -5,6 +5,7 @@ from app.models import User, Message, Listing, Conversation
 from app.forms import EditProfileForm
 from flask_socketio import emit, join_room
 from datetime import datetime, timezone, timedelta
+import emoji
 
 bp = Blueprint('chat', __name__, url_prefix='/chat')
 
@@ -70,23 +71,25 @@ def on_join(data):
 def handle_message(data):
     room = data['room']
     msg_content = data['message']
-    
+
+    text = emoji.emojize(msg_content)
+
     new_msg = Message(
         conversation_id=room,
         sender_id=current_user.id,
-        content=msg_content
+        content=text
     )
     db.session.add(new_msg)
     db.session.commit()
 
     emit('receive_message', {
-        'message': msg_content,
-        'sender': current_user.username,
+        'message': text,
+        'sender': current_user.id,
         'timestamp': datetime.now(timezone.utc).strftime('%H:%M')
     }, room=room)
 
     emit('update_inbox', {
         'conversation_id': room,
-        'message': msg_content,
+        'message': text,
         'timestamp': datetime.now(timezone.utc).strftime('%H:%M')
     }, broadcast=True)

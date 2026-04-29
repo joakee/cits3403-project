@@ -1,7 +1,9 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="container">
-    
+    <a href="{{ url_for('chat.inbox') }}" class="text-muted text-decoration-none d-inline-flex align-items-center mb-3">
+        <i class="bi bi-arrow-left me-1"></i> Back to messages
+    </a>
     <h3>
         <strong>
             {% if not conversation.listing.is_active %}
@@ -21,13 +23,17 @@
     <div id="chat-box"
         style="height: 400px; overflow-y: scroll; border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; display: flex; flex-direction: column-reverse;">
         {% for msg in messages[::-1] %}
-        <p><strong>{{ User.query.get(msg.sender_id).username }}:</strong> {{ msg.content }}</p>
+        {% if msg.sender_id == current_user.id %}
+        <p style="align-self: flex-end; background-color: #1d3557; padding: 5px 10px; color: white; border-radius: 10px;">{{ msg.content }}</p>
+        {% else %}
+        <div><p style="max-width: fit-content; align-self: flex-start; background-color: lightgray; padding: 5px 10px; border-radius: 10px;"> {{ msg.content }}</p></div>
+        {% endif %}
         {% endfor %}
     </div>
 
     {% if conversation.listing.is_active %}
     <form class="input-group" id="message">
-        <input type="text" id="message-input" class="form-control" placeholder="Type a message..." autofocus>
+        <input type="text" id="message-input" class="form-control" placeholder="Type a message..." autocomplete="off" autofocus>
         <button id="submit" class="btn btn-primary">Send</button>
     </form>
     {% else %}
@@ -39,8 +45,13 @@
 <script>
     const socket = io();
     const room = "{{ conversation.id }}";
+    const current_user = "{{ current_user.id }}"
     socket.emit('join', { room: room });
 
+    const message = document.getElementById('message');
+    message.addEventListener("submit", (event) => {
+        event.preventDefault();
+    });
     document.getElementById('message').onsubmit = function () {
         const input = document.getElementById('message-input');
         if (input.value) {
@@ -57,7 +68,15 @@
     socket.on('receive_message', function (data) {
         const chatBox = document.getElementById('chat-box');
         const msgElement = document.createElement('p');
-        msgElement.innerHTML = `<strong>${data.sender}:</strong> ${data.message}`;
+        console.log(data.sender, current_user)
+        if (data.sender === Number(current_user)) {
+            msgElement.style = "align-self: flex-end; background-color: #1d3557; padding: 5px 10px; color: white; border-radius: 10px;"
+            msgElement.innerHTML = `${data.message}`;
+        } else {
+            msgElement.style = "align-self: flex-start; background-color: lightgray; padding: 5px 10px; border-radius: 10px;"
+            msgElement.innerHTML = `${data.message}`; 
+        }
+        
         chatBox.prepend(msgElement);
     });
 </script>
