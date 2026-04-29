@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}Account Settings | UWA Marketplace{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-7 col-lg-6">
+
+        <!-- Page header -->
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <div class="avatar-circle" style="width:52px;height:52px;font-size:1.4rem;">
+                {{ current_user.username[0].upper() }}
+            </div>
+            <div>
+                <h4 class="mb-0 fw-bold" style="color:#1d3557;">Account Settings</h4>
+                <small class="text-muted">
+                    <a href="{{ url_for('profile.edit') }}" class="text-muted">Edit public profile</a>
+                    &nbsp;·&nbsp;
+                    <a href="{{ url_for('profile.view', user_id=current_user.id) }}" class="text-muted">View profile</a>
+                </small>
+            </div>
+        </div>
+
+        <!-- Change Email -->
+        <div class="card p-4 mb-3">
+            <h6 class="fw-bold mb-3" style="color:#1d3557;">
+                <i class="bi bi-envelope me-2"></i>Change Email
+            </h6>
+            <p class="text-muted small mb-3">Current: <strong>{{ current_user.email }}</strong></p>
+            <form method="POST" action="{{ url_for('profile.settings_email') }}">
+                {{ email_form.hidden_tag() }}
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">{{ email_form.email.label.text }}</label>
+                    {{ email_form.email(class_="form-control", placeholder="new@example.com") }}
+                    {% for error in email_form.email.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">{{ email_form.current_password.label.text }}</label>
+                    {{ email_form.current_password(class_="form-control") }}
+                </div>
+
+                {{ email_form.submit(class_="btn btn-primary btn-sm") }}
+            </form>
+        </div>
+
+        <!-- Change Password -->
+        <div class="card p-4 mb-3">
+            <h6 class="fw-bold mb-3" style="color:#1d3557;">
+                <i class="bi bi-lock me-2"></i>Change Password
+            </h6>
+            <form method="POST" action="{{ url_for('profile.settings_password') }}">
+                {{ password_form.hidden_tag() }}
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">{{ password_form.current_password.label.text }}</label>
+                    {{ password_form.current_password(class_="form-control") }}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">{{ password_form.new_password.label.text }}</label>
+                    {{ password_form.new_password(class_="form-control") }}
+                    <div class="form-text">Minimum 8 characters.</div>
+                    {% for error in password_form.new_password.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">{{ password_form.confirm_password.label.text }}</label>
+                    {{ password_form.confirm_password(class_="form-control") }}
+                    {% for error in password_form.confirm_password.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                {{ password_form.submit(class_="btn btn-primary btn-sm") }}
+            </form>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="card p-4 border-danger">
+            <h6 class="fw-bold mb-3 text-danger">
+                <i class="bi bi-exclamation-triangle me-2"></i>Danger Zone
+            </h6>
+            <p class="text-muted small mb-3">
+                Permanently delete your account and all your listings. This cannot be undone.
+            </p>
+            <button class="btn btn-outline-danger btn-sm" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#deleteSection">
+                Delete Account
+            </button>
+            <div class="collapse mt-3" id="deleteSection">
+                <form method="POST" action="{{ url_for('profile.settings_delete') }}"
+                      onsubmit="return confirm('This will permanently delete your account and all listings. Are you sure?')">
+                    {{ delete_form.hidden_tag() }}
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">{{ delete_form.password.label.text }}</label>
+                        {{ delete_form.password(class_="form-control") }}
+                    </div>
+                    {{ delete_form.submit(class_="btn btn-danger btn-sm") }}
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
