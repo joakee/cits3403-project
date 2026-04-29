@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Review User | UWA Marketplace{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="form-card mx-auto">
+        <h1>Review {{ profile_user.username }}</h1>
+        <p class="subtitle">Leave a rating and comment for this user.</p>
+
+        <form class="auth-form" method="POST">
+            {{ form.hidden_tag() }}
+
+            <label>{{ form.rating.label.text }}</label>
+            {{ form.rating(class="form-select") }}
+
+            <label class="mt-3">{{ form.comment.label.text }}</label>
+            {{ form.comment(class="form-control", rows="4", placeholder="Write your review") }}
+
+            <div class="mt-3">
+                {{ form.submit(class="btn btn-primary") }}
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

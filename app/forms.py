@@ -92,3 +92,19 @@ class ResetPasswordForm(FlaskForm):
         validators=[DataRequired(), EqualTo('password')]
     )
     submit = SubmitField('Reset Password')
+
+
+class ReviewForm(FlaskForm):
+    rating = SelectField(
+        'Rating',
+        choices=[
+            ('5', '5 - Excellent'),
+            ('4', '4 - Good'),
+            ('3', '3 - Average'),
+            ('2', '2 - Poor'),
+            ('1', '1 - Very Poor'),
+        ],
+        validators=[DataRequired()]
+    )
+    comment = TextAreaField('Comment', validators=[Optional(), Length(max=300)])
+    submit = SubmitField('Submit Review')
