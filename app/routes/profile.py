@@ -1,8 +1,14 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request
-from flask_login import login_required, current_user
+from flask_login import login_required, logout_user, current_user
+from werkzeug.security import check_password_hash, generate_password_hash
 from app import db
+<<<<<<< HEAD
 from app.models import User, Listing, Review
 from app.forms import EditProfileForm, ReviewForm
+=======
+from app.models import User, Listing
+from app.forms import EditProfileForm, ChangeEmailForm, ChangePasswordForm, DeleteAccountForm
+>>>>>>> 734ab1b19adf227c1081f75838ab42849f83a3df
 
 bp = Blueprint('profile', __name__, url_prefix='/user')
 
@@ -86,4 +92,78 @@ def edit():
         db.session.commit()
         flash('Profile updated.', 'success')
         return redirect(url_for('profile.view', user_id=current_user.id))
-    return render_template('profile/edit.html', form=form)
+
+
+
+@bp.route('/me/settings', methods=['GET'])
+@login_required
+def settings():
+    email_form = ChangeEmailForm(prefix='email')
+    password_form = ChangePasswordForm(prefix='password')
+    delete_form = DeleteAccountForm(prefix='delete')
+    return render_template(
+        'profile/settings.html',
+        email_form=email_form,
+        password_form=password_form,
+        delete_form=delete_form,
+    )
+
+
+@bp.route('/me/settings/email', methods=['POST'])
+@login_required
+def settings_email():
+    email_form = ChangeEmailForm(prefix='email')
+    if email_form.validate_on_submit():
+        if not check_password_hash(current_user.password_hash, email_form.current_password.data):
+            flash('Incorrect password.', 'error')
+        else:
+            current_user.email = email_form.email.data
+            db.session.commit()
+            flash('Email address updated.', 'success')
+    else:
+        for field_errors in email_form.errors.values():
+            for error in field_errors:
+                flash(error, 'error')
+    return redirect(url_for('profile.settings'))
+
+
+@bp.route('/me/settings/password', methods=['POST'])
+@login_required
+def settings_password():
+    password_form = ChangePasswordForm(prefix='password')
+    if password_form.validate_on_submit():
+        if not check_password_hash(current_user.password_hash, password_form.current_password.data):
+            flash('Incorrect current password.', 'error')
+        else:
+            current_user.password_hash = generate_password_hash(
+                password_form.new_password.data, method='pbkdf2:sha256'
+            )
+            db.session.commit()
+            flash('Password updated successfully.', 'success')
+    else:
+        for field_errors in password_form.errors.values():
+            for error in field_errors:
+                flash(error, 'error')
+    return redirect(url_for('profile.settings'))
+
+
+@bp.route('/me/settings/delete', methods=['POST'])
+@login_required
+def settings_delete():
+    delete_form = DeleteAccountForm(prefix='delete')
+    if delete_form.validate_on_submit():
+        if not check_password_hash(current_user.password_hash, delete_form.password.data):
+            flash('Incorrect password.', 'error')
+            return redirect(url_for('profile.settings'))
+        user = current_user._get_current_object()
+        logout_user()
+        Listing.query.filter_by(seller_id=user.id).delete()
+        db.session.delete(user)
+        db.session.commit()
+        flash('Your account has been deleted.', 'info')
+        return redirect(url_for('auth.register'))
+    for field_errors in delete_form.errors.values():
+        for error in field_errors:
+            flash(error, 'error')
+    return redirect(url_for('profile.settings'))
+>>>>>>> 734ab1b19adf227c1081f75838ab42849f83a3df
