@@ -219,8 +219,12 @@ body {
     transition: transform 0.15s ease, box-shadow 0.15s ease;
     text-decoration: none;
     color: inherit;
-    display: block;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
     height: 100%;
+    overflow: hidden;
+    background-color: var(--white);
 }
 
 .listing-card:hover {
@@ -233,8 +237,7 @@ body {
     height: 160px;
     object-fit: cover;
     width: 100%;
-    border-top-left-radius: var(--radius-card);
-    border-top-right-radius: var(--radius-card);
+    flex-shrink: 0;
 }
 
 .listing-img-placeholder {
@@ -245,8 +248,7 @@ body {
     justify-content: center;
     font-size: 2.5rem;
     color: #aab4c0;
-    border-top-left-radius: var(--radius-card);
-    border-top-right-radius: var(--radius-card);
+    flex-shrink: 0;
 }
 
 .listing-price {
