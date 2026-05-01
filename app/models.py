@@ -35,8 +35,12 @@ class Listing(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     seller_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
-    edits = db.relationship('ListingEdit', backref='listing',
-                            lazy='dynamic', order_by='ListingEdit.edited_at.desc()')
+    edits = db.relationship(
+        'ListingEdit',
+        backref='listing',
+        lazy='dynamic',
+        order_by='ListingEdit.edited_at.desc()'
+    )
 
     def __repr__(self):
         return f'<Listing {self.title}>'
@@ -69,3 +73,17 @@ class Message(db.Model):
     sender_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     content = db.Column(db.Text, nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+class Review(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    rating = db.Column(db.Integer, nullable=False)
+    comment = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    reviewer_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    reviewed_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+    reviewer = db.relationship('User', foreign_keys=[reviewer_id], backref='reviews_written')
+    reviewed_user = db.relationship('User', foreign_keys=[reviewed_user_id], backref='reviews_received')
+
+    def __repr__(self):
+        return f'<Review {self.rating}/5 by {self.reviewer_id} for {self.reviewed_user_id}>'
