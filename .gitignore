@@ -1,5 +1,7 @@
 /app/__pycache__/*
-/app/routes/*
+/app/routes/__pycache__
 /__pycache__/*
 marketplace.db
 /app/static/uploads/*
+*.db
+/.venv

@@ -47,17 +47,32 @@ class Listing(db.Model):
 
 
 class ListingEdit(db.Model):
-    """One row per save; records a single changed field."""
     id = db.Column(db.Integer, primary_key=True)
     listing_id = db.Column(db.Integer, db.ForeignKey('listing.id'), nullable=False)
     edited_at = db.Column(db.DateTime, default=datetime.utcnow)
-    field_name = db.Column(db.String(64), nullable=False)   # e.g. 'title', 'price'
+    field_name = db.Column(db.String(64), nullable=False)
     old_value = db.Column(db.Text, nullable=True)
     new_value = db.Column(db.Text, nullable=True)
 
     def __repr__(self):
         return f'<ListingEdit {self.listing_id} {self.field_name}>'
 
+class Conversation(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    listing_id = db.Column(db.Integer, db.ForeignKey('listing.id'), nullable=False)
+    buyer_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    seller_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    messages = db.relationship('Message', backref='conversation', lazy='dynamic')
+    listing = db.relationship('Listing', backref='conversations')
+
+class Message(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    conversation_id = db.Column(db.Integer, db.ForeignKey('conversation.id'), nullable=False)
+    sender_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Review(db.Model):
     id = db.Column(db.Integer, primary_key=True)

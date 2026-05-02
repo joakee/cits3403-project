@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Inbox</h2>
+    <hr>
+    <div class="list-group" id="inbox-list">
+        {% if not conversations %}
+        <p class="text-muted">You have no active chats yet.</p>
+        {% endif %}
+
+        {% for conv in conversations %}
+        {% set partner = conv.seller_id if conv.buyer_id == current_user.id else conv.buyer_id %}
+        {% set last_msg = conv.messages.order_by(Message.timestamp.desc()).first() %}
+
+        <a href="{{ url_for('chat.chat_room', conversation_id=conv.id) }}"
+            class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+            id="conv-{{ conv.id }}">
+
+            <div>
+                <h5 class="mb-1">
+                    <strong>
+                        {% if not conv.listing.is_active %}
+                        Sold:
+                        {% elif conv.listing.seller_id == current_user.id %}
+                        Selling:
+                        {% else %}
+                        Buying:
+                        {% endif %}
+                    </strong> 
+                    {{ conv.listing.title }}
+                </h5>
+                <p class="mb-1 text-muted" style="font-size: 0.9em;">
+                    Chatting with <strong>{{ User.query.get(partner).username }}</strong>
+                </p>
+                <small class="msg-preview text-dark font-weight-bold">
+                    {% if last_msg %}
+                    {{ User.query.get(last_msg.sender_id).username }}: {{ last_msg.content[:40] }}{% if last_msg.content|length > 40
+                    %}...{% endif %}
+                    {% else %}
+                    <i>New conversation started</i>
+                    {% endif %}
+                </small>
+            </div>
+
+            <small class="text-muted timestamp-preview">
+                {% if last_msg %}
+                {{ last_msg.timestamp.strftime('%H:%M') }}
+                {% else %}
+                {{ conv.created_at.strftime('%H:%M') }}
+                {% endif %}
+            </small>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+    // Hide the global red dot since they are now looking at the inbox
+    document.getElementById('global-unread-badge').style.display = 'none';
+
+    // When a new message comes in, update the list dynamically
+    globalSocket.on('update_inbox', function (data) {
+        const convRow = document.getElementById(`conv-${data.conversation_id}`);
+
+        if (convRow) {
+            // Update preview text and timestamp
+            convRow.querySelector('.msg-preview').innerHTML = `${data.sender_id}: ${data.message.substring(0, 40)}`;
+            convRow.querySelector('.timestamp-preview').innerText = data.timestamp;
+
+            // Highlight it briefly
+            convRow.classList.add('bg-light');
+            setTimeout(() => convRow.classList.remove('bg-light'), 2000);
+
+            // Move it to the very top of the inbox
+            const inboxList = document.getElementById('inbox-list');
+            inboxList.prepend(convRow);
+        } else {
+            // If it's a brand new conversation they haven't seen yet, refresh the page to load it
+            window.location.reload();
+        }
+    });
+</script>
+{% endblock %}
