@@ -24,20 +24,17 @@
                         <div class="d-flex align-items-center gap-3 mt-2">
                             <span class="category-badge">{{ listing.category|title }}</span>
                             {% if current_user.is_authenticated and current_user.id != listing.seller_id %}
-                                <form action="{{ url_for('listings.toggle_wishlist', listing_id=listing.id) }}" method="POST" class="m-0 wishlist-form">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    {% if listing in current_user.wishlist_listings %}
-                                        <button type="submit" class="btn btn-outline-danger btn-sm">
-                                            <i class="bi bi-heart-fill me-1"></i><span class="wishlist-text">Saved</span> (<span class="wishlist-count">{{ listing.wishlisted_by.count() }}</span>)
-                                        </button>
-                                    {% else %}
-                                        <button type="submit" class="btn btn-outline-secondary btn-sm">
-                                            <i class="bi bi-heart me-1"></i><span class="wishlist-text">Save</span> (<span class="wishlist-count">{{ listing.wishlisted_by.count() }}</span>)
-                                        </button>
-                                    {% endif %}
-                                </form>
+                                <button type="button"
+                                        class="btn btn-sm wishlist-btn {{ 'btn-outline-danger' if current_user.has_saved(listing) else 'btn-outline-secondary' }}"
+                                        data-listing-id="{{ listing.id }}"
+                                        data-is-saved="{{ 'true' if current_user.has_saved(listing) else 'false' }}"
+                                        title="Save to Wishlist">
+                                    <i class="bi {{ 'bi-heart-fill' if current_user.has_saved(listing) else 'bi-heart' }} me-1"></i>
+                                    <span class="wishlist-text">{{ 'Saved' if current_user.has_saved(listing) else 'Save' }}</span>
+                                    (<span class="wishlist-count">{{ listing.save_count }}</span>)
+                                </button>
                             {% else %}
-                                <span class="badge bg-light text-dark border"><i class="bi bi-heart-fill text-danger me-1"></i>Saved by {{ listing.wishlisted_by.count() }} {{ 'person' if listing.wishlisted_by.count() == 1 else 'people' }}</span>
+                                <span class="badge bg-light text-dark border"><i class="bi bi-heart-fill text-danger me-1"></i>Saved by {{ listing.save_count }} {{ 'person' if listing.save_count == 1 else 'people' }}</span>
                             {% endif %}
                         </div>
                     </div>

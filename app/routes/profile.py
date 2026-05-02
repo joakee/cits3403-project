@@ -1,7 +1,7 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
 from app import db
-from app.models import User, Listing, Review
+from app.models import User, Listing, Review, Wishlist
 from app.forms import EditProfileForm, ReviewForm
 
 bp = Blueprint('profile', __name__, url_prefix='/user')
@@ -89,8 +89,77 @@ def edit():
     return render_template('profile/edit.html', form=form)
 
 
-@bp.route('/wishlist')
+@bp.route('/wishlist', methods=['GET', 'POST'])
 @login_required
 def wishlist():
-    wishlist_items = current_user.wishlist_listings.filter(Listing.is_active == True).order_by(Listing.created_at.desc()).all()
-    return render_template('profile/wishlist.html', listings=wishlist_items)
+    if request.method == 'POST':
+        name = request.form.get('name')
+        if name and name.strip():
+            new_wl = Wishlist(name=name.strip(), user_id=current_user.id)
+            db.session.add(new_wl)
+            db.session.commit()
+            flash(f'Wishlist "{name}" created.', 'success')
+        return redirect(url_for('profile.wishlist'))
+
+    wishlists = current_user.wishlists.order_by(Wishlist.created_at.asc()).all()
+    if not wishlists:
+        default_wl = Wishlist(name="Saved Items", user_id=current_user.id)
+        db.session.add(default_wl)
+        db.session.commit()
+        wishlists = [default_wl]
+
+    return render_template('profile/wishlist.html', wishlists=wishlists)
+
+
+@bp.route('/wishlist/create', methods=['POST'])
+@login_required
+def wishlist_create():
+    """AJAX: create a new wishlist, return {id, name}."""
+    name = request.json.get('name', '').strip() if request.is_json else request.form.get('name', '').strip()
+    if not name:
+        return jsonify({'error': 'Name required'}), 400
+    wl = Wishlist(name=name, user_id=current_user.id)
+    db.session.add(wl)
+    db.session.commit()
+    return jsonify({'id': wl.id, 'name': wl.name})
+
+
+@bp.route('/wishlist/<int:wl_id>/rename', methods=['POST'])
+@login_required
+def wishlist_rename(wl_id):
+    """AJAX: rename a wishlist."""
+    wl = Wishlist.query.filter_by(id=wl_id, user_id=current_user.id).first_or_404()
+    name = request.json.get('name', '').strip() if request.is_json else request.form.get('name', '').strip()
+    if not name:
+        return jsonify({'error': 'Name required'}), 400
+    wl.name = name
+    db.session.commit()
+    return jsonify({'id': wl.id, 'name': wl.name})
+
+
+@bp.route('/wishlist/<int:wl_id>/delete', methods=['POST'])
+@login_required
+def wishlist_delete(wl_id):
+    """AJAX: delete a wishlist."""
+    wl = Wishlist.query.filter_by(id=wl_id, user_id=current_user.id).first_or_404()
+    db.session.delete(wl)
+    db.session.commit()
+    return jsonify({'success': True})
+
+
+@bp.route('/wishlist/<int:wl_id>/move/<int:listing_id>', methods=['POST'])
+@login_required
+def wishlist_move(wl_id, listing_id):
+    """AJAX: move a listing from wl_id into target_id (remove from source, add to target)."""
+    target_id = request.json.get('target_id') if request.is_json else request.form.get('target_id')
+    if not target_id:
+        return jsonify({'error': 'target_id required'}), 400
+    source_wl = Wishlist.query.filter_by(id=wl_id, user_id=current_user.id).first_or_404()
+    target_wl = Wishlist.query.filter_by(id=int(target_id), user_id=current_user.id).first_or_404()
+    listing = Listing.query.get_or_404(listing_id)
+    if listing in source_wl.listings:
+        source_wl.listings.remove(listing)
+    if listing not in target_wl.listings:
+        target_wl.listings.append(listing)
+    db.session.commit()
+    return jsonify({'success': True})

@@ -9,9 +9,25 @@ def load_user(user_id):
 
 
 wishlist_items = db.Table('wishlist_items',
-    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
+    db.Column('wishlist_id', db.Integer, db.ForeignKey('wishlist.id'), primary_key=True),
     db.Column('listing_id', db.Integer, db.ForeignKey('listing.id'), primary_key=True)
 )
+
+class Wishlist(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # A wishlist belongs to a user
+    user = db.relationship('User', backref=db.backref('wishlists', lazy='dynamic'))
+
+    # A wishlist contains many listings
+    listings = db.relationship('Listing', secondary=wishlist_items, lazy='dynamic', backref=db.backref('saved_in_wishlists', lazy='dynamic'))
+
+    def __repr__(self):
+        return f'<Wishlist {self.name}>'
+
 
 
 class User(db.Model, UserMixin):
@@ -24,7 +40,9 @@ class User(db.Model, UserMixin):
     avatar_url = db.Column(db.String(256), nullable=True)
 
     listings = db.relationship('Listing', backref='seller', lazy='dynamic')
-    wishlist_listings = db.relationship('Listing', secondary=wishlist_items, lazy='dynamic', backref=db.backref('wishlisted_by', lazy='dynamic'))
+
+    def has_saved(self, listing):
+        return db.session.query(wishlist_items).join(Wishlist).filter(Wishlist.user_id == self.id, wishlist_items.c.listing_id == listing.id).first() is not None
 
     def __repr__(self):
         return f'<User {self.username}>'
@@ -41,6 +59,10 @@ class Listing(db.Model):
     show_history = db.Column(db.Boolean, default=True)   # seller can hide edit history
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     seller_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+    @property
+    def save_count(self):
+        return db.session.query(Wishlist.user_id).join(wishlist_items).filter(wishlist_items.c.listing_id == self.id).distinct().count()
 
     edits = db.relationship(
         'ListingEdit',

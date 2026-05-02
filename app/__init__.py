@@ -29,6 +29,17 @@ def create_app(config_class=Config):
     app.register_blueprint(profile_bp)
     app.register_blueprint(listings_bp)
 
+    @app.context_processor
+    def inject_wishlist_count():
+        if current_user.is_authenticated:
+            from app.models import Wishlist, wishlist_items
+            from sqlalchemy import func
+            count = db.session.query(func.count(wishlist_items.c.listing_id)).join(
+                Wishlist, Wishlist.id == wishlist_items.c.wishlist_id
+            ).filter(Wishlist.user_id == current_user.id).scalar() or 0
+            return {'wishlist_total_count': count}
+        return {'wishlist_total_count': 0}
+
     @app.route('/')
     def index():
         if current_user.is_authenticated:

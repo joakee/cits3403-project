@@ -5,7 +5,7 @@ from flask import (Blueprint, render_template, redirect, url_for,
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from app import db
-from app.models import Listing, ListingEdit, User
+from app.models import Listing, ListingEdit, User, Wishlist
 from app.forms import ListingForm, EditListingForm
 
 bp = Blueprint('listings', __name__, url_prefix='/listings')
@@ -165,22 +165,78 @@ def edit(listing_id):
 @bp.route('/<int:listing_id>/wishlist', methods=['POST'])
 @login_required
 def toggle_wishlist(listing_id):
+    """Legacy toggle - saves to first/default wishlist. Kept for non-JS fallback."""
     listing = Listing.query.get_or_404(listing_id)
     added = False
-    if listing in current_user.wishlist_listings:
-        current_user.wishlist_listings.remove(listing)
+
+    # Get or create default wishlist
+    default_wl = current_user.wishlists.order_by(Wishlist.created_at.asc()).first()
+    if not default_wl:
+        default_wl = Wishlist(name="Saved Items", user_id=current_user.id)
+        db.session.add(default_wl)
+        db.session.commit()
+
+    if listing in default_wl.listings:
+        default_wl.listings.remove(listing)
         flash('Removed from wishlist.', 'info')
     else:
-        current_user.wishlist_listings.append(listing)
+        default_wl.listings.append(listing)
         added = True
         flash('Added to wishlist.', 'success')
     db.session.commit()
-    
-    wishlist_count = listing.wishlisted_by.count()
-    
+
+    wishlist_count = listing.save_count
+
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
         return jsonify({'success': True, 'added': added, 'count': wishlist_count})
-    
-    # Redirect back to where the user came from, or fallback to listing detail
+
     next_page = request.referrer or url_for('listings.detail', listing_id=listing.id)
     return redirect(next_page)
+
+
+@bp.route('/<int:listing_id>/wishlists', methods=['GET'])
+@login_required
+def get_wishlists_for_listing(listing_id):
+    """Return user's wishlists with checked status for this listing."""
+    listing = Listing.query.get_or_404(listing_id)
+    wishlists = current_user.wishlists.order_by(Wishlist.created_at.asc()).all()
+
+    # Auto-create default if none
+    if not wishlists:
+        default_wl = Wishlist(name="Saved Items", user_id=current_user.id)
+        db.session.add(default_wl)
+        db.session.commit()
+        wishlists = [default_wl]
+
+    return jsonify({
+        'wishlists': [{
+            'id': wl.id,
+            'name': wl.name,
+            'checked': listing in wl.listings
+        } for wl in wishlists],
+        'save_count': listing.save_count,
+        'is_saved': current_user.has_saved(listing)
+    })
+
+
+@bp.route('/<int:listing_id>/wishlist/<int:wishlist_id>', methods=['POST'])
+@login_required
+def toggle_wishlist_item(listing_id, wishlist_id):
+    """Toggle a listing in a specific wishlist."""
+    listing = Listing.query.get_or_404(listing_id)
+    wl = Wishlist.query.filter_by(id=wishlist_id, user_id=current_user.id).first_or_404()
+
+    if listing in wl.listings:
+        wl.listings.remove(listing)
+        checked = False
+    else:
+        wl.listings.append(listing)
+        checked = True
+    db.session.commit()
+
+    return jsonify({
+        'success': True,
+        'checked': checked,
+        'save_count': listing.save_count,
+        'is_saved': current_user.has_saved(listing)
+    })

@@ -22,25 +22,27 @@ $(document).ready(function () {
                     var imgHtml = item.image_url
                         ? '<img src="' + item.image_url + '" class="listing-img">'
                         : '<div class="listing-img-placeholder"><i class="bi bi-box-seam"></i></div>';
-                    
-                    var currentUserId = window.CURRENT_USER_ID; // Need to set this in base.html if we want to conditionally render the heart
-                    
+
+                    var currentUserId = window.CURRENT_USER_ID;
+
                     var heartHtml = '';
                     if (currentUserId && currentUserId != item.seller_id) {
                         var iconClass = item.is_wishlisted ? 'bi-heart-fill' : 'bi-heart';
-                        var csrfToken = $('meta[name="csrf-token"]').attr('content');
                         var countText = 'Saved by ' + item.wishlist_count + (item.wishlist_count === 1 ? ' person' : ' people');
-                        heartHtml = '<form action="/listings/' + item.id + '/wishlist" method="POST" class="m-0 wishlist-form">' +
-                                    '<input type="hidden" name="csrf_token" value="' + csrfToken + '">' +
-                                    '<button type="submit" class="btn btn-sm btn-link text-danger p-0 text-decoration-none" title="Toggle Wishlist" style="line-height: 1;">' +
-                                    '<i class="' + iconClass + '"></i>' +
+                        heartHtml = '<button type="button"' +
+                                    ' class="btn btn-sm btn-link text-danger p-0 text-decoration-none wishlist-btn"' +
+                                    ' data-listing-id="' + item.id + '"' +
+                                    ' data-is-saved="' + (item.is_wishlisted ? 'true' : 'false') + '"' +
+                                    ' title="Save to Wishlist" style="line-height: 1;">' +
+                                    '<i class="bi ' + iconClass + '"></i>' +
                                     '<span class="wishlist-count ms-1 text-dark" style="font-size: 0.85em;">' + countText + '</span>' +
-                                    '</button></form>';
-                    } else {
+                                    '</button>';
+                    } else if (currentUserId) {
+                        // seller view - just show count
                         var countText = 'Saved by ' + item.wishlist_count + (item.wishlist_count === 1 ? ' person' : ' people');
                         heartHtml = '<div class="text-danger" style="line-height: 1;">' +
-                                    '<i class="bi-heart-fill"></i>' +
-                                    '<span class="wishlist-count ms-1 text-dark" style="font-size: 0.85em;">' + countText + '</span>' +
+                                    '<i class="bi bi-heart-fill"></i>' +
+                                    '<span class="ms-1 text-dark" style="font-size: 0.85em;">' + countText + '</span>' +
                                     '</div>';
                     }
 
@@ -72,60 +74,143 @@ $(document).ready(function () {
         }, 300);
     });
 
-    // ── AJAX Wishlist Toggle ──────────────────────
-    $(document).on('submit', '.wishlist-form', function(e) {
-        e.preventDefault();
-        var $form = $(this);
-        var url = $form.attr('action');
+
+    // ── Wishlist Popover (Save to list) ──────────────────────────
+    var $wishlistPopover = null;
+    var activeBtn = null;
+
+    function buildPopoverContent(listingId, wishlists) {
+        var html = '<div class="wishlist-popover-inner" style="min-width: 180px;">';
+        html += '<p class="fw-semibold mb-2" style="font-size: 0.9em; color: #1d3557;">Save to wishlist</p>';
+        wishlists.forEach(function(wl) {
+            var checked = wl.checked ? 'checked' : '';
+            html += '<div class="form-check mb-1">' +
+                    '<input class="form-check-input wl-checkbox" type="checkbox" ' + checked +
+                    ' id="wl-' + wl.id + '" data-wishlist-id="' + wl.id + '" data-listing-id="' + listingId + '">' +
+                    '<label class="form-check-label" for="wl-' + wl.id + '" style="font-size: 0.9em;">' +
+                    $('<span>').text(wl.name).html() + '</label></div>';
+        });
+        html += '<hr class="my-2">';
+        html += '<a href="/wishlist" class="btn btn-sm btn-outline-secondary w-100" style="font-size: 0.8em;"><i class="bi bi-folder-plus me-1"></i>Manage Lists</a>';
+        html += '</div>';
+        return html;
+    }
+
+    function showWishlistPopover($btn, listingId) {
+        // Close any open popover first
+        if ($wishlistPopover) {
+            $wishlistPopover.remove();
+            if (activeBtn === $btn[0]) {
+                $wishlistPopover = null;
+                activeBtn = null;
+                return;
+            }
+        }
+        activeBtn = $btn[0];
+
+        // Fetch wishlists for this listing
+        $.getJSON('/listings/' + listingId + '/wishlists', function(data) {
+            var content = buildPopoverContent(listingId, data.wishlists);
+
+            // Append to body so overflow:hidden on cards doesn't clip it
+            $wishlistPopover = $('<div class="wishlist-popup shadow rounded border bg-white p-3" style="position: fixed; z-index: 99999;"></div>').html(content);
+            $('body').append($wishlistPopover);
+
+            // Position below the button using its viewport coordinates
+            var rect = $btn[0].getBoundingClientRect();
+            var popW = $wishlistPopover.outerWidth();
+            var left = rect.right - popW;
+            var top  = rect.bottom + 6;
+
+            // Keep inside viewport horizontally
+            if (left < 8) left = 8;
+
+            $wishlistPopover.css({ top: top + 'px', left: left + 'px' });
+
+            // Update parent button state from data
+            updateHeartBtn($btn, data.is_saved, data.save_count);
+        });
+    }
+
+    function updateHeartBtn($btn, isSaved, saveCount) {
+        var $icon = $btn.find('i');
+        var $count = $btn.find('.wishlist-count');
+        $btn.attr('data-is-saved', isSaved ? 'true' : 'false');
+
+        if ($btn.hasClass('btn-outline-danger') || $btn.hasClass('btn-outline-secondary')) {
+            // detail page button
+            var $text = $btn.find('.wishlist-text');
+            if (isSaved) {
+                $btn.removeClass('btn-outline-secondary').addClass('btn-outline-danger');
+                $icon.attr('class', 'bi bi-heart-fill me-1');
+                if ($text.length) $text.text('Saved');
+            } else {
+                $btn.removeClass('btn-outline-danger').addClass('btn-outline-secondary');
+                $icon.attr('class', 'bi bi-heart me-1');
+                if ($text.length) $text.text('Save');
+            }
+            if ($count.length) $count.text(saveCount);
+        } else {
+            // grid card button
+            if (isSaved) {
+                $icon.attr('class', 'bi bi-heart-fill');
+            } else {
+                $icon.attr('class', 'bi bi-heart');
+            }
+            if ($count.length) {
+                var countText = 'Saved by ' + saveCount + (saveCount === 1 ? ' person' : ' people');
+                $count.text(countText);
+            }
+        }
+    }
+
+    // Click on a wishlist heart button
+    $(document).on('click', '.wishlist-btn', function(e) {
+        e.stopPropagation();
+        var $btn = $(this);
+        var listingId = $btn.data('listing-id');
+        showWishlistPopover($btn, listingId);
+    });
+
+    // Click on a wishlist checkbox
+    $(document).on('change', '.wl-checkbox', function() {
+        var $cb = $(this);
+        var wishlistId = $cb.data('wishlist-id');
+        var listingId = $cb.data('listing-id');
         var csrfToken = $('meta[name="csrf-token"]').attr('content');
-        
+
         $.ajax({
             type: 'POST',
-            url: url,
+            url: '/listings/' + listingId + '/wishlist/' + wishlistId,
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
                 'X-CSRFToken': csrfToken
             },
             success: function(response) {
                 if (response.success) {
-                    var $icon = $form.find('i');
-                    var $btn = $form.find('button');
-                    var $count = $form.find('.wishlist-count');
-                    
-                    if (response.count !== undefined) {
-                        // In detail page buttons, we only show the number in parentheses "(3)" 
-                        // But if it contains "Saved by", we update the whole text.
-                        var currentText = $count.text();
-                        if (currentText.indexOf('Saved by') !== -1 || currentText.indexOf('person') !== -1 || currentText.indexOf('people') !== -1) {
-                            $count.text('Saved by ' + response.count + (response.count === 1 ? ' person' : ' people'));
-                        } else {
-                            $count.text(response.count);
-                        }
+                    $cb.prop('checked', response.checked);
+                    // Update the trigger button
+                    if (activeBtn) {
+                        updateHeartBtn($(activeBtn), response.is_saved, response.save_count);
                     }
-                    
-                    // If it's a detail page button (has text)
-                    if ($btn.hasClass('btn-outline-danger') || $btn.hasClass('btn-outline-secondary')) {
-                        var $text = $form.find('.wishlist-text');
-                        if (response.added) {
-                            $btn.removeClass('btn-outline-secondary').addClass('btn-outline-danger');
-                            $icon.removeClass('bi-heart').addClass('bi-heart-fill');
-                            $text.text('Saved');
-                        } else {
-                            $btn.removeClass('btn-outline-danger').addClass('btn-outline-secondary');
-                            $icon.removeClass('bi-heart-fill').addClass('bi-heart');
-                            $text.text('Save');
+                    // Also update any other heart buttons for the same listing on page
+                    $('.wishlist-btn[data-listing-id="' + listingId + '"]').each(function() {
+                        if (this !== activeBtn) {
+                            updateHeartBtn($(this), response.is_saved, response.save_count);
                         }
-                    } else {
-                        // Grid card icon
-                        if (response.added) {
-                            $icon.removeClass('bi-heart').addClass('bi-heart-fill');
-                        } else {
-                            $icon.removeClass('bi-heart-fill').addClass('bi-heart');
-                        }
-                    }
+                    });
                 }
             }
         });
+    });
+
+    // Close popover when clicking outside
+    $(document).on('click', function(e) {
+        if ($wishlistPopover && !$(e.target).closest('.wishlist-popup, .wishlist-btn').length) {
+            $wishlistPopover.remove();
+            $wishlistPopover = null;
+            activeBtn = null;
+        }
     });
 
 });

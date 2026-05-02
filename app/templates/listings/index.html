@@ -39,21 +39,19 @@
                         </h6>
                         <div class="position-relative" style="z-index: 2; white-space: nowrap;">
                             {% if current_user.is_authenticated and current_user.id != listing.seller_id %}
-                            <form action="{{ url_for('listings.toggle_wishlist', listing_id=listing.id) }}" method="POST" class="m-0 wishlist-form">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <button type="submit" class="btn btn-sm btn-link text-danger p-0 text-decoration-none" title="Toggle Wishlist" style="line-height: 1;">
-                                    {% if listing in current_user.wishlist_listings %}
-                                    <i class="bi bi-heart-fill"></i>
-                                    {% else %}
-                                    <i class="bi bi-heart"></i>
-                                    {% endif %}
-                                    <span class="wishlist-count ms-1 text-dark" style="font-size: 0.85em;">Saved by {{ listing.wishlisted_by.count() }} {{ 'person' if listing.wishlisted_by.count() == 1 else 'people' }}</span>
-                                </button>
-                            </form>
+                            <button type="button"
+                                    class="btn btn-sm btn-link text-danger p-0 text-decoration-none wishlist-btn"
+                                    data-listing-id="{{ listing.id }}"
+                                    data-is-saved="{{ 'true' if current_user.has_saved(listing) else 'false' }}"
+                                    title="Save to Wishlist"
+                                    style="line-height: 1;">
+                                <i class="bi {{ 'bi-heart-fill' if current_user.has_saved(listing) else 'bi-heart' }}"></i>
+                                <span class="wishlist-count ms-1 text-dark" style="font-size: 0.85em;">Saved by {{ listing.save_count }} {{ 'person' if listing.save_count == 1 else 'people' }}</span>
+                            </button>
                             {% else %}
                             <div class="text-danger" style="line-height: 1;">
                                 <i class="bi bi-heart-fill"></i>
-                                <span class="wishlist-count ms-1 text-dark" style="font-size: 0.85em;">Saved by {{ listing.wishlisted_by.count() }} {{ 'person' if listing.wishlisted_by.count() == 1 else 'people' }}</span>
+                                <span class="ms-1 text-dark" style="font-size: 0.85em;">Saved by {{ listing.save_count }} {{ 'person' if listing.save_count == 1 else 'people' }}</span>
                             </div>
                             {% endif %}
                         </div>
