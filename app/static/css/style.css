@@ -216,6 +216,7 @@ body {
 
 /* ─── Listing cards ───────────────────────────────────────────── */
 .listing-card {
+    position: relative;
     transition: transform 0.15s ease, box-shadow 0.15s ease;
     text-decoration: none;
     color: inherit;
@@ -226,6 +227,21 @@ body {
     overflow: hidden;
     background-color: var(--white);
 }
+
+.wl-status-banner {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    text-align: center;
+    padding: 2px 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    z-index: 10;
+    color: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
 
 .listing-card:hover {
     transform: translateY(-3px);
@@ -421,6 +437,47 @@ body {
 .auth-form button:hover {
     background-color: #16324f;
 }
+
+/* ─── Wishlist Header Controls ─────────────────────────────────── */
+.accordion-header .header-controls {
+    pointer-events: auto;
+    top: 50%;
+    transform: translateY(-50%);
+    right: 5.25rem; /* Move further left from chevron (+20px) */
+}
+
+.accordion-header .wl-sort-select {
+    border-radius: 4px;
+    padding-right: 1.5rem !important;
+    background-position: right 0.4rem center;
+    background-size: 8px 8px;
+    background-color: #ffffff !important; /* Force white background */
+    color: #212529 !important; /* Force dark text */
+    border: 1px solid #dee2e6;
+}
+
+/* Light mode (collapsed) */
+.accordion-button.collapsed ~ .header-controls .wl-sort-select {
+    border-color: #dee2e6;
+}
+
+/* Darker/Blue mode (expanded) */
+.accordion-button:not(.collapsed) ~ .header-controls .wl-sort-select {
+    border-color: rgba(255,255,255,0.5);
+}
+
+
+.accordion-button:not(.collapsed) ~ .header-controls .wl-rename-btn {
+    background-color: rgba(255,255,255,0.9);
+    border: none;
+}
+
+.accordion-button:not(.collapsed) ~ .header-controls .wl-delete-btn {
+    background-color: rgba(255,255,255,0.9);
+    border: none;
+    color: #dc3545;
+}
+
 
 .switch-text {
     text-align: center;

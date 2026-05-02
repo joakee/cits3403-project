@@ -64,6 +64,22 @@ class Listing(db.Model):
     def save_count(self):
         return db.session.query(Wishlist.user_id).join(wishlist_items).filter(wishlist_items.c.listing_id == self.id).distinct().count()
 
+    @property
+    def price_change_info(self):
+        """Return dict {original, current, dropped} if price has changed via edit history, else None."""
+        first_price_edit = ListingEdit.query.filter_by(
+            listing_id=self.id, field_name='price'
+        ).order_by(ListingEdit.edited_at.asc()).first()
+        if first_price_edit:
+            try:
+                original = float(first_price_edit.old_value)
+                current = float(self.price)
+                if abs(original - current) > 0.001:
+                    return {'original': original, 'current': current, 'dropped': current < original}
+            except (ValueError, TypeError):
+                pass
+        return None
+
     edits = db.relationship(
         'ListingEdit',
         backref='listing',
