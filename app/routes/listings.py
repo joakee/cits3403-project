@@ -59,6 +59,10 @@ def api_search():
 @bp.route('/<int:listing_id>')
 def detail(listing_id):
     listing = Listing.query.get_or_404(listing_id)
+    # Increment views if viewer is not the seller
+    if not current_user.is_authenticated or current_user.id != listing.seller_id:
+        listing.views += 1
+        db.session.commit()
     return render_template('listings/detail.html', listing=listing)
 
 

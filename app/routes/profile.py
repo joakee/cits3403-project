@@ -31,6 +31,16 @@ def view(user_id):
     if reviews:
         avg_rating = round(sum(r.rating for r in reviews) / len(reviews), 1)
 
+    # Seller Analytics (only for self)
+    total_views = 0
+    total_saves = 0
+    if current_user.is_authenticated and current_user.id == user_id:
+        from app.models import wishlist_items
+        total_views = db.session.query(db.func.sum(Listing.views)).filter(Listing.seller_id == user_id).scalar() or 0
+        total_saves = db.session.query(db.func.count(wishlist_items.c.listing_id)).join(
+            Listing, Listing.id == wishlist_items.c.listing_id
+        ).filter(Listing.seller_id == user_id).scalar() or 0
+
     return render_template(
         'profile/view.html',
         profile_user=profile_user,
@@ -41,6 +51,8 @@ def view(user_id):
         sold_count=sold_count,
         reviews=reviews,
         avg_rating=avg_rating,
+        total_views=total_views,
+        total_saves=total_saves,
     )
 
 

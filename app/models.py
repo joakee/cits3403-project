@@ -18,9 +18,41 @@ class User(db.Model, UserMixin):
     avatar_url = db.Column(db.String(256), nullable=True)
 
     listings = db.relationship('Listing', backref='seller', lazy='dynamic')
+    wishlists = db.relationship('Wishlist', backref='user', lazy='dynamic', cascade='all, delete-orphan')
+
+    @property
+    def wishlist_listings(self):
+        """Return a list of all Listings that are in any of the user's wishlists."""
+        return Listing.query.join(wishlist_items).join(Wishlist).filter(Wishlist.user_id == self.id).all()
+
+    def has_saved(self, listing):
+        """Check if a specific listing is in any of the user's wishlists."""
+        return db.session.query(Wishlist).join(wishlist_items).filter(
+            Wishlist.user_id == self.id,
+            wishlist_items.c.listing_id == listing.id
+        ).first() is not None
 
     def __repr__(self):
         return f'<User {self.username}>'
+
+
+wishlist_items = db.Table('wishlist_items',
+    db.Column('wishlist_id', db.Integer, db.ForeignKey('wishlist.id'), primary_key=True),
+    db.Column('listing_id', db.Integer, db.ForeignKey('listing.id'), primary_key=True)
+)
+
+
+class Wishlist(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+    listings = db.relationship('Listing', secondary=wishlist_items, backref=db.backref('wishlisted_by', lazy='dynamic'))
+
+    def __repr__(self):
+        return f'<Wishlist {self.name}>'
+
 
 
 class Listing(db.Model):
@@ -32,8 +64,33 @@ class Listing(db.Model):
     image_url = db.Column(db.String(256), nullable=True)
     is_active = db.Column(db.Boolean, default=True)
     show_history = db.Column(db.Boolean, default=True)   # seller can hide edit history
+    views = db.Column(db.Integer, default=0)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     seller_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    
+    @property
+    def save_count(self):
+        return db.session.query(Wishlist.user_id).join(wishlist_items).filter(wishlist_items.c.listing_id == self.id).distinct().count()
+
+    @property
+    def price_change_info(self):
+        """Return dict {original, current, dropped} if price has changed via edit history, else None."""
+        first_price_edit = ListingEdit.query.filter_by(
+            listing_id=self.id, field_name='price'
+        ).order_by(ListingEdit.edited_at.asc()).first()
+        if first_price_edit:
+            try:
+                original = float(first_price_edit.old_value)
+                current = self.price
+                if abs(original - current) > 0.01:
+                    return {
+                        'original': original,
+                        'current': current,
+                        'dropped': current < original
+                    }
+            except (ValueError, TypeError):
+                pass
+        return None
 
     edits = db.relationship(
         'ListingEdit',
