@@ -58,6 +58,7 @@ def api_search():
         'seller_id': l.seller.id,
         'seller_username': l.seller.username,
         'is_wishlisted': l.id in wishlisted_ids,
+        'wishlist_count': l.wishlisted_by.count()
     } for l in results])
 
 
@@ -175,8 +176,10 @@ def toggle_wishlist(listing_id):
         flash('Added to wishlist.', 'success')
     db.session.commit()
     
+    wishlist_count = listing.wishlisted_by.count()
+    
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
-        return jsonify({'success': True, 'added': added})
+        return jsonify({'success': True, 'added': added, 'count': wishlist_count})
     
     # Redirect back to where the user came from, or fallback to listing detail
     next_page = request.referrer or url_for('listings.detail', listing_id=listing.id)

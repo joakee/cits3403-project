@@ -27,11 +27,21 @@ $(document).ready(function () {
                     
                     var heartHtml = '';
                     if (currentUserId && currentUserId != item.seller_id) {
-                        var iconClass = item.is_wishlisted ? 'bi-heart-fill fs-5' : 'bi-heart fs-5';
-                        heartHtml = '<form action="/listings/' + item.id + '/wishlist" method="POST" class="position-relative m-0 wishlist-form" style="z-index: 2;">' +
-                                    '<button type="submit" class="btn btn-sm btn-link text-danger p-0" title="Toggle Wishlist">' +
+                        var iconClass = item.is_wishlisted ? 'bi-heart-fill' : 'bi-heart';
+                        var csrfToken = $('meta[name="csrf-token"]').attr('content');
+                        var countText = 'Saved by ' + item.wishlist_count + (item.wishlist_count === 1 ? ' person' : ' people');
+                        heartHtml = '<form action="/listings/' + item.id + '/wishlist" method="POST" class="m-0 wishlist-form">' +
+                                    '<input type="hidden" name="csrf_token" value="' + csrfToken + '">' +
+                                    '<button type="submit" class="btn btn-sm btn-link text-danger p-0 text-decoration-none" title="Toggle Wishlist" style="line-height: 1;">' +
                                     '<i class="' + iconClass + '"></i>' +
+                                    '<span class="wishlist-count ms-1 text-dark" style="font-size: 0.85em;">' + countText + '</span>' +
                                     '</button></form>';
+                    } else {
+                        var countText = 'Saved by ' + item.wishlist_count + (item.wishlist_count === 1 ? ' person' : ' people');
+                        heartHtml = '<div class="text-danger" style="line-height: 1;">' +
+                                    '<i class="bi-heart-fill"></i>' +
+                                    '<span class="wishlist-count ms-1 text-dark" style="font-size: 0.85em;">' + countText + '</span>' +
+                                    '</div>';
                     }
 
                     var sellerUrl = '/user/' + item.seller_id;
@@ -42,19 +52,20 @@ $(document).ready(function () {
                         '<div class="listing-card card">' +
                         imgHtml +
                         '<div class="card-body p-3">' +
-                        '<h6 class="card-title mb-1 text-truncate" title="' + $('<span>').text(item.title).html() + '">' +
+                        '<div class="d-flex justify-content-between align-items-start mb-1 gap-2">' +
+                        '<h6 class="card-title mb-0 text-truncate" title="' + $('<span>').text(item.title).html() + '" style="flex: 1;">' +
                         '<a href="/listings/' + item.id + '" class="stretched-link text-decoration-none text-dark">' + $('<span>').text(item.title).html() + '</a>' +
                         '</h6>' +
+                        '<div class="position-relative" style="z-index: 2; white-space: nowrap;">' + heartHtml + '</div>' +
+                        '</div>' +
                         '<div class="listing-price">$' + parseFloat(item.price).toFixed(2) + '</div>' +
                         '<div class="d-flex align-items-center justify-content-between mt-2">' +
                         '<span class="category-badge">' + $('<span>').text(item.category).html() + '</span>' +
-                        '<div class="d-flex align-items-center gap-2">' +
-                        heartHtml +
                         '<small class="text-muted">' +
                         '<a href="' + sellerUrl + '" class="text-muted text-decoration-none position-relative" style="z-index:2">' +
                         $('<span>').text(sellerName).html() +
                         '</a></small>' +
-                        '</div></div></div></div></div>'
+                        '</div></div></div></div>'
                     );
                 });
             });
@@ -79,15 +90,30 @@ $(document).ready(function () {
                 if (response.success) {
                     var $icon = $form.find('i');
                     var $btn = $form.find('button');
+                    var $count = $form.find('.wishlist-count');
+                    
+                    if (response.count !== undefined) {
+                        // In detail page buttons, we only show the number in parentheses "(3)" 
+                        // But if it contains "Saved by", we update the whole text.
+                        var currentText = $count.text();
+                        if (currentText.indexOf('Saved by') !== -1 || currentText.indexOf('person') !== -1 || currentText.indexOf('people') !== -1) {
+                            $count.text('Saved by ' + response.count + (response.count === 1 ? ' person' : ' people'));
+                        } else {
+                            $count.text(response.count);
+                        }
+                    }
                     
                     // If it's a detail page button (has text)
                     if ($btn.hasClass('btn-outline-danger') || $btn.hasClass('btn-outline-secondary')) {
+                        var $text = $form.find('.wishlist-text');
                         if (response.added) {
                             $btn.removeClass('btn-outline-secondary').addClass('btn-outline-danger');
-                            $btn.html('<i class="bi bi-heart-fill me-1"></i>Saved to Wishlist');
+                            $icon.removeClass('bi-heart').addClass('bi-heart-fill');
+                            $text.text('Saved');
                         } else {
                             $btn.removeClass('btn-outline-danger').addClass('btn-outline-secondary');
-                            $btn.html('<i class="bi bi-heart me-1"></i>Save to Wishlist');
+                            $icon.removeClass('bi-heart-fill').addClass('bi-heart');
+                            $text.text('Save');
                         }
                     } else {
                         // Grid card icon

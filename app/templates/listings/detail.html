@@ -28,14 +28,16 @@
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     {% if listing in current_user.wishlist_listings %}
                                         <button type="submit" class="btn btn-outline-danger btn-sm">
-                                            <i class="bi bi-heart-fill me-1"></i>Saved to Wishlist
+                                            <i class="bi bi-heart-fill me-1"></i><span class="wishlist-text">Saved</span> (<span class="wishlist-count">{{ listing.wishlisted_by.count() }}</span>)
                                         </button>
                                     {% else %}
                                         <button type="submit" class="btn btn-outline-secondary btn-sm">
-                                            <i class="bi bi-heart me-1"></i>Save to Wishlist
+                                            <i class="bi bi-heart me-1"></i><span class="wishlist-text">Save</span> (<span class="wishlist-count">{{ listing.wishlisted_by.count() }}</span>)
                                         </button>
                                     {% endif %}
                                 </form>
+                            {% else %}
+                                <span class="badge bg-light text-dark border"><i class="bi bi-heart-fill text-danger me-1"></i>Saved by {{ listing.wishlisted_by.count() }} {{ 'person' if listing.wishlisted_by.count() == 1 else 'people' }}</span>
                             {% endif %}
                         </div>
                     </div>
