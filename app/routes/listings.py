@@ -5,7 +5,7 @@ from flask import (Blueprint, render_template, redirect, url_for,
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from app import db
-from app.models import Listing, ListingEdit
+from app.models import Listing, ListingEdit, User
 from app.forms import ListingForm, EditListingForm
 
 bp = Blueprint('listings', __name__, url_prefix='/listings')
@@ -44,12 +44,20 @@ def api_search():
     if q:
         query = query.filter(Listing.title.ilike(f'%{q}%'))
     results = query.order_by(Listing.created_at.desc()).limit(20).all()
+    
+    wishlisted_ids = set()
+    if current_user.is_authenticated:
+        wishlisted_ids = {l.id for l in current_user.wishlist_listings}
+
     return jsonify([{
         'id': l.id,
         'title': l.title,
         'price': l.price,
         'category': l.category,
         'image_url': l.image_url,
+        'seller_id': l.seller.id,
+        'seller_username': l.seller.username,
+        'is_wishlisted': l.id in wishlisted_ids,
     } for l in results])
 
 
@@ -151,3 +159,25 @@ def edit(listing_id):
         form.show_history.data = listing.show_history
 
     return render_template('listings/edit.html', form=form, listing=listing)
+
+
+@bp.route('/<int:listing_id>/wishlist', methods=['POST'])
+@login_required
+def toggle_wishlist(listing_id):
+    listing = Listing.query.get_or_404(listing_id)
+    added = False
+    if listing in current_user.wishlist_listings:
+        current_user.wishlist_listings.remove(listing)
+        flash('Removed from wishlist.', 'info')
+    else:
+        current_user.wishlist_listings.append(listing)
+        added = True
+        flash('Added to wishlist.', 'success')
+    db.session.commit()
+    
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
+        return jsonify({'success': True, 'added': added})
+    
+    # Redirect back to where the user came from, or fallback to listing detail
+    next_page = request.referrer or url_for('listings.detail', listing_id=listing.id)
+    return redirect(next_page)

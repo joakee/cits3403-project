@@ -8,6 +8,12 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 
+wishlist_items = db.Table('wishlist_items',
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
+    db.Column('listing_id', db.Integer, db.ForeignKey('listing.id'), primary_key=True)
+)
+
+
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), unique=True, nullable=False)
@@ -18,6 +24,7 @@ class User(db.Model, UserMixin):
     avatar_url = db.Column(db.String(256), nullable=True)
 
     listings = db.relationship('Listing', backref='seller', lazy='dynamic')
+    wishlist_listings = db.relationship('Listing', secondary=wishlist_items, lazy='dynamic', backref=db.backref('wishlisted_by', lazy='dynamic'))
 
     def __repr__(self):
         return f'<User {self.username}>'

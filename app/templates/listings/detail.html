@@ -21,7 +21,23 @@
                 <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap">
                     <div>
                         <h3 class="fw-bold mb-1" style="color:#1d3557;">{{ listing.title }}</h3>
-                        <span class="category-badge">{{ listing.category|title }}</span>
+                        <div class="d-flex align-items-center gap-3 mt-2">
+                            <span class="category-badge">{{ listing.category|title }}</span>
+                            {% if current_user.is_authenticated and current_user.id != listing.seller_id %}
+                                <form action="{{ url_for('listings.toggle_wishlist', listing_id=listing.id) }}" method="POST" class="m-0 wishlist-form">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    {% if listing in current_user.wishlist_listings %}
+                                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                                            <i class="bi bi-heart-fill me-1"></i>Saved to Wishlist
+                                        </button>
+                                    {% else %}
+                                        <button type="submit" class="btn btn-outline-secondary btn-sm">
+                                            <i class="bi bi-heart me-1"></i>Save to Wishlist
+                                        </button>
+                                    {% endif %}
+                                </form>
+                            {% endif %}
+                        </div>
                     </div>
                     <div class="listing-price fs-3">${{ "%.2f"|format(listing.price) }}</div>
                 </div>

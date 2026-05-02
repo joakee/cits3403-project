@@ -87,3 +87,10 @@ def edit():
         flash('Profile updated.', 'success')
         return redirect(url_for('profile.view', user_id=current_user.id))
     return render_template('profile/edit.html', form=form)
+
+
+@bp.route('/wishlist')
+@login_required
+def wishlist():
+    wishlist_items = current_user.wishlist_listings.filter(Listing.is_active == True).order_by(Listing.created_at.desc()).all()
+    return render_template('profile/wishlist.html', listings=wishlist_items)
