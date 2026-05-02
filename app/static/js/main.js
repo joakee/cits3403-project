@@ -91,7 +91,12 @@ $(document).ready(function () {
                     $('<span>').text(wl.name).html() + '</label></div>';
         });
         html += '<hr class="my-2">';
-        html += '<a href="/wishlist" class="btn btn-sm btn-outline-secondary w-100" style="font-size: 0.8em;"><i class="bi bi-folder-plus me-1"></i>Manage Lists</a>';
+        // Inline new-list creation
+        html += '<div class="d-flex gap-1 mt-1 wl-new-list-row">' +
+                '<input type="text" class="form-control form-control-sm wl-new-name" placeholder="New list..." data-listing-id="' + listingId + '" style="font-size:0.8em;">' +
+                '<button class="btn btn-sm btn-primary wl-new-create" style="font-size:0.75em; white-space:nowrap;">+ Add</button>' +
+                '</div>';
+        html += '<a href="/user/wishlist" class="btn btn-sm btn-outline-secondary w-100 mt-2" style="font-size: 0.8em;"><i class="bi bi-folder2-open me-1"></i>Manage Lists</a>';
         html += '</div>';
         return html;
     }
@@ -211,6 +216,53 @@ $(document).ready(function () {
             $wishlistPopover = null;
             activeBtn = null;
         }
+    });
+
+    // ── Inline "+ Add" new list inside popover ───────────────────
+    function createNewListFromPopover($row) {
+        var $input = $row.find('.wl-new-name');
+        var listingId = $input.data('listing-id');
+        var name = $input.val().trim();
+        if (!name) return;
+        var csrfToken = $('meta[name="csrf-token"]').attr('content');
+        $.ajax({
+            type: 'POST',
+            url: '/user/wishlist/create',
+            contentType: 'application/json',
+            data: JSON.stringify({ name: name }),
+            headers: { 'X-CSRFToken': csrfToken, 'X-Requested-With': 'XMLHttpRequest' },
+            success: function(data) {
+                // Auto-check into new list
+                var csrfToken2 = $('meta[name="csrf-token"]').attr('content');
+                $.ajax({
+                    type: 'POST',
+                    url: '/listings/' + listingId + '/wishlist/' + data.id,
+                    headers: { 'X-CSRFToken': csrfToken2, 'X-Requested-With': 'XMLHttpRequest' },
+                    success: function(resp) {
+                        // Add new checkbox row to popover
+                        var newRow = '<div class="form-check mb-1">' +
+                            '<input class="form-check-input wl-checkbox" type="checkbox" checked' +
+                            ' id="wl-' + data.id + '" data-wishlist-id="' + data.id + '" data-listing-id="' + listingId + '">' +
+                            '<label class="form-check-label" for="wl-' + data.id + '" style="font-size:0.9em;">' +
+                            $('<span>').text(data.name).html() + '</label></div>';
+                        $row.before(newRow);
+                        $input.val('');
+                        if (activeBtn) {
+                            updateHeartBtn($(activeBtn), resp.is_saved, resp.save_count);
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    $(document).on('click', '.wl-new-create', function(e) {
+        e.stopPropagation();
+        createNewListFromPopover($(this).closest('.wl-new-list-row'));
+    });
+    $(document).on('keydown', '.wl-new-name', function(e) {
+        e.stopPropagation();
+        if (e.key === 'Enter') createNewListFromPopover($(this).closest('.wl-new-list-row'));
     });
 
 });
