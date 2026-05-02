@@ -4,9 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, current_user
 from flask_wtf.csrf import CSRFProtect
 from config import Config
-from flask_socketio import SocketIO
 
-socketio = SocketIO()
 db = SQLAlchemy()
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
@@ -26,14 +24,10 @@ def create_app(config_class=Config):
     from app.routes.auth import bp as auth_bp
     from app.routes.profile import bp as profile_bp
     from app.routes.listings import bp as listings_bp
-    from app.routes.chat import bp as chat_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(profile_bp)
     app.register_blueprint(listings_bp)
-    app.register_blueprint(chat_bp)
-
-    socketio.init_app(app)
 
     @app.route('/')
     def index():
