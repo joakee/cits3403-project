@@ -21,7 +21,22 @@
                 <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap">
                     <div>
                         <h3 class="fw-bold mb-1" style="color:#1d3557;">{{ listing.title }}</h3>
-                        <span class="category-badge">{{ listing.category|title }}</span>
+                        <div class="d-flex align-items-center gap-3 mt-2">
+                            <span class="category-badge">{{ listing.category|title }}</span>
+                            {% if current_user.is_authenticated and current_user.id != listing.seller_id %}
+                                <button type="button"
+                                        class="btn btn-sm wishlist-btn {{ 'btn-outline-danger' if current_user.has_saved(listing) else 'btn-outline-secondary' }}"
+                                        data-listing-id="{{ listing.id }}"
+                                        data-is-saved="{{ 'true' if current_user.has_saved(listing) else 'false' }}"
+                                        title="Save to Wishlist">
+                                    <i class="bi {{ 'bi-heart-fill' if current_user.has_saved(listing) else 'bi-heart' }} me-1"></i>
+                                    <span class="wishlist-text">{{ 'Saved' if current_user.has_saved(listing) else 'Save' }}</span>
+                                    (<span class="wishlist-count">{{ listing.save_count }}</span>)
+                                </button>
+                            {% else %}
+                                <span class="badge bg-light text-dark border"><i class="bi bi-heart-fill text-danger me-1"></i>Saved by {{ listing.save_count }} {{ 'person' if listing.save_count == 1 else 'people' }}</span>
+                            {% endif %}
+                        </div>
                     </div>
                     <div class="listing-price fs-3">${{ "%.2f"|format(listing.price) }}</div>
                 </div>
