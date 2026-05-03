@@ -29,12 +29,15 @@ def _save_image(file_storage):
 
 @bp.route('/')
 def index():
-    q = request.args.get('q', '').strip()
+    q   = request.args.get('q', '').strip()
+    cat = request.args.get('category', '').strip()
     query = Listing.query.filter_by(is_active=True)
     if q:
         query = query.filter(Listing.title.ilike(f'%{q}%'))
+    if cat:
+        query = query.filter(Listing.category == cat)
     listings = query.order_by(Listing.created_at.desc()).all()
-    return render_template('listings/index.html', listings=listings, q=q)
+    return render_template('listings/index.html', listings=listings, q=q, cat=cat)
 
 
 @bp.route('/api/search')
