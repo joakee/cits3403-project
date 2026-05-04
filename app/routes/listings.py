@@ -1,7 +1,7 @@
 import os
 import uuid
 from flask import (Blueprint, render_template, redirect, url_for,
-                   flash, request, jsonify, current_app)
+                   flash, request, jsonify, current_app, abort)
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from app import db
@@ -164,6 +164,21 @@ def edit(listing_id):
 
     return render_template('listings/edit.html', form=form, listing=listing)
 
+@bp.route('/<int:listing_id>/toggle-active', methods=['POST'])
+@login_required
+def toggle_listing_active(listing_id):
+    # Check if the user has moderation or admin rights
+    if not (current_user.is_admin or current_user.is_moderator):
+        abort(403) # Forbidden
+
+    listing = Listing.query.get_or_404(listing_id)
+    listing.is_active = not listing.is_active
+    db.session.commit()
+
+    status = "restored" if listing.is_active else "taken down"
+    flash(f"Listing '{listing.title}' has been successfully {status}.", "success")
+    
+    return redirect(url_for('listings.detail', listing_id=listing.id))
 
 @bp.route('/<int:listing_id>/wishlist', methods=['POST'])
 @login_required
