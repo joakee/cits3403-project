@@ -133,3 +133,23 @@ class ReviewForm(FlaskForm):
     )
     comment = TextAreaField('Comment', validators=[Optional(), Length(max=300)])
     submit = SubmitField('Submit Review')
+
+
+class ReportForm(FlaskForm):
+    reason = SelectField(
+        'Reason',
+        choices=[
+            ('spam', 'Spam or misleading'),
+            ('prohibited', 'Prohibited item'),
+            ('scam', 'Suspected scam'),
+            ('inappropriate', 'Inappropriate content'),
+            ('duplicate', 'Duplicate listing'),
+            ('other', 'Other'),
+        ],
+        validators=[DataRequired()]
+    )
+    description = TextAreaField(
+        'Additional details (optional)',
+        validators=[Optional(), Length(max=500)]
+    )
+    submit = SubmitField('Submit Report')

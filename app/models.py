@@ -5,7 +5,10 @@ from app import db, login_manager
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    user = User.query.get(int(user_id))
+    if user and not user.is_active:
+        return None
+    return user
 
 
 wishlist_items = db.Table('wishlist_items',
@@ -41,8 +44,10 @@ class User(db.Model, UserMixin):
     is_admin = db.Column(db.Boolean, default=False)
     is_moderator = db.Column(db.Boolean, default=False)
     is_active = db.Column(db.Boolean, default=True)
+    banned_at = db.Column(db.DateTime, nullable=True)
+    ban_reason = db.Column(db.Text, nullable=True)
 
-    listings = db.relationship('Listing', backref='seller', lazy='dynamic')
+    listings = db.relationship('Listing', backref='seller', lazy='dynamic', foreign_keys='Listing.seller_id')
 
     def has_saved(self, listing):
         return db.session.query(wishlist_items).join(Wishlist).filter(Wishlist.user_id == self.id, wishlist_items.c.listing_id == listing.id).first() is not None
@@ -59,7 +64,11 @@ class Listing(db.Model):
     category = db.Column(db.String(64), nullable=False)
     image_url = db.Column(db.String(256), nullable=True)
     is_active = db.Column(db.Boolean, default=True)
-    show_history = db.Column(db.Boolean, default=True)   # seller can hide edit history
+    is_removed = db.Column(db.Boolean, default=False)
+    removed_at = db.Column(db.DateTime, nullable=True)
+    removed_reason = db.Column(db.Text, nullable=True)
+    removed_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    show_history = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     seller_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
@@ -136,3 +145,42 @@ class Review(db.Model):
 
     def __repr__(self):
         return f'<Review {self.rating}/5 by {self.reviewer_id} for {self.reviewed_user_id}>'
+
+
+class Report(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    reporter_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    target_type = db.Column(db.String(20), nullable=False)  # 'listing' or 'user'
+    target_id = db.Column(db.Integer, nullable=False)
+    reason = db.Column(db.String(64), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    status = db.Column(db.String(20), default='open', nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    handled_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    admin_note = db.Column(db.Text, nullable=True)
+
+    reporter = db.relationship('User', foreign_keys=[reporter_id], backref='reports_filed')
+    handled_by = db.relationship('User', foreign_keys=[handled_by_id], backref='reports_handled')
+
+    REASON_CHOICES = [
+        ('spam', 'Spam or misleading'),
+        ('prohibited', 'Prohibited item'),
+        ('scam', 'Suspected scam'),
+        ('inappropriate', 'Inappropriate content'),
+        ('duplicate', 'Duplicate listing'),
+        ('other', 'Other'),
+    ]
+
+    STATUS_CHOICES = ['open', 'under_review', 'resolved', 'dismissed']
+
+    @property
+    def target(self):
+        if self.target_type == 'listing':
+            return Listing.query.get(self.target_id)
+        elif self.target_type == 'user':
+            return User.query.get(self.target_id)
+        return None
+
+    def __repr__(self):
+        return f'<Report #{self.id} {self.target_type}:{self.target_id} [{self.status}]>'
