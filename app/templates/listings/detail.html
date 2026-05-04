@@ -10,18 +10,23 @@
 
         <div class="card overflow-hidden">
             {% if current_user.is_authenticated and (current_user.is_admin or current_user.is_moderator) %}
-                <div class="m-4 alert alert-secondary mt-3 d-flex justify-content-between align-items-center">
+                <div class="m-4 alert {{ 'alert-danger' if listing.is_removed else 'alert-secondary' }} mt-3 d-flex justify-content-between align-items-center">
                     <span>
-                        <strong>Mod Control:</strong> This post is currently 
-                        {% if listing.is_active %}
+                        <strong>Mod Control:</strong> This post is currently
+                        {% if listing.is_removed %}
+                            <span class="badge bg-danger">Removed by Moderation</span>
+                            {% if listing.removed_reason %}
+                                <small class="text-muted ms-2">{{ listing.removed_reason }}</small>
+                            {% endif %}
+                        {% elif listing.is_active %}
                             <span class="badge bg-success">Active</span>
                         {% else %}
-                            <span class="badge bg-danger">Hidden</span>
+                            <span class="badge bg-warning text-dark">Hidden</span>
                         {% endif %}
                     </span>
                     <form action="{{ url_for('listings.toggle_listing_active', listing_id=listing.id) }}" method="POST" style="margin:0;">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        
+
                         {% if listing.is_active %}
                             <button type="submit" class="btn btn-danger btn-sm">Take Down Post</button>
                         {% else %}
@@ -82,15 +87,21 @@
                             Listed {{ listing.created_at.strftime('%d %B %Y') }}
                         </div>
                     </div>
-                    {% if current_user.id != listing.seller_id %}
-                        {% if listing.is_active %}
-                        <a href="{{ url_for('chat.start_chat', listing_id=listing.id) }}" class="ms-auto btn btn-success">
-                            Message Seller
-                        </a>
-                        {% else %}
-                        <span class="badge bg-secondary ms-auto">Sold</span>
-                        {% endif %}
-                    {% else %}
+                    {% if current_user.is_authenticated and current_user.id != listing.seller_id %}
+                        <div class="ms-auto d-flex gap-2 align-items-center">
+                            {% if listing.is_active %}
+                            <a href="{{ url_for('chat.start_chat', listing_id=listing.id) }}" class="btn btn-success">
+                                Message Seller
+                            </a>
+                            {% else %}
+                            <span class="badge bg-secondary">Sold</span>
+                            {% endif %}
+                            <a href="{{ url_for('moderation.report_listing', listing_id=listing.id) }}"
+                               class="btn btn-outline-danger btn-sm" title="Report this listing">
+                                <i class="bi bi-flag me-1"></i>Report
+                            </a>
+                        </div>
+                    {% elif current_user.is_authenticated and current_user.id == listing.seller_id %}
                     <p class="text-muted ms-auto">This is your listing</p>
                     {% endif %}
                 </div>

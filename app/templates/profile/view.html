@@ -40,17 +40,22 @@
                 <p class="mt-2 mb-0" style="color: #374151;">{{ profile_user.bio }}</p>
             {% endif %}
         </div>
-        {% if current_user.is_authenticated and current_user.is_admin and current_user.id != profile_user.id %}
-            <div>
+        {% if current_user.is_authenticated and current_user.id != profile_user.id %}
+            <div class="d-flex flex-column gap-2">
+                {% if current_user.is_admin %}
                 <form action="{{ url_for('profile.toggle_user_ban', user_id=profile_user.id) }}" method="POST">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    
                     {% if profile_user.is_active %}
                         <button type="submit" class="btn btn-outline-danger w-100">Ban User</button>
                     {% else %}
                         <button type="submit" class="btn btn-outline-success w-100">Unban User (Restore Access)</button>
                     {% endif %}
                 </form>
+                {% endif %}
+                <a href="{{ url_for('moderation.report_user', user_id=profile_user.id) }}"
+                   class="btn btn-outline-danger btn-sm">
+                    <i class="bi bi-flag me-1"></i>Report User
+                </a>
             </div>
         {% endif %}
     </div>

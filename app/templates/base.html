@@ -56,6 +56,11 @@
                         <a href="{{ url_for('auth.login') }}" class="btn btn-sm btn-outline-light">Log In</a>
                         <a href="{{ url_for('auth.register') }}" class="btn btn-sm btn-light">Sign Up</a>
                     {% endif %}
+                    {% if current_user.is_authenticated and (current_user.is_admin or current_user.is_moderator) %}
+                        <a href="{{ url_for('moderation.reports_list') }}" class="btn btn-sm btn-outline-warning">
+                            <i class="bi bi-shield-exclamation me-1"></i>Reports
+                        </a>
+                    {% endif %}
                     {% if current_user.is_authenticated and current_user.is_admin %}
                         <a href="/admin/" class="btn btn-warning text-dark font-weight-bold">
                             Admin Panel
