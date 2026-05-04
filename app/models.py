@@ -38,6 +38,7 @@ class User(db.Model, UserMixin):
     member_since = db.Column(db.DateTime, default=datetime.utcnow)
     bio = db.Column(db.Text, default='')
     avatar_url = db.Column(db.String(256), nullable=True)
+    is_admin = db.Column(db.Boolean, default=False)
 
     listings = db.relationship('Listing', backref='seller', lazy='dynamic')
 

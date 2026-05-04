@@ -25,6 +25,16 @@ with app.app_context():
         )
         db.session.add(u2)
 
+    u4 = User.query.filter_by(username='admin').first()
+    if not u4:
+        u4 = User(
+            username='admin',
+            email='admin@admin.com',
+            password_hash=generate_password_hash('password123', method='pbkdf2:sha256'),
+            is_admin=True
+        )
+        db.session.add(u4)
+
     db.session.commit()
 
     # 2. Create listings
