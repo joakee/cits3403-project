@@ -40,6 +40,7 @@ class User(db.Model, UserMixin):
     avatar_url = db.Column(db.String(256), nullable=True)
     is_admin = db.Column(db.Boolean, default=False)
     is_moderator = db.Column(db.Boolean, default=False)
+    is_active = db.Column(db.Boolean, default=True)
 
     listings = db.relationship('Listing', backref='seller', lazy='dynamic')
 
