@@ -27,11 +27,13 @@ def create_app(config_class=Config):
     from app.routes.profile import bp as profile_bp
     from app.routes.listings import bp as listings_bp
     from app.routes.chat import bp as chat_bp
+    from app.routes.moderation import bp as moderation_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(profile_bp)
     app.register_blueprint(listings_bp)
     app.register_blueprint(chat_bp)
+    app.register_blueprint(moderation_bp)
 
     from app.admin import init_admin
     init_admin(app)
