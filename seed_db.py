@@ -21,7 +21,8 @@ with app.app_context():
         u2 = User(
             username='bob',
             email='bob@example.com',
-            password_hash=generate_password_hash('password123', method='pbkdf2:sha256')
+            password_hash=generate_password_hash('password123', method='pbkdf2:sha256'),
+            is_moderator=True
         )
         db.session.add(u2)
 

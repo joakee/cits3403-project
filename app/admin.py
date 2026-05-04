@@ -17,9 +17,43 @@ class SecureModelView(ModelView):
         flash("You do not have permission to view this page.", "danger")
         return redirect(url_for('auth.login', next=request.url))
 
+class UserAdminView(SecureModelView):
+    column_searchable_list = ['username', 'email']
+    
+    column_filters = ['is_admin', 'member_since']
+    
+    column_list = ('username', 'email', 'is_admin', 'member_since')
+
+class ModeratorListingView(ModelView):
+    # What they can do
+    can_create = False
+    can_edit = False  # They can't change prices/titles
+    can_delete = False # We prefer 'toggle active' over deleting
+    
+    # What they can see
+    column_list = ('title', 'seller', 'price', 'is_active', 'created_at')
+    column_searchable_list = ['title', 'description']
+
+    def is_accessible(self):
+        # Both Admins and Moderators can access this specific view
+        if not current_user.is_authenticated:
+            return False
+        return current_user.is_admin or current_user.is_moderator
+
+    @action('toggle_active', 'Take Down / Restore', 'Change visibility of these listings?')
+    def action_toggle_active(self, ids):
+        # ... (Keep the toggle logic from previous response) ...
+        query = Listing.query.filter(Listing.id.in_(ids))
+        for listing in query.all():
+            listing.is_active = not listing.is_active
+        db.session.commit()
+        flash("Status updated.", "success")
+
 class SecureAdminIndexView(AdminIndexView):
     def is_accessible(self):
-        return current_user.is_authenticated and getattr(current_user, 'is_admin', False)
+        if not current_user.is_authenticated:
+            return False
+        return current_user.is_admin or current_user.is_moderator
 
     def inaccessible_callback(self, name, **kwargs):
         return redirect(url_for('auth.login'))
@@ -31,17 +65,13 @@ class SecureAdminIndexView(AdminIndexView):
         listing_count = Listing.query.count()
         total_messages = Message.query.count()
         
-        # 2. Financial Analytics (Sum of active listing prices)
         total_market_value = db.session.query(func.sum(Listing.price)).filter_by(is_active=True).scalar() or 0
-        
-        # 3. Category Distribution
         category_data = db.session.query(
             Listing.category, func.count(Listing.id)
         ).group_by(Listing.category).all()
-
-        # 4. Recent Activity (Last 5 listings)
         recent_listings = Listing.query.order_by(Listing.created_at.desc()).limit(5).all()
 
+        
         return self.render('admin/index.html', 
                            user_count=user_count,
                            listing_count=listing_count,
@@ -74,12 +104,13 @@ def init_admin(app):
     admin = Admin(
         app, 
         name='Marketplace Admin', 
-        theme=Bootstrap4Theme(swatch='slate'),
+        theme=Bootstrap4Theme(swatch='darkly'),
         index_view=SecureAdminIndexView()
     )
     
     # Add views to the admin panel
-    admin.add_view(SecureModelView(User, db.session))
-    admin.add_view(ListingAdminView(Listing, db.session))
-    admin.add_view(SecureModelView(Conversation, db.session))
-    admin.add_view(SecureModelView(Message, db.session))
+    admin.add_view(UserAdminView(User, db.session, category="Management"))
+    admin.add_view(SecureModelView(Conversation, db.session, category="Logs"))
+    admin.add_view(SecureModelView(Message, db.session, category="Logs"))
+
+    admin.add_view(ModeratorListingView(Listing, db.session, name="Moderation"))
