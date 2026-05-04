@@ -57,16 +57,16 @@ def create_app(config_class=Config):
         from sqlalchemy import func
 
         recent_listings = (Listing.query
-                           .filter_by(is_active=True)
+                           .filter_by(is_active=True, is_removed=False)
                            .order_by(Listing.created_at.desc())
                            .limit(8).all())
 
         category_counts_raw = (db.session.query(Listing.category, func.count(Listing.id))
-                               .filter_by(is_active=True)
+                               .filter(Listing.is_active == True, Listing.is_removed == False)
                                .group_by(Listing.category).all())
         category_counts = {cat: count for cat, count in category_counts_raw}
 
-        total_listings = Listing.query.filter_by(is_active=True).count()
+        total_listings = Listing.query.filter_by(is_active=True, is_removed=False).count()
         total_users    = User.query.count()
 
         events = [

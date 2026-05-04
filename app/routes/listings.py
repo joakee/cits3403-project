@@ -31,7 +31,7 @@ def _save_image(file_storage):
 def index():
     q   = request.args.get('q', '').strip()
     cat = request.args.get('category', '').strip()
-    query = Listing.query.filter_by(is_active=True)
+    query = Listing.query.filter_by(is_active=True, is_removed=False)
     if q:
         query = query.filter(Listing.title.ilike(f'%{q}%'))
     if cat:
@@ -43,7 +43,7 @@ def index():
 @bp.route('/api/search')
 def api_search():
     q = request.args.get('q', '').strip()
-    query = Listing.query.filter_by(is_active=True)
+    query = Listing.query.filter_by(is_active=True, is_removed=False)
     if q:
         query = query.filter(Listing.title.ilike(f'%{q}%'))
     results = query.order_by(Listing.created_at.desc()).limit(20).all()
@@ -68,6 +68,12 @@ def api_search():
 @bp.route('/<int:listing_id>')
 def detail(listing_id):
     listing = Listing.query.get_or_404(listing_id)
+    if listing.is_removed:
+        if current_user.is_authenticated and (current_user.is_admin or current_user.is_moderator):
+            pass
+        else:
+            flash('This listing has been removed by moderation.', 'warning')
+            return redirect(url_for('listings.index'))
     return render_template('listings/detail.html', listing=listing)
 
 
