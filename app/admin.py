@@ -1,9 +1,10 @@
 from flask import redirect, url_for, request, flash
-from flask_admin import Admin, AdminIndexView
+from flask_admin import Admin, AdminIndexView, expose
 from flask_admin.contrib.sqla import ModelView
 from flask_admin.actions import action
 from flask_login import current_user
 from flask_admin.theme import Bootstrap4Theme
+from sqlalchemy import func
 
 from app import db 
 from app.models import User, Listing, Conversation, Message
@@ -22,6 +23,32 @@ class SecureAdminIndexView(AdminIndexView):
 
     def inaccessible_callback(self, name, **kwargs):
         return redirect(url_for('auth.login'))
+    
+    @expose('/')
+    def index(self):
+        # 1. High-level counts
+        user_count = User.query.count()
+        listing_count = Listing.query.count()
+        total_messages = Message.query.count()
+        
+        # 2. Financial Analytics (Sum of active listing prices)
+        total_market_value = db.session.query(func.sum(Listing.price)).filter_by(is_active=True).scalar() or 0
+        
+        # 3. Category Distribution
+        category_data = db.session.query(
+            Listing.category, func.count(Listing.id)
+        ).group_by(Listing.category).all()
+
+        # 4. Recent Activity (Last 5 listings)
+        recent_listings = Listing.query.order_by(Listing.created_at.desc()).limit(5).all()
+
+        return self.render('admin/index.html', 
+                           user_count=user_count,
+                           listing_count=listing_count,
+                           total_messages=total_messages,
+                           total_market_value=total_market_value,
+                           category_data=category_data,
+                           recent_listings=recent_listings)
 
 class ListingAdminView(SecureModelView):
     column_list = ('title', 'seller', 'price', 'is_active', 'created_at')
@@ -47,7 +74,7 @@ def init_admin(app):
     admin = Admin(
         app, 
         name='Marketplace Admin', 
-        theme=Bootstrap4Theme(),
+        theme=Bootstrap4Theme(swatch='slate'),
         index_view=SecureAdminIndexView()
     )
     
