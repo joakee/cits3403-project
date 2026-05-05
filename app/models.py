@@ -39,6 +39,15 @@ class User(db.Model, UserMixin):
     bio = db.Column(db.Text, default='')
     avatar_url = db.Column(db.String(256), nullable=True)
 
+    # Store / seller profile fields
+    is_store = db.Column(db.Boolean, default=False)
+    is_verified = db.Column(db.Boolean, default=False)
+    is_admin = db.Column(db.Boolean, default=False)
+    store_name = db.Column(db.String(128), nullable=True)
+    store_address = db.Column(db.String(256), nullable=True)
+    contact_phone = db.Column(db.String(32), nullable=True)
+    contact_email = db.Column(db.String(120), nullable=True)
+
     listings = db.relationship('Listing', backref='seller', lazy='dynamic')
 
     def has_saved(self, listing):
@@ -57,6 +66,7 @@ class Listing(db.Model):
     image_url = db.Column(db.String(256), nullable=True)
     is_active = db.Column(db.Boolean, default=True)
     show_history = db.Column(db.Boolean, default=True)   # seller can hide edit history
+    stock_quantity = db.Column(db.Integer, nullable=True)  # None = unlimited
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     seller_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
@@ -118,6 +128,7 @@ class Message(db.Model):
     sender_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     content = db.Column(db.Text, nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    is_read = db.Column(db.Boolean, default=False)
 
 class Review(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -133,3 +144,11 @@ class Review(db.Model):
 
     def __repr__(self):
         return f'<Review {self.rating}/5 by {self.reviewer_id} for {self.reviewed_user_id}>'
+
+
+class ListingView(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    listing_id = db.Column(db.Integer, db.ForeignKey('listing.id'), nullable=False)
+    viewed_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    listing = db.relationship('Listing', backref='views')

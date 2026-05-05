@@ -2,7 +2,7 @@ from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 from wtforms import (
     StringField, PasswordField, BooleanField, SubmitField,
-    TextAreaField, DecimalField, SelectField
+    TextAreaField, DecimalField, SelectField, IntegerField
 )
 from wtforms.validators import (
     DataRequired, Email, EqualTo, Length,
@@ -54,6 +54,7 @@ class ListingForm(FlaskForm):
         ('furniture', 'Furniture'),
         ('other', 'Other'),
     ])
+    stock_quantity = IntegerField('Stock Quantity', validators=[Optional(), NumberRange(min=0)], default=None)
     image = FileField('Photo', validators=[
         Optional(),
         FileAllowed(['jpg', 'jpeg', 'png', 'gif', 'webp'], 'Images only.')
@@ -72,12 +73,21 @@ class EditListingForm(FlaskForm):
         ('furniture', 'Furniture'),
         ('other', 'Other'),
     ])
+    stock_quantity = IntegerField('Stock Quantity', validators=[Optional(), NumberRange(min=0)], default=None)
     image = FileField('Replace Photo', validators=[
         Optional(),
         FileAllowed(['jpg', 'jpeg', 'png', 'gif', 'webp'], 'Images only.')
     ])
     show_history = BooleanField('Show edit history publicly')
     submit = SubmitField('Save Changes')
+
+
+class StoreSetupForm(FlaskForm):
+    store_name = StringField('Store Name', validators=[Optional(), Length(max=128)])
+    store_address = StringField('Address', validators=[Optional(), Length(max=256)])
+    contact_phone = StringField('Phone', validators=[Optional(), Length(max=32)])
+    contact_email = StringField('Contact Email', validators=[Optional(), Email(), Length(max=120)])
+    submit = SubmitField('Save Store Profile')
 
 
 class ChangeEmailForm(FlaskForm):

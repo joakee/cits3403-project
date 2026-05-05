@@ -5,7 +5,7 @@ from flask import (Blueprint, render_template, redirect, url_for,
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from app import db
-from app.models import Listing, ListingEdit, User, Wishlist
+from app.models import Listing, ListingEdit, User, Wishlist, ListingView
 from app.forms import ListingForm, EditListingForm
 
 bp = Blueprint('listings', __name__, url_prefix='/listings')
@@ -68,6 +68,9 @@ def api_search():
 @bp.route('/<int:listing_id>')
 def detail(listing_id):
     listing = Listing.query.get_or_404(listing_id)
+    view = ListingView(listing_id=listing_id)
+    db.session.add(view)
+    db.session.commit()
     return render_template('listings/detail.html', listing=listing)
 
 
@@ -83,6 +86,7 @@ def new():
             price=float(form.price.data),
             category=form.category.data,
             image_url=image_url,
+            stock_quantity=form.stock_quantity.data,
             seller_id=current_user.id,
         )
         db.session.add(listing)
@@ -118,7 +122,7 @@ def edit(listing_id):
         changes_made = False
 
         # Check standard text/number fields
-        fields_to_check = ['title', 'description', 'price', 'category']
+        fields_to_check = ['title', 'description', 'price', 'category', 'stock_quantity']
         for field in fields_to_check:
             old_val = getattr(listing, field)
             new_val = getattr(form, field).data
