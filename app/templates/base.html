@@ -56,6 +56,11 @@
                         <a href="{{ url_for('auth.login') }}" class="btn btn-sm btn-outline-light">Log In</a>
                         <a href="{{ url_for('auth.register') }}" class="btn btn-sm btn-light">Sign Up</a>
                     {% endif %}
+                    {% if current_user.is_authenticated and current_user.is_admin %}
+                        <a href="/admin/" class="btn btn-warning text-dark font-weight-bold">
+                            Admin Panel
+                        </a>
+                    {% endif %}
                 </div>
             </div>
         </div>

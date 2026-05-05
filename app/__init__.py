@@ -33,6 +33,9 @@ def create_app(config_class=Config):
     app.register_blueprint(listings_bp)
     app.register_blueprint(chat_bp)
 
+    from app.admin import init_admin
+    init_admin(app)
+
     socketio.init_app(app)
 
     @app.context_processor

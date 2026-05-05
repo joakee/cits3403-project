@@ -18,8 +18,12 @@ def login():
         if user and check_password_hash(user.password_hash, form.password.data):
             login_user(user, remember=form.remember.data)
             next_page = request.args.get('next')
+            if not user.is_active:
+                flash("Your account has been suspended. Please contact support.", "danger")
+                return redirect(url_for('auth.login'))
             return redirect(next_page or url_for('listings.index'))
         flash('Invalid email or password.', 'error')
+    
     return render_template('auth/login.html', form=form)
 
 

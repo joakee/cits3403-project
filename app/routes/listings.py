@@ -5,7 +5,6 @@ from flask import (
     flash, request, jsonify, current_app
 )
 from flask_login import login_required, current_user
-from werkzeug.utils import secure_filename
 from app import db
 from app.models import Listing, ListingEdit, User, Wishlist
 from app.forms import ListingForm, EditListingForm
