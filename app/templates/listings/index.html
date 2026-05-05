@@ -15,9 +15,67 @@
         {% endif %}
     </div>
 
-    <div class="mb-4">
-        <input id="listings-search" class="form-control" type="search"
-               placeholder="Search listings…" value="{{ q }}" />
+    <form method="GET" action="{{ url_for('listings.index') }}" class="listings-filter-bar">
+        <div class="row g-3">
+            <div class="col-12 col-md-4">
+                <input
+                    id="listings-search"
+                    name="q"
+                    class="form-control"
+                    type="search"
+                    placeholder="Search listings..."
+                    value="{{ q }}"
+                />
+            </div>
+
+            <div class="col-12 col-md-2">
+                <select name="category" class="form-select">
+                    <option value="">All Categories</option>
+                    <option value="books" {{ 'selected' if cat == 'books' else '' }}>Books & Notes</option>
+                    <option value="electronics" {{ 'selected' if cat == 'electronics' else '' }}>Electronics</option>
+                    <option value="clothing" {{ 'selected' if cat == 'clothing' else '' }}>Clothing</option>
+                    <option value="furniture" {{ 'selected' if cat == 'furniture' else '' }}>Furniture</option>
+                    <option value="other" {{ 'selected' if cat == 'other' else '' }}>Other</option>
+                </select>
+            </div>
+
+            <div class="col-6 col-md-2">
+                <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    name="min_price"
+                    class="form-control"
+                    placeholder="Min price"
+                    value="{{ min_price }}"
+                />
+            </div>
+
+            <div class="col-6 col-md-2">
+                <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    name="max_price"
+                    class="form-control"
+                    placeholder="Max price"
+                    value="{{ max_price }}"
+                />
+            </div>
+
+            <div class="col-12 col-md-2 listings-filter-actions">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-funnel me-1"></i>Apply
+                </button>
+                <a href="{{ url_for('listings.index') }}" class="btn btn-outline-secondary w-100">
+                    Clear
+                </a>
+            </div>
+        </div>
+    </form>
+
+    <div class="listings-results-meta">
+        Showing {{ listings|length }} listing{{ '' if listings|length == 1 else 's' }}
     </div>
 
     <div id="listings-grid" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
@@ -73,7 +131,7 @@
         <div class="col-12">
             <div class="empty-state">
                 <i class="bi bi-inbox"></i>
-                <p>No listings yet. Be the first to post!</p>
+                <p>No listings match your filters.</p>
             </div>
         </div>
         {% endfor %}
