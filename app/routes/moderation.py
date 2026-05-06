@@ -2,7 +2,7 @@ from datetime import datetime
 from flask import (Blueprint, render_template, redirect, url_for,
                    flash, request, abort)
 from flask_login import login_required, current_user
-from app import db
+from app import db, socketio
 from app.models import Report, Listing, User
 from app.forms import ReportForm
 
@@ -184,6 +184,7 @@ def takedown_listing(report_id):
     report.updated_at = datetime.utcnow()
 
     db.session.commit()
+    socketio.emit('listing_removed', {'listing_id': listing.id})
     flash(f'Listing "{listing.title}" has been taken down.', 'success')
     return redirect(url_for('moderation.reports_list'))
 
@@ -209,6 +210,7 @@ def restore_listing(report_id):
     listing.removed_by_id = None
 
     db.session.commit()
+    socketio.emit('listing_restored', {'listing_id': listing.id})
     flash(f'Listing "{listing.title}" has been restored.', 'success')
     return redirect(url_for('moderation.report_detail', report_id=report_id))
 
@@ -241,8 +243,10 @@ def ban_user(report_id):
     user.banned_at = datetime.utcnow()
     user.ban_reason = reason or f'Banned via report #{report.id}'
 
+    affected_listing_ids = []
     for listing in user.listings:
         listing.is_active = False
+        affected_listing_ids.append(listing.id)
 
     report.status = 'resolved'
     report.handled_by_id = current_user.id
@@ -250,6 +254,8 @@ def ban_user(report_id):
     report.updated_at = datetime.utcnow()
 
     db.session.commit()
+    for lid in affected_listing_ids:
+        socketio.emit('listing_removed', {'listing_id': lid})
     flash(f'User "{user.username}" has been banned.', 'warning')
     return redirect(url_for('moderation.reports_list'))
 
