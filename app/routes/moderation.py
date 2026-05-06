@@ -184,6 +184,7 @@ def takedown_listing(report_id):
     report.updated_at = datetime.utcnow()
 
     db.session.commit()
+    print(f'[moderation] Emitting listing_removed for listing_id={listing.id}')
     socketio.emit('listing_removed', {'listing_id': listing.id})
     flash(f'Listing "{listing.title}" has been taken down.', 'success')
     return redirect(url_for('moderation.reports_list'))

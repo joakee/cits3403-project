@@ -6,7 +6,7 @@ from flask_wtf.csrf import CSRFProtect
 from config import Config
 from flask_socketio import SocketIO
 
-socketio = SocketIO()
+socketio = SocketIO(cors_allowed_origins='*')
 db = SQLAlchemy()
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
@@ -39,6 +39,14 @@ def create_app(config_class=Config):
     init_admin(app)
 
     socketio.init_app(app)
+
+    @socketio.on('connect')
+    def handle_connect():
+        print('[socketio] Client connected')
+
+    @socketio.on('disconnect')
+    def handle_disconnect():
+        print('[socketio] Client disconnected')
 
     @app.context_processor
     def inject_wishlist_count():
