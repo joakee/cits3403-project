@@ -103,6 +103,9 @@ def api_search():
         'image_url': l.image_url,
         'seller_id': l.seller.id,
         'seller_username': l.seller.username,
+        'seller_is_store': l.seller.is_store,
+        'seller_is_verified': l.seller.is_verified,
+        'seller_store_name': l.seller.store_name,
         'is_wishlisted': l.id in wishlisted_ids,
         'wishlist_count': l.wishlisted_by.count()
     } for l in results])
@@ -146,9 +149,17 @@ def close(listing_id):
     if listing.seller_id != current_user.id:
         flash('Not authorised.', 'error')
         return redirect(url_for('listings.detail', listing_id=listing_id))
-    listing.is_active = False
+    if current_user.is_store and listing.stock_quantity is not None:
+        listing.stock_quantity = max(0, listing.stock_quantity - 1)
+        if listing.stock_quantity == 0:
+            listing.is_active = False
+            flash('Stock depleted — listing marked as sold.', 'success')
+        else:
+            flash(f'Sale recorded. {listing.stock_quantity} remaining in stock.', 'success')
+    else:
+        listing.is_active = False
+        flash('Listing marked as sold.', 'success')
     db.session.commit()
-    flash('Listing marked as sold.', 'success')
     return redirect(url_for('profile.view', user_id=current_user.id))
 
 

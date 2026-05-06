@@ -53,8 +53,11 @@ $(document).ready(function () {
                                     '</div>';
                     }
 
-                    var sellerUrl = '/user/' + item.seller_id;
-                    var sellerName = item.seller_username ? item.seller_username.split(' ')[0] : 'User';
+                    var sellerUrl = item.seller_is_store ? '/store/' + item.seller_id : '/user/' + item.seller_id;
+                    var sellerDisplayName = (item.seller_is_store && item.seller_store_name) ? item.seller_store_name : item.seller_username;
+                    var sellerName = sellerDisplayName ? sellerDisplayName.split(' ')[0] : 'User';
+                    var verifiedBadge = (item.seller_is_store && item.seller_is_verified)
+                        ? ' <i class="bi bi-patch-check-fill text-primary" style="font-size:0.8em;"></i>' : '';
 
                     grid.append(
                         '<div class="col">' +
@@ -70,10 +73,10 @@ $(document).ready(function () {
                         '<div class="listing-price">$' + parseFloat(item.price).toFixed(2) + '</div>' +
                         '<div class="d-flex align-items-center justify-content-between mt-2">' +
                         '<span class="category-badge">' + $('<span>').text(item.category).html() + '</span>' +
-                        '<small class="text-muted">' +
+                        '<small class="text-muted d-inline-flex align-items-center gap-1">' +
                         '<a href="' + sellerUrl + '" class="text-muted text-decoration-none position-relative" style="z-index:2">' +
                         $('<span>').text(sellerName).html() +
-                        '</a></small>' +
+                        '</a>' + verifiedBadge + '</small>' +
                         '</div></div></div></div>'
                     );
                 });

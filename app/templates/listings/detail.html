@@ -104,6 +104,15 @@
                     <a href="{{ url_for('listings.edit', listing_id=listing.id) }}" class="btn btn-outline-primary btn-sm">
                         <i class="bi bi-pencil me-1"></i>Edit Listing
                     </a>
+                    {% if listing.seller.is_store and listing.stock_quantity is not none %}
+                    <form method="POST" action="{{ url_for('listings.close', listing_id=listing.id) }}"
+                          onsubmit="return confirm('Record a sale? Stock will decrease by 1.')">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-cart-check me-1"></i>Record a Sale
+                        </button>
+                    </form>
+                    {% else %}
                     <form method="POST" action="{{ url_for('listings.close', listing_id=listing.id) }}"
                           onsubmit="return confirm('Mark this item as sold? It will no longer appear in search results.')">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -111,6 +120,7 @@
                             <i class="bi bi-check-circle me-1"></i>Mark as Sold
                         </button>
                     </form>
+                    {% endif %}
                 </div>
                 {% endif %}
             </div>
