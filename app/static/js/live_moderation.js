@@ -62,6 +62,51 @@
         '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
       document.body.appendChild(toast);
     });
+
+    socket.on('new_report', function (r) {
+      var tbody = document.querySelector('.table tbody');
+      if (!tbody) return;
+
+      var emptyMsg = document.querySelector('.text-center.py-5.text-muted');
+      if (emptyMsg) {
+        var wrapper = document.createElement('div');
+        wrapper.className = 'table-responsive';
+        var table = document.createElement('table');
+        table.className = 'table table-hover align-middle';
+        table.innerHTML = '<thead class="table-light"><tr>' +
+          '<th>#</th><th>Type</th><th>Target</th><th>Reason</th>' +
+          '<th>Reporter</th><th>Date</th><th>Status</th><th></th>' +
+          '</tr></thead><tbody></tbody></table>';
+        wrapper.appendChild(table);
+        emptyMsg.parentNode.replaceChild(wrapper, emptyMsg);
+        tbody = table.querySelector('tbody');
+      }
+
+      var targetUrl = r.target_type === 'listing'
+        ? '/listings/' + r.target_id
+        : '/user/' + r.target_id;
+      var typeBadge = r.target_type === 'listing'
+        ? '<span class="badge bg-info text-dark">Listing</span>'
+        : '<span class="badge bg-secondary">User</span>';
+
+      var tr = document.createElement('tr');
+      tr.innerHTML =
+        '<td>' + r.id + '</td>' +
+        '<td>' + typeBadge + '</td>' +
+        '<td><a href="' + targetUrl + '">' + escHtml(r.target_name) + '</a></td>' +
+        '<td>' + escHtml(r.reason) + '</td>' +
+        '<td>' + escHtml(r.reporter) + '</td>' +
+        '<td>' + r.created_at + '</td>' +
+        '<td><span class="badge bg-danger">Open</span></td>' +
+        '<td><a href="/moderation/reports/' + r.id + '" class="btn btn-sm btn-outline-primary">View</a></td>';
+      tbody.insertBefore(tr, tbody.firstChild);
+    });
+  }
+
+  function escHtml(s) {
+    var d = document.createElement('div');
+    d.appendChild(document.createTextNode(s));
+    return d.innerHTML;
   }
 
   if (document.readyState === 'complete') {

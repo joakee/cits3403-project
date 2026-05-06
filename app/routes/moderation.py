@@ -51,6 +51,16 @@ def report_listing(listing_id):
         )
         db.session.add(report)
         db.session.commit()
+        socketio.emit('new_report', {
+            'id': report.id,
+            'target_type': 'listing',
+            'target_name': listing.title[:60],
+            'target_id': listing.id,
+            'reason': report.reason,
+            'reporter': current_user.username,
+            'created_at': report.created_at.strftime('%d %b %Y'),
+            'status': 'open',
+        })
         flash('Report submitted. Our team will review it shortly.', 'success')
         return redirect(url_for('listings.detail', listing_id=listing_id))
 
@@ -87,6 +97,16 @@ def report_user(user_id):
         )
         db.session.add(report)
         db.session.commit()
+        socketio.emit('new_report', {
+            'id': report.id,
+            'target_type': 'user',
+            'target_name': target_user.username,
+            'target_id': target_user.id,
+            'reason': report.reason,
+            'reporter': current_user.username,
+            'created_at': report.created_at.strftime('%d %b %Y'),
+            'status': 'open',
+        })
         flash('Report submitted. Our team will review it shortly.', 'success')
         return redirect(url_for('profile.view', user_id=user_id))
 
