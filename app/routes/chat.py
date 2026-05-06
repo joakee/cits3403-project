@@ -15,6 +15,8 @@ bp = Blueprint('chat', __name__, url_prefix='/chat')
 @login_required
 def start_chat(listing_id):
     listing = Listing.query.get_or_404(listing_id)
+    if listing.is_removed and not (current_user.is_admin or current_user.is_moderator):
+        abort(404)
     if listing.seller_id == current_user.id:
         return "You cannot buy your own item!", 400
 

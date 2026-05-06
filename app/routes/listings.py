@@ -105,6 +105,8 @@ def close(listing_id):
     if listing.seller_id != current_user.id:
         flash('Not authorised.', 'error')
         return redirect(url_for('listings.detail', listing_id=listing_id))
+    if listing.is_removed and not (current_user.is_admin or current_user.is_moderator):
+        abort(404)
     listing.is_active = False
     db.session.commit()
     flash('Listing marked as sold.', 'success')
@@ -118,6 +120,8 @@ def edit(listing_id):
     if listing.seller_id != current_user.id:
         flash('Not authorised.', 'error')
         return redirect(url_for('listings.detail', listing_id=listing_id))
+    if listing.is_removed and not (current_user.is_admin or current_user.is_moderator):
+        abort(404)
 
     form = EditListingForm(obj=listing)
     if form.validate_on_submit():
@@ -191,6 +195,8 @@ def toggle_listing_active(listing_id):
 def toggle_wishlist(listing_id):
     """Legacy toggle - saves to first/default wishlist. Kept for non-JS fallback."""
     listing = Listing.query.get_or_404(listing_id)
+    if listing.is_removed and not (current_user.is_admin or current_user.is_moderator):
+        abort(404)
     added = False
 
     # Get or create default wishlist
@@ -223,6 +229,8 @@ def toggle_wishlist(listing_id):
 def get_wishlists_for_listing(listing_id):
     """Return user's wishlists with checked status for this listing."""
     listing = Listing.query.get_or_404(listing_id)
+    if listing.is_removed and not (current_user.is_admin or current_user.is_moderator):
+        return jsonify({'error': 'Listing not found'}), 404
     wishlists = current_user.wishlists.order_by(Wishlist.created_at.asc()).all()
 
     # Auto-create default if none
@@ -248,6 +256,8 @@ def get_wishlists_for_listing(listing_id):
 def toggle_wishlist_item(listing_id, wishlist_id):
     """Toggle a listing in a specific wishlist."""
     listing = Listing.query.get_or_404(listing_id)
+    if listing.is_removed and not (current_user.is_admin or current_user.is_moderator):
+        return jsonify({'error': 'Listing not found'}), 404
     wl = Wishlist.query.filter_by(id=wishlist_id, user_id=current_user.id).first_or_404()
 
     if listing in wl.listings:
