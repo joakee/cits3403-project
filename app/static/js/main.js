@@ -51,7 +51,7 @@ $(document).ready(function () {
 
                     grid.append(
                         '<div class="col">' +
-                        '<div class="listing-card card">' +
+                        '<div class="listing-card card" data-listing-id="' + item.id + '">' +
                         imgHtml +
                         '<div class="card-body p-3">' +
                         '<div class="d-flex justify-content-between align-items-start mb-1 gap-2">' +

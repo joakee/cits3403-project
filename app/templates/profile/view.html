@@ -137,7 +137,7 @@
     <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
         {% for listing in displayed_listings %}
         <div class="col">
-            <a href="{{ url_for('listings.detail', listing_id=listing.id) }}" class="listing-card card">
+            <a href="{{ url_for('listings.detail', listing_id=listing.id) }}" class="listing-card card" data-listing-id="{{ listing.id }}">
                 {% if listing.image_url %}
                     <img src="{{ listing.image_url }}" class="listing-img" alt="{{ listing.title }}">
                 {% else %}
