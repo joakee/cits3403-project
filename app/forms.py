@@ -91,6 +91,7 @@ class StoreSetupForm(FlaskForm):
     store_address = StringField('Address', validators=[Optional(), Length(max=256)])
     contact_phone = StringField('Phone', validators=[Optional(), Length(max=32)])
     contact_email = StringField('Contact Email', validators=[Optional(), Email(), Length(max=120)])
+    store_bio = TextAreaField('Store Description', validators=[Optional(), Length(max=500)])
     submit = SubmitField('Save Store Profile')
 
 

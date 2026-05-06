@@ -19,6 +19,7 @@ def setup():
         current_user.store_address = form.store_address.data.strip() or None
         current_user.contact_phone = form.contact_phone.data.strip() or None
         current_user.contact_email = form.contact_email.data.strip() or None
+        current_user.store_bio = form.store_bio.data.strip()
         db.session.commit()
         flash('Store profile saved.', 'success')
         return redirect(url_for('store.storefront', user_id=current_user.id))

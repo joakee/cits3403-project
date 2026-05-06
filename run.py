@@ -19,6 +19,7 @@ def _migrate_columns():
         'store_address':  'VARCHAR(256)',
         'contact_phone':  'VARCHAR(32)',
         'contact_email':  'VARCHAR(120)',
+        'store_bio':      'TEXT',
     }
     new_listing_cols = {
         'stock_quantity': 'INTEGER',

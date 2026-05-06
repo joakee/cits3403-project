@@ -47,6 +47,7 @@ class User(db.Model, UserMixin):
     store_address = db.Column(db.String(256), nullable=True)
     contact_phone = db.Column(db.String(32), nullable=True)
     contact_email = db.Column(db.String(120), nullable=True)
+    store_bio = db.Column(db.Text, default='')
 
     listings = db.relationship('Listing', backref='seller', lazy='dynamic')
 
