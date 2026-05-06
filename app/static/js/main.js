@@ -1,12 +1,19 @@
 $(document).ready(function () {
 
+    // ── Disable submit buttons on form submit (prevent double-submit) ────
+    $(document).on('submit', 'form', function () {
+        $(this).find('[type="submit"]').prop('disabled', true).addClass('disabled');
+    });
+
     // ── Live search on listings index page ──────────────────────
     var searchTimer;
     $('#listings-search').on('input', function () {
         clearTimeout(searchTimer);
         var q = $(this).val();
+        var sort = new URLSearchParams(window.location.search).get('sort') || 'newest';
+        var cat  = new URLSearchParams(window.location.search).get('category') || '';
         searchTimer = setTimeout(function () {
-            $.getJSON('/listings/api/search', { q: q }, function (data) {
+            $.getJSON('/listings/api/search', { q: q, sort: sort, category: cat }, function (data) {
                 var grid = $('#listings-grid');
                 grid.empty();
                 if (data.length === 0) {

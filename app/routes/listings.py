@@ -5,7 +5,8 @@ from flask import (Blueprint, render_template, redirect, url_for,
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from app import db
-from app.models import Listing, ListingEdit, User, Wishlist, ListingView
+from sqlalchemy import func
+from app.models import Listing, ListingEdit, User, Wishlist, ListingView, wishlist_items
 from app.forms import ListingForm, EditListingForm
 
 bp = Blueprint('listings', __name__, url_prefix='/listings')
@@ -27,26 +28,68 @@ def _save_image(file_storage):
     return url_for('static', filename=f'uploads/{filename}')
 
 
+VALID_SORTS = {'newest', 'price_asc', 'price_desc', 'saves'}
+PER_PAGE = 20
+
+
+def _apply_sort(query, sort):
+    if sort == 'price_asc':
+        return query.order_by(Listing.price.asc())
+    if sort == 'price_desc':
+        return query.order_by(Listing.price.desc())
+    if sort == 'saves':
+        saves_subq = (
+            db.session.query(
+                wishlist_items.c.listing_id,
+                func.count(func.distinct(Wishlist.user_id)).label('n')
+            )
+            .join(Wishlist, Wishlist.id == wishlist_items.c.wishlist_id)
+            .group_by(wishlist_items.c.listing_id)
+            .subquery()
+        )
+        return (query
+                .outerjoin(saves_subq, Listing.id == saves_subq.c.listing_id)
+                .order_by(func.coalesce(saves_subq.c.n, 0).desc()))
+    return query.order_by(Listing.created_at.desc())
+
+
 @bp.route('/')
 def index():
-    q   = request.args.get('q', '').strip()
-    cat = request.args.get('category', '').strip()
+    q    = request.args.get('q', '').strip()
+    cat  = request.args.get('category', '').strip()
+    sort = request.args.get('sort', 'newest')
+    if sort not in VALID_SORTS:
+        sort = 'newest'
+    page = request.args.get('page', 1, type=int)
+
     query = Listing.query.filter_by(is_active=True)
     if q:
         query = query.filter(Listing.title.ilike(f'%{q}%'))
     if cat:
         query = query.filter(Listing.category == cat)
-    listings = query.order_by(Listing.created_at.desc()).all()
-    return render_template('listings/index.html', listings=listings, q=q, cat=cat)
+    query = _apply_sort(query, sort)
+
+    pagination = query.paginate(page=page, per_page=PER_PAGE, error_out=False)
+    return render_template('listings/index.html',
+                           listings=pagination.items,
+                           pagination=pagination,
+                           q=q, cat=cat, sort=sort)
 
 
 @bp.route('/api/search')
 def api_search():
-    q = request.args.get('q', '').strip()
+    q    = request.args.get('q', '').strip()
+    sort = request.args.get('sort', 'newest')
+    cat  = request.args.get('category', '').strip()
+    if sort not in VALID_SORTS:
+        sort = 'newest'
     query = Listing.query.filter_by(is_active=True)
     if q:
         query = query.filter(Listing.title.ilike(f'%{q}%'))
-    results = query.order_by(Listing.created_at.desc()).limit(20).all()
+    if cat:
+        query = query.filter(Listing.category == cat)
+    query = _apply_sort(query, sort)
+    results = query.limit(20).all()
     
     wishlisted_ids = set()
     if current_user.is_authenticated:

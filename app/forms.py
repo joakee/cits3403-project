@@ -40,6 +40,10 @@ class RegisterForm(FlaskForm):
 class EditProfileForm(FlaskForm):
     username = StringField('Full Name', validators=[DataRequired(), Length(3, 64)])
     bio = TextAreaField('Bio', validators=[Optional(), Length(max=300)])
+    avatar = FileField('Profile Photo', validators=[
+        Optional(),
+        FileAllowed(['jpg', 'jpeg', 'png', 'gif', 'webp'], 'Images only.')
+    ])
     submit = SubmitField('Save Changes')
 
 
