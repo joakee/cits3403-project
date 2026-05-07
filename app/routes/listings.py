@@ -29,6 +29,14 @@ def _save_image(file_storage):
 
 
 VALID_SORTS = {'newest', 'price_asc', 'price_desc', 'saves'}
+VALID_SOURCES = {'all', 'stores', 'users'}
+CATEGORIES = [
+    ('books', 'Books & Notes'),
+    ('electronics', 'Electronics'),
+    ('clothing', 'Clothing'),
+    ('furniture', 'Furniture'),
+    ('other', 'Other'),
+]
 PER_PAGE = 20
 
 
@@ -55,11 +63,14 @@ def _apply_sort(query, sort):
 
 @bp.route('/')
 def index():
-    q    = request.args.get('q', '').strip()
-    cat  = request.args.get('category', '').strip()
-    sort = request.args.get('sort', 'newest')
+    q      = request.args.get('q', '').strip()
+    cat    = request.args.get('category', '').strip()
+    sort   = request.args.get('sort', 'newest')
+    source = request.args.get('source', 'all').strip()
     if sort not in VALID_SORTS:
         sort = 'newest'
+    if source not in VALID_SOURCES:
+        source = 'all'
     page = request.args.get('page', 1, type=int)
 
     query = Listing.query.filter_by(is_active=True)
@@ -67,27 +78,39 @@ def index():
         query = query.filter(Listing.title.ilike(f'%{q}%'))
     if cat:
         query = query.filter(Listing.category == cat)
+    if source == 'stores':
+        query = query.filter(Listing.posted_as_store == True)
+    elif source == 'users':
+        query = query.filter(Listing.posted_as_store == False)
     query = _apply_sort(query, sort)
 
     pagination = query.paginate(page=page, per_page=PER_PAGE, error_out=False)
     return render_template('listings/index.html',
                            listings=pagination.items,
                            pagination=pagination,
-                           q=q, cat=cat, sort=sort)
+                           categories=CATEGORIES,
+                           q=q, cat=cat, sort=sort, source=source)
 
 
 @bp.route('/api/search')
 def api_search():
-    q    = request.args.get('q', '').strip()
-    sort = request.args.get('sort', 'newest')
-    cat  = request.args.get('category', '').strip()
+    q      = request.args.get('q', '').strip()
+    sort   = request.args.get('sort', 'newest')
+    cat    = request.args.get('category', '').strip()
+    source = request.args.get('source', 'all').strip()
     if sort not in VALID_SORTS:
         sort = 'newest'
+    if source not in VALID_SOURCES:
+        source = 'all'
     query = Listing.query.filter_by(is_active=True)
     if q:
         query = query.filter(Listing.title.ilike(f'%{q}%'))
     if cat:
         query = query.filter(Listing.category == cat)
+    if source == 'stores':
+        query = query.filter(Listing.posted_as_store == True)
+    elif source == 'users':
+        query = query.filter(Listing.posted_as_store == False)
     query = _apply_sort(query, sort)
     results = query.limit(20).all()
     

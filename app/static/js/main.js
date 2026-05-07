@@ -10,10 +10,12 @@ $(document).ready(function () {
     $('#listings-search').on('input', function () {
         clearTimeout(searchTimer);
         var q = $(this).val();
-        var sort = new URLSearchParams(window.location.search).get('sort') || 'newest';
-        var cat  = new URLSearchParams(window.location.search).get('category') || '';
+        var params = new URLSearchParams(window.location.search);
+        var sort   = params.get('sort') || 'newest';
+        var cat    = params.get('category') || '';
+        var source = params.get('source') || 'all';
         searchTimer = setTimeout(function () {
-            $.getJSON('/listings/api/search', { q: q, sort: sort, category: cat }, function (data) {
+            $.getJSON('/listings/api/search', { q: q, sort: sort, category: cat, source: source }, function (data) {
                 var grid = $('#listings-grid');
                 grid.empty();
                 if (data.length === 0) {

@@ -15,22 +15,75 @@
         {% endif %}
     </div>
 
-    <!-- Search + filters -->
-    <div class="d-flex flex-wrap gap-2 mb-4 align-items-center">
+    <!-- Search bar -->
+    <div class="mb-3">
         <input id="listings-search" class="form-control" type="search"
-               style="max-width:320px;"
+               style="max-width:380px;"
                placeholder="Search listings…" value="{{ q }}" />
+    </div>
 
+    <!-- Category pills -->
+    <div class="d-flex flex-wrap gap-1 mb-2">
+        <a href="{{ url_for('listings.index', q=q, sort=sort, source=source) }}"
+           class="btn btn-sm {{ 'btn-secondary' if not cat else 'btn-outline-secondary' }}">
+            All Categories
+        </a>
+        {% for key, label in categories %}
+            <a href="{{ url_for('listings.index', q=q, category=key, sort=sort, source=source) }}"
+               class="btn btn-sm {{ 'btn-secondary' if cat == key else 'btn-outline-secondary' }}">
+                {{ label }}
+            </a>
+        {% endfor %}
+    </div>
+
+    <!-- Source + sort row -->
+    <div class="d-flex flex-wrap gap-2 mb-3 align-items-center justify-content-between">
+        <div class="btn-group btn-group-sm" role="group" aria-label="Seller type">
+            {% for key, label in [('all', 'All'), ('users', 'Individuals'), ('stores', 'Stores')] %}
+                <a href="{{ url_for('listings.index', q=q, category=cat, sort=sort, source=key) }}"
+                   class="btn {{ 'btn-primary' if source == key else 'btn-outline-secondary' }}">
+                    {{ label }}
+                </a>
+            {% endfor %}
+        </div>
         <div class="d-flex gap-1 flex-wrap">
-            {% set sort_labels = {'newest': 'Newest', 'price_asc': 'Price ↑', 'price_desc': 'Price ↓', 'saves': 'Most Saved'} %}
-            {% for key, label in sort_labels.items() %}
-                <a href="{{ url_for('listings.index', q=q, category=cat, sort=key) }}"
+            {% set sort_labels = [('newest','Newest'),('price_asc','Price ↑'),('price_desc','Price ↓'),('saves','Most Saved')] %}
+            {% for key, label in sort_labels %}
+                <a href="{{ url_for('listings.index', q=q, category=cat, sort=key, source=source) }}"
                    class="btn btn-sm {{ 'btn-primary' if sort == key else 'btn-outline-secondary' }}">
                     {{ label }}
                 </a>
             {% endfor %}
         </div>
     </div>
+
+    <!-- Active filter summary -->
+    {% if cat or source != 'all' or q %}
+    <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+        <span class="text-muted small">Filtering by:</span>
+        {% if q %}
+            <a href="{{ url_for('listings.index', category=cat, sort=sort, source=source) }}"
+               class="badge rounded-pill bg-primary text-decoration-none d-inline-flex align-items-center gap-1">
+                "{{ q }}" <i class="bi bi-x"></i>
+            </a>
+        {% endif %}
+        {% if cat %}
+            {% for key, label in categories %}{% if key == cat %}
+            <a href="{{ url_for('listings.index', q=q, sort=sort, source=source) }}"
+               class="badge rounded-pill bg-primary text-decoration-none d-inline-flex align-items-center gap-1">
+                {{ label }} <i class="bi bi-x"></i>
+            </a>
+            {% endif %}{% endfor %}
+        {% endif %}
+        {% if source != 'all' %}
+            <a href="{{ url_for('listings.index', q=q, category=cat, sort=sort) }}"
+               class="badge rounded-pill bg-primary text-decoration-none d-inline-flex align-items-center gap-1">
+                {{ 'Stores only' if source == 'stores' else 'Individuals only' }} <i class="bi bi-x"></i>
+            </a>
+        {% endif %}
+        <a href="{{ url_for('listings.index') }}" class="text-muted small ms-1">Clear all</a>
+    </div>
+    {% endif %}
 
     <div id="listings-grid" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
         {% for listing in listings %}
@@ -110,14 +163,14 @@
         <ul class="pagination mb-0">
             <li class="page-item {{ 'disabled' if not pagination.has_prev }}">
                 <a class="page-link"
-                   href="{{ url_for('listings.index', q=q, category=cat, sort=sort, page=pagination.prev_num) if pagination.has_prev else '#' }}">
+                   href="{{ url_for('listings.index', q=q, category=cat, sort=sort, source=source, page=pagination.prev_num) if pagination.has_prev else '#' }}">
                     &laquo;
                 </a>
             </li>
             {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
                 {% if p %}
                     <li class="page-item {{ 'active' if p == pagination.page }}">
-                        <a class="page-link" href="{{ url_for('listings.index', q=q, category=cat, sort=sort, page=p) }}">{{ p }}</a>
+                        <a class="page-link" href="{{ url_for('listings.index', q=q, category=cat, sort=sort, source=source, page=p) }}">{{ p }}</a>
                     </li>
                 {% else %}
                     <li class="page-item disabled"><span class="page-link">…</span></li>
@@ -125,7 +178,7 @@
             {% endfor %}
             <li class="page-item {{ 'disabled' if not pagination.has_next }}">
                 <a class="page-link"
-                   href="{{ url_for('listings.index', q=q, category=cat, sort=sort, page=pagination.next_num) if pagination.has_next else '#' }}">
+                   href="{{ url_for('listings.index', q=q, category=cat, sort=sort, source=source, page=pagination.next_num) if pagination.has_next else '#' }}">
                     &raquo;
                 </a>
             </li>
