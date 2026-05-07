@@ -201,6 +201,9 @@
         <i class="bi bi-search"></i>
         <p>No listings in this category.</p>
     </div>
+    <div id="scroll-sentinel" class="text-center py-3 d-none">
+        <div class="spinner-border spinner-border-sm text-secondary" role="status"></div>
+    </div>
 {% else %}
     <div class="empty-state mb-5">
         <i class="bi bi-inbox"></i>
@@ -244,6 +247,42 @@
                     </div>
                     {% if review.comment %}
                         <p class="mb-0 mt-2">{{ review.comment }}</p>
+                    {% endif %}
+
+                    <!-- Reply -->
+                    {% if review.reply_text %}
+                        <div class="mt-3 ps-3 border-start border-2 border-primary">
+                            <small class="text-muted fw-semibold">
+                                <i class="bi bi-shop me-1"></i>{{ store_user.store_name or store_user.username }} replied
+                                &middot; {{ review.reply_at.strftime('%d %b %Y') }}
+                            </small>
+                            <p class="mb-0 mt-1 reply-text-display">{{ review.reply_text }}</p>
+                            {% if current_user.is_authenticated and current_user.id == store_user.id %}
+                                <button class="btn btn-link btn-sm p-0 mt-1 text-muted edit-reply-btn"
+                                        data-review-id="{{ review.id }}">Edit reply</button>
+                            {% endif %}
+                        </div>
+                    {% elif current_user.is_authenticated and current_user.id == store_user.id %}
+                        <div class="mt-2">
+                            <button class="btn btn-link btn-sm p-0 text-muted reply-toggle-btn"
+                                    data-review-id="{{ review.id }}">
+                                <i class="bi bi-reply me-1"></i>Reply
+                            </button>
+                        </div>
+                    {% endif %}
+
+                    <!-- Reply form (hidden by default) -->
+                    {% if current_user.is_authenticated and current_user.id == store_user.id %}
+                    <div class="reply-form mt-2 d-none" data-review-id="{{ review.id }}">
+                        <textarea class="form-control form-control-sm reply-textarea" rows="2"
+                                  maxlength="1000" placeholder="Write a reply…">{{ review.reply_text or '' }}</textarea>
+                        <div class="d-flex gap-2 mt-1">
+                            <button class="btn btn-primary btn-sm reply-submit-btn"
+                                    data-review-id="{{ review.id }}">Save</button>
+                            <button class="btn btn-outline-secondary btn-sm reply-cancel-btn"
+                                    data-review-id="{{ review.id }}">Cancel</button>
+                        </div>
+                    </div>
                     {% endif %}
                 </div>
             {% endfor %}
@@ -311,37 +350,67 @@ if (followBtn) {
     });
 }
 
-// Listings filter + sort
+// Listings filter + sort + infinite scroll
 (function() {
     var grid = document.getElementById('listings-grid');
     if (!grid) return;
 
+    var PAGE_SIZE = 12;
     var filterBtns = document.querySelectorAll('#category-filter button');
     var sortSelect = document.getElementById('listing-sort');
     var noResults = document.getElementById('no-results');
+    var sentinel = document.getElementById('scroll-sentinel');
     var activeCat = 'all';
+    // visibleOrdered: the current sorted/filtered list; revealedCount tracks how many are shown
+    var visibleOrdered = [];
+    var revealedCount = 0;
 
-    function getCols() {
+    function getAllCols() {
         return Array.from(grid.querySelectorAll('.listing-col'));
     }
 
+    function revealNext() {
+        var toReveal = visibleOrdered.slice(revealedCount, revealedCount + PAGE_SIZE);
+        toReveal.forEach(function(col) { col.style.display = ''; });
+        revealedCount += toReveal.length;
+        var hasMore = revealedCount < visibleOrdered.length;
+        sentinel.classList.toggle('d-none', !hasMore);
+    }
+
     function applyFilterSort() {
-        var cols = getCols();
-        var visible = cols.filter(function(col) {
-            var match = activeCat === 'all' || col.dataset.category === activeCat;
-            col.style.display = match ? '' : 'none';
-            return match;
+        var cols = getAllCols();
+        // Hide all first
+        cols.forEach(function(col) { col.style.display = 'none'; });
+
+        var matched = cols.filter(function(col) {
+            return activeCat === 'all' || col.dataset.category === activeCat;
         });
 
-        noResults.classList.toggle('d-none', visible.length > 0);
+        noResults.classList.toggle('d-none', matched.length > 0);
 
         var sortVal = sortSelect.value;
-        visible.sort(function(a, b) {
+        matched.sort(function(a, b) {
             if (sortVal === 'price-asc') return parseFloat(a.dataset.price) - parseFloat(b.dataset.price);
             if (sortVal === 'price-desc') return parseFloat(b.dataset.price) - parseFloat(a.dataset.price);
             return parseFloat(b.dataset.date) - parseFloat(a.dataset.date);
         });
-        visible.forEach(function(col) { grid.appendChild(col); });
+        // Re-append in sorted order while keeping them hidden
+        matched.forEach(function(col) { grid.appendChild(col); });
+
+        visibleOrdered = matched;
+        revealedCount = 0;
+        revealNext();
+    }
+
+    // IntersectionObserver to load next page when sentinel comes into view
+    if ('IntersectionObserver' in window) {
+        var observer = new IntersectionObserver(function(entries) {
+            if (entries[0].isIntersecting) revealNext();
+        }, { rootMargin: '200px' });
+        observer.observe(sentinel);
+    } else {
+        // Fallback: show all
+        sentinel.classList.add('d-none');
     }
 
     filterBtns.forEach(function(btn) {
@@ -354,6 +423,56 @@ if (followBtn) {
     });
 
     sortSelect.addEventListener('change', applyFilterSort);
+
+    // Initial render
+    applyFilterSort();
+})();
+
+// Review replies
+(function() {
+    var CSRF = '{{ csrf_token() }}';
+
+    function showForm(reviewId) {
+        var form = document.querySelector('.reply-form[data-review-id="' + reviewId + '"]');
+        if (form) form.classList.remove('d-none');
+    }
+    function hideForm(reviewId) {
+        var form = document.querySelector('.reply-form[data-review-id="' + reviewId + '"]');
+        if (form) form.classList.add('d-none');
+    }
+
+    document.querySelectorAll('.reply-toggle-btn, .edit-reply-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() { showForm(btn.dataset.reviewId); });
+    });
+
+    document.querySelectorAll('.reply-cancel-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() { hideForm(btn.dataset.reviewId); });
+    });
+
+    document.querySelectorAll('.reply-submit-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var reviewId = btn.dataset.reviewId;
+            var form = document.querySelector('.reply-form[data-review-id="' + reviewId + '"]');
+            var textarea = form.querySelector('.reply-textarea');
+            var text = textarea.value.trim();
+            if (!text) return;
+
+            fetch('/store/review/' + reviewId + '/reply', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': CSRF
+                },
+                body: JSON.stringify({ reply_text: text })
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (!data.success) return;
+                // Reload page to show updated reply cleanly
+                window.location.reload();
+            });
+        });
+    });
 })();
 </script>
 {% endblock %}

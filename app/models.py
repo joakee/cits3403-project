@@ -154,6 +154,8 @@ class Review(db.Model):
     rating = db.Column(db.Integer, nullable=False)
     comment = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    reply_text = db.Column(db.Text, nullable=True)
+    reply_at = db.Column(db.DateTime, nullable=True)
 
     reviewer_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     reviewed_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)

@@ -182,6 +182,22 @@ def update_stock(listing_id):
         return jsonify(error='Invalid value'), 400
 
 
+@bp.route('/review/<int:review_id>/reply', methods=['POST'])
+@login_required
+def reply_review(review_id):
+    review = Review.query.get_or_404(review_id)
+    if review.reviewed_user_id != current_user.id:
+        abort(403)
+    text = (request.json or {}).get('reply_text', '').strip()
+    if not text:
+        return jsonify(error='Reply cannot be empty'), 400
+    review.reply_text = text[:1000]
+    review.reply_at = datetime.utcnow()
+    db.session.commit()
+    return jsonify(success=True, reply_text=review.reply_text,
+                   reply_at=review.reply_at.strftime('%d %b %Y'))
+
+
 @bp.route('/admin/verify/<int:user_id>', methods=['POST'])
 @login_required
 def admin_verify(user_id):
