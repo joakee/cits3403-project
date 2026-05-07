@@ -1,9 +1,10 @@
 import os
 import uuid
-from flask import (Blueprint, render_template, redirect, url_for,
-                   flash, request, jsonify, current_app)
+from flask import (
+    Blueprint, render_template, redirect, url_for,
+    flash, request, jsonify, current_app
+)
 from flask_login import login_required, current_user
-from werkzeug.utils import secure_filename
 from app import db
 from sqlalchemy import func
 from app.models import Listing, ListingEdit, User, Wishlist, ListingView, wishlist_items
@@ -63,57 +64,119 @@ def _apply_sort(query, sort):
 
 @bp.route('/')
 def index():
-    q      = request.args.get('q', '').strip()
-    cat    = request.args.get('category', '').strip()
-    sort   = request.args.get('sort', 'newest')
+    # Combine arguments from both branches
+    q = request.args.get('q', '').strip()
+    cat = request.args.get('category', '').strip()
+    sort = request.args.get('sort', 'newest')
     source = request.args.get('source', 'all').strip()
+    min_price = request.args.get('min_price', '').strip()
+    max_price = request.args.get('max_price', '').strip()
+    page = request.args.get('page', 1, type=int)
+
     if sort not in VALID_SORTS:
         sort = 'newest'
     if source not in VALID_SOURCES:
         source = 'all'
-    page = request.args.get('page', 1, type=int)
 
     query = Listing.query.filter_by(is_active=True)
+
+    # Search logic (from main)
     if q:
-        query = query.filter(Listing.title.ilike(f'%{q}%'))
+        query = query.filter(
+            db.or_(
+                Listing.title.ilike(f'%{q}%'),
+                Listing.description.ilike(f'%{q}%')
+            )
+        )
+
+    # Category filter
     if cat:
         query = query.filter(Listing.category == cat)
+
+    # Price filters (from main)
+    if min_price:
+        try:
+            query = query.filter(Listing.price >= float(min_price))
+        except ValueError:
+            flash('Minimum price must be a number.', 'warning')
+
+    if max_price:
+        try:
+            query = query.filter(Listing.price <= float(max_price))
+        except ValueError:
+            flash('Maximum price must be a number.', 'warning')
+
+    # Source filters (from issue-34)
     if source == 'stores':
         query = query.filter(Listing.posted_as_store == True)
     elif source == 'users':
         query = query.filter(Listing.posted_as_store == False)
-    query = _apply_sort(query, sort)
 
+    # Sorting and Pagination (from issue-34)
+    query = _apply_sort(query, sort)
     pagination = query.paginate(page=page, per_page=PER_PAGE, error_out=False)
-    return render_template('listings/index.html',
-                           listings=pagination.items,
-                           pagination=pagination,
-                           categories=CATEGORIES,
-                           q=q, cat=cat, sort=sort, source=source)
+
+    return render_template(
+        'listings/index.html',
+        listings=pagination.items,
+        pagination=pagination,
+        categories=CATEGORIES,
+        q=q, 
+        cat=cat, 
+        sort=sort, 
+        source=source,
+        min_price=min_price,
+        max_price=max_price
+    )
 
 
 @bp.route('/api/search')
 def api_search():
-    q      = request.args.get('q', '').strip()
-    sort   = request.args.get('sort', 'newest')
-    cat    = request.args.get('category', '').strip()
+    q = request.args.get('q', '').strip()
+    sort = request.args.get('sort', 'newest')
+    cat = request.args.get('category', '').strip()
     source = request.args.get('source', 'all').strip()
+    min_price = request.args.get('min_price', '').strip()
+    max_price = request.args.get('max_price', '').strip()
+
     if sort not in VALID_SORTS:
         sort = 'newest'
     if source not in VALID_SOURCES:
         source = 'all'
+
     query = Listing.query.filter_by(is_active=True)
+
     if q:
-        query = query.filter(Listing.title.ilike(f'%{q}%'))
+        query = query.filter(
+            db.or_(
+                Listing.title.ilike(f'%{q}%'),
+                Listing.description.ilike(f'%{q}%')
+            )
+        )
+
     if cat:
         query = query.filter(Listing.category == cat)
+
+    if min_price:
+        try:
+            query = query.filter(Listing.price >= float(min_price))
+        except ValueError:
+            pass
+
+    if max_price:
+        try:
+            query = query.filter(Listing.price <= float(max_price))
+        except ValueError:
+            pass
+
     if source == 'stores':
         query = query.filter(Listing.posted_as_store == True)
     elif source == 'users':
         query = query.filter(Listing.posted_as_store == False)
+
     query = _apply_sort(query, sort)
     results = query.limit(20).all()
-    
+
     wishlisted_ids = set()
     if current_user.is_authenticated:
         wishlisted_ids = {l.id for l in current_user.wishlist_listings}
@@ -201,15 +264,13 @@ def edit(listing_id):
     if form.validate_on_submit():
         changes_made = False
 
-        # Check standard text/number fields
         fields_to_check = ['title', 'description', 'price', 'category']
         if listing.posted_as_store:
             fields_to_check.append('stock_quantity')
         for field in fields_to_check:
             old_val = getattr(listing, field)
             new_val = getattr(form, field).data
-            
-            # Form price is Decimal, model is float. Convert new_val to float for comparison.
+
             if field == 'price':
                 new_val = float(new_val)
 
@@ -224,14 +285,12 @@ def edit(listing_id):
                 setattr(listing, field, new_val)
                 changes_made = True
 
-        # Handle image separately (don't log image changes in history text)
         if form.image.data:
             image_url = _save_image(form.image.data)
             if image_url:
                 listing.image_url = image_url
                 changes_made = True
 
-        # Handle history visibility toggle (don't log this as an edit)
         if listing.show_history != form.show_history.data:
             listing.show_history = form.show_history.data
             changes_made = True
@@ -241,10 +300,9 @@ def edit(listing_id):
             flash('Listing updated successfully.', 'success')
         else:
             flash('No changes were made.', 'info')
-            
+
         return redirect(url_for('listings.detail', listing_id=listing.id))
 
-    # Pre-populate boolean on GET
     if request.method == 'GET':
         form.show_history.data = listing.show_history
 
@@ -258,7 +316,6 @@ def toggle_wishlist(listing_id):
     listing = Listing.query.get_or_404(listing_id)
     added = False
 
-    # Get or create default wishlist
     default_wl = current_user.wishlists.order_by(Wishlist.created_at.asc()).first()
     if not default_wl:
         default_wl = Wishlist(name="Saved Items", user_id=current_user.id)
@@ -290,7 +347,6 @@ def get_wishlists_for_listing(listing_id):
     listing = Listing.query.get_or_404(listing_id)
     wishlists = current_user.wishlists.order_by(Wishlist.created_at.asc()).all()
 
-    # Auto-create default if none
     if not wishlists:
         default_wl = Wishlist(name="Saved Items", user_id=current_user.id)
         db.session.add(default_wl)
