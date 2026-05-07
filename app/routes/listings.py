@@ -186,7 +186,7 @@ def close(listing_id):
         listing.is_active = False
         flash('Listing marked as sold.', 'success')
     db.session.commit()
-    return redirect(url_for('profile.view', user_id=current_user.id))
+    return redirect(url_for('listings.detail', listing_id=listing_id))
 
 
 @bp.route('/<int:listing_id>/edit', methods=['GET', 'POST'])
