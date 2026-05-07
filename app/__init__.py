@@ -35,6 +35,9 @@ def create_app(config_class=Config):
     app.register_blueprint(chat_bp)
     app.register_blueprint(store_bp)
 
+    from app.admin import init_admin
+    init_admin(app)
+
     socketio.init_app(app)
 
     @app.template_filter('timeago')

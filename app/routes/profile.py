@@ -1,6 +1,6 @@
 import os
 import uuid
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app, abort
 from flask_login import login_required, current_user
 from werkzeug.security import check_password_hash, generate_password_hash
 from app import db
@@ -268,3 +268,27 @@ def wishlist_move(wl_id, listing_id):
         target_wl.listings.append(listing)
     db.session.commit()
     return jsonify({'success': True})
+
+@bp.route('/<int:user_id>/toggle-ban', methods=['POST'])
+@login_required
+def toggle_user_ban(user_id):
+    # Only true administrators can ban/unban users
+    if not current_user.is_admin:
+        abort(403)
+
+    if current_user.id == user_id:
+        flash("You cannot ban your own account!", "danger")
+        return redirect(url_for('profile.view_profile', user_id=user_id))
+
+    user = User.query.get_or_404(user_id)
+    user.is_active = not user.is_active # Toggle active status
+
+    for listing in user.listings:
+        listing.is_active = False
+
+    db.session.commit()
+
+    action_taken = "banned" if not user.is_active else "unbanned"
+    flash(f"User {user.username} has been {action_taken}.", "warning")
+    
+    return redirect(url_for('profile.view', user_id=user.id))

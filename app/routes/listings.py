@@ -64,7 +64,6 @@ def _apply_sort(query, sort):
 
 @bp.route('/')
 def index():
-    # Combine arguments from both branches
     q = request.args.get('q', '').strip()
     cat = request.args.get('category', '').strip()
     sort = request.args.get('sort', 'newest')
@@ -80,7 +79,6 @@ def index():
 
     query = Listing.query.filter_by(is_active=True)
 
-    # Search logic (from main)
     if q:
         query = query.filter(
             db.or_(
@@ -89,11 +87,9 @@ def index():
             )
         )
 
-    # Category filter
     if cat:
         query = query.filter(Listing.category == cat)
 
-    # Price filters (from main)
     if min_price:
         try:
             query = query.filter(Listing.price >= float(min_price))
@@ -106,13 +102,11 @@ def index():
         except ValueError:
             flash('Maximum price must be a number.', 'warning')
 
-    # Source filters (from issue-34)
     if source == 'stores':
         query = query.filter(Listing.posted_as_store == True)
     elif source == 'users':
         query = query.filter(Listing.posted_as_store == False)
 
-    # Sorting and Pagination (from issue-34)
     query = _apply_sort(query, sort)
     pagination = query.paginate(page=page, per_page=PER_PAGE, error_out=False)
 
@@ -121,9 +115,9 @@ def index():
         listings=pagination.items,
         pagination=pagination,
         categories=CATEGORIES,
-        q=q, 
-        cat=cat, 
-        sort=sort, 
+        q=q,
+        cat=cat,
+        sort=sort,
         source=source,
         min_price=min_price,
         max_price=max_price
@@ -133,50 +127,12 @@ def index():
 @bp.route('/api/search')
 def api_search():
     q = request.args.get('q', '').strip()
-    sort = request.args.get('sort', 'newest')
-    cat = request.args.get('category', '').strip()
-    source = request.args.get('source', 'all').strip()
-    min_price = request.args.get('min_price', '').strip()
-    max_price = request.args.get('max_price', '').strip()
-
-    if sort not in VALID_SORTS:
-        sort = 'newest'
-    if source not in VALID_SOURCES:
-        source = 'all'
-
     query = Listing.query.filter_by(is_active=True)
 
     if q:
-        query = query.filter(
-            db.or_(
-                Listing.title.ilike(f'%{q}%'),
-                Listing.description.ilike(f'%{q}%')
-            )
-        )
-
-    if cat:
-        query = query.filter(Listing.category == cat)
-
-    if min_price:
-        try:
-            query = query.filter(Listing.price >= float(min_price))
-        except ValueError:
-            pass
-
-    if max_price:
-        try:
-            query = query.filter(Listing.price <= float(max_price))
-        except ValueError:
-            pass
-
-    if source == 'stores':
-        query = query.filter(Listing.posted_as_store == True)
-    elif source == 'users':
-        query = query.filter(Listing.posted_as_store == False)
-
-    query = _apply_sort(query, sort)
-    results = query.limit(20).all()
-
+        query = query.filter(Listing.title.ilike(f'%{q}%'))
+    results = query.order_by(Listing.created_at.desc()).limit(20).all()
+    
     wishlisted_ids = set()
     if current_user.is_authenticated:
         wishlisted_ids = {l.id for l in current_user.wishlist_listings}

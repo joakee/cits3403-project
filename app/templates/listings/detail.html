@@ -9,6 +9,27 @@
         </a>
 
         <div class="card overflow-hidden">
+            {% if current_user.is_authenticated and (current_user.is_admin or current_user.is_moderator) %}
+                <div class="m-4 alert alert-secondary mt-3 d-flex justify-content-between align-items-center">
+                    <span>
+                        <strong>Mod Control:</strong> This post is currently 
+                        {% if listing.is_active %}
+                            <span class="badge bg-success">Active</span>
+                        {% else %}
+                            <span class="badge bg-danger">Hidden</span>
+                        {% endif %}
+                    </span>
+                    <form action="{{ url_for('listings.toggle_listing_active', listing_id=listing.id) }}" method="POST" style="margin:0;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        
+                        {% if listing.is_active %}
+                            <button type="submit" class="btn btn-danger btn-sm">Take Down Post</button>
+                        {% else %}
+                            <button type="submit" class="btn btn-success btn-sm">Restore Post</button>
+                        {% endif %}
+                    </form>
+                </div>
+            {% endif %}
             {% if listing.image_url %}
                 <img src="{{ listing.image_url }}" class="w-100" style="max-height: 380px; object-fit: cover;" alt="{{ listing.title }}">
             {% else %}
@@ -86,9 +107,13 @@
                         </div>
                     </div>
                     {% if current_user.id != listing.seller_id %}
-                    <a href="{{ url_for('chat.start_chat', listing_id=listing.id) }}" class="ms-auto btn btn-success">
-                        Message Seller
-                    </a>
+                        {% if listing.is_active %}
+                        <a href="{{ url_for('chat.start_chat', listing_id=listing.id) }}" class="ms-auto btn btn-success">
+                            Message Seller
+                        </a>
+                        {% else %}
+                        <span class="badge bg-secondary ms-auto">Sold</span>
+                        {% endif %}
                     {% else %}
                     <p class="text-muted ms-auto">This is your listing</p>
                     {% endif %}
