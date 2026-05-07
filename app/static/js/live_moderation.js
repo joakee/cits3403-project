@@ -65,10 +65,10 @@
 
     socket.on('new_report', function (r) {
       var tbody = document.querySelector('.table tbody');
-      if (!tbody) return;
 
-      var emptyMsg = document.querySelector('.text-center.py-5.text-muted');
-      if (emptyMsg) {
+      if (!tbody) {
+        var emptyMsg = document.querySelector('.text-center.py-5.text-muted');
+        if (!emptyMsg) return;
         var wrapper = document.createElement('div');
         wrapper.className = 'table-responsive';
         var table = document.createElement('table');
