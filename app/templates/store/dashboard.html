@@ -109,13 +109,17 @@
                             <td class="text-end">{{ listing.save_count }}</td>
                             <td class="text-end">
                                 {% if listing.stock_quantity is none %}
-                                    <span class="text-muted">—</span>
-                                {% elif listing.stock_quantity == 0 %}
-                                    <span class="badge bg-danger">Out</span>
-                                {% elif listing.stock_quantity <= 5 %}
-                                    <span class="badge bg-warning text-dark">{{ listing.stock_quantity }}</span>
+                                    <span class="text-muted small">∞</span>
                                 {% else %}
-                                    <span class="badge bg-success">{{ listing.stock_quantity }}</span>
+                                    <div class="d-inline-flex align-items-center gap-1 stock-inline" data-listing-id="{{ listing.id }}">
+                                        <input type="number" min="0"
+                                               class="form-control form-control-sm stock-input text-center"
+                                               value="{{ listing.stock_quantity }}"
+                                               style="width:58px;">
+                                        <button class="btn btn-sm btn-outline-success py-0 px-1 stock-save" title="Save">
+                                            <i class="bi bi-check2"></i>
+                                        </button>
+                                    </div>
                                 {% endif %}
                             </td>
                             <td class="text-end">
@@ -165,16 +169,20 @@
                 <i class="bi bi-exclamation-triangle me-2"></i>Low / No Stock
             </h5>
             {% for listing in stock_warnings %}
-            <div class="d-flex align-items-center justify-content-between mb-2">
-                <a href="{{ url_for('listings.edit', listing_id=listing.id) }}"
-                   class="text-decoration-none text-truncate" style="max-width:180px; color:#1d3557;">
+            <div class="d-flex align-items-center justify-content-between mb-2 gap-2">
+                <a href="{{ url_for('listings.detail', listing_id=listing.id) }}"
+                   class="text-decoration-none text-truncate" style="max-width:120px; color:#1d3557; font-size:0.875rem;">
                     {{ listing.title }}
                 </a>
-                {% if listing.stock_quantity == 0 %}
-                    <span class="badge bg-danger">Out of stock</span>
-                {% else %}
-                    <span class="badge bg-warning text-dark">{{ listing.stock_quantity }} left</span>
-                {% endif %}
+                <div class="d-inline-flex align-items-center gap-1 stock-inline" data-listing-id="{{ listing.id }}">
+                    <input type="number" min="0"
+                           class="form-control form-control-sm stock-input text-center"
+                           value="{{ listing.stock_quantity }}"
+                           style="width:58px;">
+                    <button class="btn btn-sm btn-outline-success py-0 px-1 stock-save" title="Save">
+                        <i class="bi bi-check2"></i>
+                    </button>
+                </div>
             </div>
             {% endfor %}
         </div>
@@ -183,4 +191,35 @@
     </div>
 </div>
 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('.stock-save').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        var wrapper = btn.closest('.stock-inline');
+        var listingId = wrapper.dataset.listingId;
+        var input = wrapper.querySelector('.stock-input');
+        var qty = parseInt(input.value, 10);
+        if (isNaN(qty) || qty < 0) return;
+
+        fetch('/store/stock/' + listingId, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({ stock_quantity: qty })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (!data.success) return;
+            var icon = btn.querySelector('i');
+            icon.className = 'bi bi-check2-all text-success';
+            input.value = data.stock_quantity;
+            setTimeout(function() { icon.className = 'bi bi-check2'; }, 1500);
+        });
+    });
+});
+</script>
 {% endblock %}

@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
+from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, jsonify
 from flask_login import login_required, current_user
 from sqlalchemy import func
 from app import db
@@ -49,13 +49,20 @@ def storefront(user_id):
     total_listings = Listing.query.filter_by(seller_id=user_id, posted_as_store=True).count()
     sold_count = Listing.query.filter_by(seller_id=user_id, is_active=False, posted_as_store=True).count()
 
+    follower_count = store_user.store_followers.count()
+    is_following = (current_user.is_authenticated and
+                    current_user.id != store_user.id and
+                    current_user.is_following_store(store_user))
+
     return render_template('store/storefront.html',
                            store_user=store_user,
                            listings=listings,
                            reviews=reviews,
                            avg_rating=avg_rating,
                            total_listings=total_listings,
-                           sold_count=sold_count)
+                           sold_count=sold_count,
+                           follower_count=follower_count,
+                           is_following=is_following)
 
 
 @bp.route('/dashboard')
@@ -133,6 +140,46 @@ def dashboard():
                            listing_view_counts=listing_view_counts,
                            category_counts=category_counts,
                            stock_warnings=stock_warnings)
+
+
+@bp.route('/follow/<int:user_id>', methods=['POST'])
+@login_required
+def follow_store(user_id):
+    store_user = User.query.get_or_404(user_id)
+    if not store_user.is_store or store_user.id == current_user.id:
+        abort(400)
+    if current_user.is_following_store(store_user):
+        current_user.following_stores.remove(store_user)
+        following = False
+    else:
+        current_user.following_stores.append(store_user)
+        following = True
+    db.session.commit()
+    follower_count = store_user.store_followers.count()
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify(following=following, follower_count=follower_count)
+    return redirect(url_for('store.storefront', user_id=user_id))
+
+
+@bp.route('/stock/<int:listing_id>', methods=['POST'])
+@login_required
+def update_stock(listing_id):
+    listing = Listing.query.get_or_404(listing_id)
+    if listing.seller_id != current_user.id:
+        abort(403)
+    try:
+        qty = request.json.get('stock_quantity')
+        if qty is None:
+            listing.stock_quantity = None
+        else:
+            qty = int(qty)
+            if qty < 0:
+                return jsonify(error='Stock cannot be negative'), 400
+            listing.stock_quantity = qty
+        db.session.commit()
+        return jsonify(success=True, stock_quantity=listing.stock_quantity)
+    except (ValueError, TypeError):
+        return jsonify(error='Invalid value'), 400
 
 
 @bp.route('/admin/verify/<int:user_id>', methods=['POST'])

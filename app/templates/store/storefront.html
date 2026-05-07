@@ -38,6 +38,20 @@
                     </a>
                 {% endif %}
 
+                {% if current_user.is_authenticated and current_user.id != store_user.id %}
+                    <button id="follow-btn"
+                            class="btn btn-sm {{ 'btn-primary' if is_following else 'btn-outline-primary' }}"
+                            data-store-id="{{ store_user.id }}"
+                            data-following="{{ 'true' if is_following else 'false' }}">
+                        <i class="bi {{ 'bi-person-check-fill' if is_following else 'bi-person-plus' }} me-1"></i>
+                        <span id="follow-label">{{ 'Following' if is_following else 'Follow' }}</span>
+                    </button>
+                {% endif %}
+
+                <button class="btn btn-outline-secondary btn-sm" id="share-btn" title="Copy store link">
+                    <i class="bi bi-share" id="share-icon"></i>
+                </button>
+
                 {% if current_user.is_authenticated and current_user.is_admin %}
                     <form method="POST" action="{{ url_for('store.admin_verify', user_id=store_user.id) }}" class="d-inline">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -94,36 +108,63 @@
 
     <!-- Stats row -->
     <div class="row g-3 mt-3">
-        <div class="col-4 col-sm-3">
+        <div class="col-3 col-sm-3">
             <div class="profile-stat">
                 <div class="stat-value">{{ listings|length }}</div>
                 <div class="stat-label">Active</div>
             </div>
         </div>
-        <div class="col-4 col-sm-3">
+        <div class="col-3 col-sm-3">
             <div class="profile-stat">
                 <div class="stat-value">{{ sold_count }}</div>
                 <div class="stat-label">Sold</div>
             </div>
         </div>
-        <div class="col-4 col-sm-3">
+        <div class="col-3 col-sm-3">
             <div class="profile-stat">
                 <div class="stat-value">{{ avg_rating or '—' }}</div>
                 <div class="stat-label">Avg Rating</div>
+            </div>
+        </div>
+        <div class="col-3 col-sm-3">
+            <div class="profile-stat">
+                <div class="stat-value" id="follower-count">{{ follower_count }}</div>
+                <div class="stat-label">Followers</div>
             </div>
         </div>
     </div>
 </div>
 
 <!-- Active listings -->
-<h5 class="section-heading">
-    <i class="bi bi-grid me-2"></i>Listings
-</h5>
+<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+    <h5 class="section-heading mb-0">
+        <i class="bi bi-grid me-2"></i>Listings
+    </h5>
+    {% if listings %}
+    <div class="d-flex gap-2 flex-wrap align-items-center">
+        <div class="btn-group btn-group-sm" id="category-filter" role="group">
+            <button type="button" class="btn btn-outline-secondary active" data-cat="all">All</button>
+            {% set cats = listings | map(attribute='category') | list | unique | list %}
+            {% for cat in cats %}
+                <button type="button" class="btn btn-outline-secondary" data-cat="{{ cat }}">{{ cat|title }}</button>
+            {% endfor %}
+        </div>
+        <select id="listing-sort" class="form-select form-select-sm" style="width:auto;">
+            <option value="newest">Newest</option>
+            <option value="price-asc">Price ↑</option>
+            <option value="price-desc">Price ↓</option>
+        </select>
+    </div>
+    {% endif %}
+</div>
 
 {% if listings %}
-    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3 mb-5">
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3 mb-5" id="listings-grid">
         {% for listing in listings %}
-        <div class="col">
+        <div class="col listing-col"
+             data-category="{{ listing.category }}"
+             data-price="{{ listing.price }}"
+             data-date="{{ listing.created_at.timestamp() }}">
             <a href="{{ url_for('listings.detail', listing_id=listing.id) }}" class="listing-card card text-decoration-none">
                 {% if listing.image_url %}
                     <img src="{{ listing.image_url }}" class="listing-img" alt="{{ listing.title }}">
@@ -155,6 +196,10 @@
             </a>
         </div>
         {% endfor %}
+    </div>
+    <div id="no-results" class="empty-state mb-5 d-none">
+        <i class="bi bi-search"></i>
+        <p>No listings in this category.</p>
     </div>
 {% else %}
     <div class="empty-state mb-5">
@@ -212,6 +257,7 @@
 
 {% block extra_js %}
 <script>
+// Copy contact info buttons
 document.querySelectorAll('.copy-btn').forEach(function(btn) {
     btn.addEventListener('click', function() {
         navigator.clipboard.writeText(btn.dataset.copy).then(function() {
@@ -221,5 +267,93 @@ document.querySelectorAll('.copy-btn').forEach(function(btn) {
         });
     });
 });
+
+// Share store link
+var shareBtn = document.getElementById('share-btn');
+if (shareBtn) {
+    shareBtn.addEventListener('click', function() {
+        navigator.clipboard.writeText(window.location.href).then(function() {
+            var icon = document.getElementById('share-icon');
+            icon.className = 'bi bi-check2 text-success';
+            setTimeout(function() { icon.className = 'bi bi-share'; }, 2000);
+        });
+    });
+}
+
+// Follow / unfollow
+var followBtn = document.getElementById('follow-btn');
+if (followBtn) {
+    followBtn.addEventListener('click', function() {
+        var storeId = followBtn.dataset.storeId;
+        fetch('/store/follow/' + storeId, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            }
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            var label = document.getElementById('follow-label');
+            var icon = followBtn.querySelector('i');
+            if (data.following) {
+                followBtn.classList.replace('btn-outline-primary', 'btn-primary');
+                icon.className = 'bi bi-person-check-fill me-1';
+                label.textContent = 'Following';
+            } else {
+                followBtn.classList.replace('btn-primary', 'btn-outline-primary');
+                icon.className = 'bi bi-person-plus me-1';
+                label.textContent = 'Follow';
+            }
+            var countEl = document.getElementById('follower-count');
+            if (countEl) countEl.textContent = data.follower_count;
+        });
+    });
+}
+
+// Listings filter + sort
+(function() {
+    var grid = document.getElementById('listings-grid');
+    if (!grid) return;
+
+    var filterBtns = document.querySelectorAll('#category-filter button');
+    var sortSelect = document.getElementById('listing-sort');
+    var noResults = document.getElementById('no-results');
+    var activeCat = 'all';
+
+    function getCols() {
+        return Array.from(grid.querySelectorAll('.listing-col'));
+    }
+
+    function applyFilterSort() {
+        var cols = getCols();
+        var visible = cols.filter(function(col) {
+            var match = activeCat === 'all' || col.dataset.category === activeCat;
+            col.style.display = match ? '' : 'none';
+            return match;
+        });
+
+        noResults.classList.toggle('d-none', visible.length > 0);
+
+        var sortVal = sortSelect.value;
+        visible.sort(function(a, b) {
+            if (sortVal === 'price-asc') return parseFloat(a.dataset.price) - parseFloat(b.dataset.price);
+            if (sortVal === 'price-desc') return parseFloat(b.dataset.price) - parseFloat(a.dataset.price);
+            return parseFloat(b.dataset.date) - parseFloat(a.dataset.date);
+        });
+        visible.forEach(function(col) { grid.appendChild(col); });
+    }
+
+    filterBtns.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            filterBtns.forEach(function(b) { b.classList.remove('active'); });
+            btn.classList.add('active');
+            activeCat = btn.dataset.cat;
+            applyFilterSort();
+        });
+    });
+
+    sortSelect.addEventListener('change', applyFilterSort);
+})();
 </script>
 {% endblock %}

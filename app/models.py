@@ -13,6 +13,11 @@ wishlist_items = db.Table('wishlist_items',
     db.Column('listing_id', db.Integer, db.ForeignKey('listing.id'), primary_key=True)
 )
 
+store_follows = db.Table('store_follows',
+    db.Column('follower_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
+    db.Column('store_id', db.Integer, db.ForeignKey('user.id'), primary_key=True)
+)
+
 class Wishlist(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), nullable=False)
@@ -51,8 +56,20 @@ class User(db.Model, UserMixin):
 
     listings = db.relationship('Listing', backref='seller', lazy='dynamic')
 
+    following_stores = db.relationship(
+        'User',
+        secondary=store_follows,
+        primaryjoin='User.id == store_follows.c.follower_id',
+        secondaryjoin='User.id == store_follows.c.store_id',
+        backref=db.backref('store_followers', lazy='dynamic'),
+        lazy='dynamic'
+    )
+
     def has_saved(self, listing):
         return db.session.query(wishlist_items).join(Wishlist).filter(Wishlist.user_id == self.id, wishlist_items.c.listing_id == listing.id).first() is not None
+
+    def is_following_store(self, store_user):
+        return self.following_stores.filter(store_follows.c.store_id == store_user.id).count() > 0
 
     def __repr__(self):
         return f'<User {self.username}>'
