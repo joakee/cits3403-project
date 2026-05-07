@@ -53,10 +53,10 @@ $(document).ready(function () {
                                     '</div>';
                     }
 
-                    var sellerUrl = item.seller_is_store ? '/store/' + item.seller_id : '/user/' + item.seller_id;
-                    var sellerDisplayName = (item.seller_is_store && item.seller_store_name) ? item.seller_store_name : item.seller_username;
+                    var sellerUrl = item.posted_as_store ? '/store/' + item.seller_id : '/user/' + item.seller_id;
+                    var sellerDisplayName = (item.posted_as_store && item.seller_store_name) ? item.seller_store_name : item.seller_username;
                     var sellerName = sellerDisplayName ? sellerDisplayName.split(' ')[0] : 'User';
-                    var verifiedBadge = (item.seller_is_store && item.seller_is_verified)
+                    var verifiedBadge = (item.posted_as_store && item.seller_is_verified)
                         ? ' <i class="bi bi-patch-check-fill text-primary" style="font-size:0.8em;"></i>' : '';
 
                     grid.append(

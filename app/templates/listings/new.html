@@ -12,6 +12,22 @@
             <form method="POST" enctype="multipart/form-data">
                 {{ form.hidden_tag() }}
 
+                {% if current_user.is_store %}
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Post as</label>
+                    <div class="btn-group w-100" role="group">
+                        <input type="radio" class="btn-check" name="post_as" id="post-personal" value="personal" checked>
+                        <label class="btn btn-outline-secondary" for="post-personal">
+                            <i class="bi bi-person me-1"></i>Personal
+                        </label>
+                        <input type="radio" class="btn-check" name="post_as" id="post-store" value="store">
+                        <label class="btn btn-outline-primary" for="post-store">
+                            <i class="bi bi-shop me-1"></i>{{ current_user.store_name or 'Store' }}
+                        </label>
+                    </div>
+                </div>
+                {% endif %}
+
                 <div class="mb-3">
                     <label class="form-label fw-semibold">{{ form.title.label.text }}</label>
                     {{ form.title(class_="form-control", placeholder="What are you selling?") }}
@@ -40,7 +56,7 @@
                 </div>
 
                 {% if current_user.is_store %}
-                <div class="mb-3">
+                <div class="mb-3" id="stock-field" style="display:none;">
                     <label class="form-label fw-semibold">{{ form.stock_quantity.label.text }}</label>
                     {{ form.stock_quantity(class_="form-control", placeholder="Leave blank for unlimited") }}
                     <div class="form-text">Optional. Enter a number to track stock. Leave blank for unlimited.</div>
@@ -63,4 +79,21 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+{% if current_user.is_store %}
+<script>
+(function() {
+    var stockField = document.getElementById('stock-field');
+    var radios = document.querySelectorAll('input[name="post_as"]');
+    function updateStock() {
+        var isStore = document.getElementById('post-store').checked;
+        if (stockField) stockField.style.display = isStore ? '' : 'none';
+    }
+    radios.forEach(function(r) { r.addEventListener('change', updateStock); });
+    updateStock();
+})();
+</script>
+{% endif %}
 {% endblock %}

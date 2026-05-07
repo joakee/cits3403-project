@@ -72,7 +72,7 @@
                     <div class="d-flex align-items-center justify-content-between mt-2">
                         <span class="category-badge">{{ listing.category|title }}</span>
                         <small class="text-muted d-flex align-items-center gap-1">
-                            {% if listing.seller.is_store %}
+                            {% if listing.posted_as_store %}
                                 <a href="{{ url_for('store.storefront', user_id=listing.seller.id) }}"
                                    class="text-muted text-decoration-none position-relative d-inline-flex align-items-center gap-1" style="z-index:2">
                                     {{ (listing.seller.store_name or listing.seller.username).split()[0] }}

@@ -33,7 +33,7 @@ def storefront(user_id):
         abort(404)
 
     listings = (Listing.query
-                .filter_by(seller_id=user_id, is_active=True)
+                .filter_by(seller_id=user_id, is_active=True, posted_as_store=True)
                 .order_by(Listing.created_at.desc())
                 .all())
 
@@ -46,8 +46,8 @@ def storefront(user_id):
     if reviews:
         avg_rating = round(sum(r.rating for r in reviews) / len(reviews), 1)
 
-    total_listings = Listing.query.filter_by(seller_id=user_id).count()
-    sold_count = Listing.query.filter_by(seller_id=user_id, is_active=False).count()
+    total_listings = Listing.query.filter_by(seller_id=user_id, posted_as_store=True).count()
+    sold_count = Listing.query.filter_by(seller_id=user_id, is_active=False, posted_as_store=True).count()
 
     return render_template('store/storefront.html',
                            store_user=store_user,
@@ -70,7 +70,7 @@ def dashboard():
     seven_days_ago = now - timedelta(days=7)
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
-    all_listing_ids = [l.id for l in current_user.listings.all()]
+    all_listing_ids = [l.id for l in current_user.listings.filter_by(posted_as_store=True).all()]
 
     # View counts
     total_views = 0
@@ -97,8 +97,8 @@ def dashboard():
             ListingView.viewed_at >= today_start
         ).scalar() or 0
 
-    active_listings = current_user.listings.filter_by(is_active=True).order_by(Listing.created_at.desc()).all()
-    sold_listings = current_user.listings.filter_by(is_active=False).all()
+    active_listings = current_user.listings.filter_by(is_active=True, posted_as_store=True).order_by(Listing.created_at.desc()).all()
+    sold_listings = current_user.listings.filter_by(is_active=False, posted_as_store=True).all()
 
     revenue = sum(l.price for l in sold_listings)
 

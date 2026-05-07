@@ -103,7 +103,7 @@ def api_search():
         'image_url': l.image_url,
         'seller_id': l.seller.id,
         'seller_username': l.seller.username,
-        'seller_is_store': l.seller.is_store,
+        'posted_as_store': l.posted_as_store,
         'seller_is_verified': l.seller.is_verified,
         'seller_store_name': l.seller.store_name,
         'is_wishlisted': l.id in wishlisted_ids,
@@ -125,6 +125,7 @@ def detail(listing_id):
 def new():
     form = ListingForm()
     if form.validate_on_submit():
+        posted_as_store = current_user.is_store and request.form.get('post_as') == 'store'
         image_url = _save_image(form.image.data)
         listing = Listing(
             title=form.title.data,
@@ -132,7 +133,8 @@ def new():
             price=float(form.price.data),
             category=form.category.data,
             image_url=image_url,
-            stock_quantity=form.stock_quantity.data,
+            stock_quantity=form.stock_quantity.data if posted_as_store else None,
+            posted_as_store=posted_as_store,
             seller_id=current_user.id,
         )
         db.session.add(listing)
@@ -149,7 +151,7 @@ def close(listing_id):
     if listing.seller_id != current_user.id:
         flash('Not authorised.', 'error')
         return redirect(url_for('listings.detail', listing_id=listing_id))
-    if current_user.is_store and listing.stock_quantity is not None:
+    if listing.posted_as_store and listing.stock_quantity is not None:
         listing.stock_quantity = max(0, listing.stock_quantity - 1)
         if listing.stock_quantity == 0:
             listing.is_active = False
@@ -176,7 +178,9 @@ def edit(listing_id):
         changes_made = False
 
         # Check standard text/number fields
-        fields_to_check = ['title', 'description', 'price', 'category', 'stock_quantity']
+        fields_to_check = ['title', 'description', 'price', 'category']
+        if listing.posted_as_store:
+            fields_to_check.append('stock_quantity')
         for field in fields_to_check:
             old_val = getattr(listing, field)
             new_val = getattr(form, field).data

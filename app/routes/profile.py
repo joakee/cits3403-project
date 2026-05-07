@@ -19,7 +19,7 @@ def view(user_id):
     listing_filter = request.args.get('filter', 'active')
     page = request.args.get('page', 1, type=int)
 
-    base_q = Listing.query.filter_by(seller_id=user_id)
+    base_q = Listing.query.filter_by(seller_id=user_id, posted_as_store=False)
     if listing_filter == 'sold':
         paged = base_q.filter_by(is_active=False).order_by(Listing.created_at.desc())
     elif listing_filter == 'all':

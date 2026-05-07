@@ -23,6 +23,7 @@ def _migrate_columns():
     }
     new_listing_cols = {
         'stock_quantity': 'INTEGER',
+        'posted_as_store': 'BOOLEAN DEFAULT 0',
     }
 
     message_cols = {c['name'] for c in inspector.get_columns('message')}

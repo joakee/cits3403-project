@@ -68,6 +68,7 @@ class Listing(db.Model):
     is_active = db.Column(db.Boolean, default=True)
     show_history = db.Column(db.Boolean, default=True)   # seller can hide edit history
     stock_quantity = db.Column(db.Integer, nullable=True)  # None = unlimited
+    posted_as_store = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     seller_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
