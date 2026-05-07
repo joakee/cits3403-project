@@ -164,7 +164,8 @@ def new():
         db.session.commit()
         flash('Listing posted!', 'success')
         return redirect(url_for('listings.detail', listing_id=listing.id))
-    return render_template('listings/new.html', form=form)
+    default_post_as = request.args.get('as', 'personal')
+    return render_template('listings/new.html', form=form, default_post_as=default_post_as)
 
 
 @bp.route('/<int:listing_id>/close', methods=['POST'])

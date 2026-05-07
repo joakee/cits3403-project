@@ -16,11 +16,11 @@
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Post as</label>
                     <div class="btn-group w-100" role="group">
-                        <input type="radio" class="btn-check" name="post_as" id="post-personal" value="personal" checked>
+                        <input type="radio" class="btn-check" name="post_as" id="post-personal" value="personal" {{ 'checked' if default_post_as != 'store' else '' }}>
                         <label class="btn btn-outline-secondary" for="post-personal">
                             <i class="bi bi-person me-1"></i>Personal
                         </label>
-                        <input type="radio" class="btn-check" name="post_as" id="post-store" value="store">
+                        <input type="radio" class="btn-check" name="post_as" id="post-store" value="store" {{ 'checked' if default_post_as == 'store' else '' }}>
                         <label class="btn btn-outline-primary" for="post-store">
                             <i class="bi bi-shop me-1"></i>{{ current_user.store_name or 'Store' }}
                         </label>
