@@ -208,6 +208,20 @@ def close(listing_id):
     return redirect(url_for('listings.detail', listing_id=listing_id))
 
 
+@bp.route('/<int:listing_id>/toggle_active', methods=['POST'])
+@login_required
+def toggle_listing_active(listing_id):
+    listing = Listing.query.get_or_404(listing_id)
+    if not (current_user.is_admin or current_user.is_moderator):
+        flash('Not authorised.', 'error')
+        return redirect(url_for('listings.detail', listing_id=listing_id))
+    listing.is_active = not listing.is_active
+    db.session.commit()
+    status = 'restored' if listing.is_active else 'taken down'
+    flash(f'Listing {status}.', 'success')
+    return redirect(url_for('listings.detail', listing_id=listing_id))
+
+
 @bp.route('/<int:listing_id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit(listing_id):

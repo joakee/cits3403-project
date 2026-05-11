@@ -50,7 +50,6 @@ class User(db.Model, UserMixin):
     # Store / seller profile fields
     is_store = db.Column(db.Boolean, default=False)
     is_verified = db.Column(db.Boolean, default=False)
-    is_admin = db.Column(db.Boolean, default=False)
     store_name = db.Column(db.String(128), nullable=True)
     store_address = db.Column(db.String(256), nullable=True)
     contact_phone = db.Column(db.String(32), nullable=True)
