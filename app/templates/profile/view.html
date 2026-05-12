@@ -146,12 +146,17 @@
                     <h6 class="card-title mb-1 text-truncate" title="{{ listing.title }}">
                         {{ listing.title }}
                     </h6>
-                    <div class="d-flex align-items-center gap-2 mt-1">
+
+                    <div class="d-flex align-items-center justify-content-between mt-2 gap-2">
                         <div class="listing-price">${{ "%.2f"|format(listing.price) }}</div>
-                        {% if not listing.is_active %}
-                            <span class="badge bg-secondary" style="font-size:10px;">Sold</span>
+
+                        {% if listing.is_active %}
+                            <span class="listing-status-badge status-active">Active</span>
+                        {% else %}
+                            <span class="listing-status-badge status-sold">Sold</span>
                         {% endif %}
                     </div>
+
                     <div class="d-flex align-items-center justify-content-between mt-2">
                         <span class="category-badge">{{ listing.category|title }}</span>
                         <small class="text-muted">{{ listing.created_at.strftime('%d %b') }}</small>
