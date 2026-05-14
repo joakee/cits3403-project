@@ -34,6 +34,7 @@ def index():
     cat = request.args.get('category', '').strip()
     min_price = request.args.get('min_price', '').strip()
     max_price = request.args.get('max_price', '').strip()
+    sort = request.args.get('sort', 'newest').strip()
 
     query = Listing.query.filter_by(is_active=True)
 
@@ -60,7 +61,17 @@ def index():
         except ValueError:
             flash('Maximum price must be a number.', 'warning')
 
-    listings = query.order_by(Listing.created_at.desc()).all()
+    if sort == 'price_low':
+        query = query.order_by(Listing.price.asc())
+    elif sort == 'price_high':
+        query = query.order_by(Listing.price.desc())
+    elif sort == 'oldest':
+        query = query.order_by(Listing.created_at.asc())
+    else:
+        sort = 'newest'
+        query = query.order_by(Listing.created_at.desc())
+
+    listings = query.all()
 
     return render_template(
         'listings/index.html',
@@ -68,7 +79,8 @@ def index():
         q=q,
         cat=cat,
         min_price=min_price,
-        max_price=max_price
+        max_price=max_price,
+        sort=sort
     )
 
 

@@ -17,7 +17,7 @@
 
     <form method="GET" action="{{ url_for('listings.index') }}" class="listings-filter-bar">
         <div class="row g-3">
-            <div class="col-12 col-md-4">
+            <div class="col-12 col-lg-2">
                 <input
                     id="listings-search"
                     name="q"
@@ -28,7 +28,7 @@
                 />
             </div>
 
-            <div class="col-12 col-md-2">
+            <div class="col-12 col-lg-2">
                 <select name="category" class="form-select">
                     <option value="">All Categories</option>
                     <option value="books" {{ 'selected' if cat == 'books' else '' }}>Books & Notes</option>
@@ -39,7 +39,7 @@
                 </select>
             </div>
 
-            <div class="col-6 col-md-2">
+            <div class="col-6 col-lg-2">
                 <input
                     type="number"
                     step="0.01"
@@ -51,7 +51,7 @@
                 />
             </div>
 
-            <div class="col-6 col-md-2">
+            <div class="col-6 col-lg-2">
                 <input
                     type="number"
                     step="0.01"
@@ -63,7 +63,16 @@
                 />
             </div>
 
-            <div class="col-12 col-md-2 listings-filter-actions">
+            <div class="col-12 col-lg-2">
+                <select name="sort" class="form-select">
+                    <option value="newest" {{ 'selected' if sort == 'newest' else '' }}>Latest Listings</option>
+                    <option value="oldest" {{ 'selected' if sort == 'oldest' else '' }}>Earliest Listings</option>
+                    <option value="price_low" {{ 'selected' if sort == 'price_low' else '' }}>Lowest Price</option>
+                    <option value="price_high" {{ 'selected' if sort == 'price_high' else '' }}>Highest Price</option>
+                </select>
+            </div>
+
+            <div class="col-12 col-lg-2 listings-filter-actions">
                 <button type="submit" class="btn btn-primary w-100">
                     <i class="bi bi-funnel me-1"></i>Apply
                 </button>
@@ -104,12 +113,16 @@
                                     title="Save to Wishlist"
                                     style="line-height: 1;">
                                 <i class="bi {{ 'bi-heart-fill' if current_user.has_saved(listing) else 'bi-heart' }}"></i>
-                                <span class="wishlist-count ms-1 text-dark" style="font-size: 0.85em;">Saved by {{ listing.save_count }} {{ 'person' if listing.save_count == 1 else 'people' }}</span>
+                                <span class="wishlist-count ms-1 text-dark" style="font-size: 0.85em;">
+                                    Saved by {{ listing.save_count }} {{ 'person' if listing.save_count == 1 else 'people' }}
+                                </span>
                             </button>
                             {% else %}
                             <div class="text-danger" style="line-height: 1;">
                                 <i class="bi bi-heart-fill"></i>
-                                <span class="ms-1 text-dark" style="font-size: 0.85em;">Saved by {{ listing.save_count }} {{ 'person' if listing.save_count == 1 else 'people' }}</span>
+                                <span class="ms-1 text-dark" style="font-size: 0.85em;">
+                                    Saved by {{ listing.save_count }} {{ 'person' if listing.save_count == 1 else 'people' }}
+                                </span>
                             </div>
                             {% endif %}
                         </div>
