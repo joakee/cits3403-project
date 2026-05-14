@@ -40,6 +40,7 @@
                 <p class="mt-2 mb-0" style="color: #374151;">{{ profile_user.bio }}</p>
             {% endif %}
         </div>
+
         {% if current_user.is_authenticated and current_user.is_admin and current_user.id != profile_user.id %}
             <div>
                 <form action="{{ url_for('profile.toggle_user_ban', user_id=profile_user.id) }}" method="POST">
@@ -80,6 +81,49 @@
         </div>
     </div>
 </div>
+
+<!-- ── Seller data section ────────────────────────────────────── -->
+{% if current_user.is_authenticated and current_user.id == profile_user.id %}
+<div class="card p-4 mb-4 shadow-sm">
+    <h5 class="section-heading mb-3">
+        <i class="bi bi-bar-chart-line me-2"></i>Seller Data
+    </h5>
+
+    <div class="row g-3">
+        <div class="col-6 col-md-3">
+            <div class="profile-stat">
+                <div class="stat-value">{{ total_views }}</div>
+                <div class="stat-label">Total Views</div>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-3">
+            <div class="profile-stat">
+                <div class="stat-value">{{ total_saves }}</div>
+                <div class="stat-label">Total Saves</div>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-3">
+            <div class="profile-stat">
+                <div class="stat-value">{{ active_count }}</div>
+                <div class="stat-label">Active Listings</div>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-3">
+            <div class="profile-stat">
+                <div class="stat-value">{{ sold_count }}</div>
+                <div class="stat-label">Sold Listings</div>
+            </div>
+        </div>
+    </div>
+
+    <p class="text-muted mt-3 mb-0" style="font-size: 13px;">
+        These stats help you understand how your listings are performing.
+    </p>
+</div>
+{% endif %}
 
 <!-- ── Reviews section ───────────────────────────────────────── -->
 <div class="card p-4 mb-4 shadow-sm">
@@ -161,6 +205,13 @@
                         <span class="category-badge">{{ listing.category|title }}</span>
                         <small class="text-muted">{{ listing.created_at.strftime('%d %b') }}</small>
                     </div>
+
+                    {% if current_user.is_authenticated and current_user.id == profile_user.id %}
+                        <div class="d-flex justify-content-between mt-2 text-muted" style="font-size: 12px;">
+                            <span><i class="bi bi-eye me-1"></i>{{ listing.view_count or 0 }} views</span>
+                            <span><i class="bi bi-heart me-1"></i>{{ listing.save_count }} saves</span>
+                        </div>
+                    {% endif %}
                 </div>
             </a>
         </div>

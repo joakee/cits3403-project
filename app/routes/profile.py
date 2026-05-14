@@ -13,6 +13,7 @@ def view(user_id):
     listing_filter = request.args.get('filter', 'active')
 
     base_q = Listing.query.filter_by(seller_id=user_id)
+
     if listing_filter == 'sold':
         displayed = base_q.filter_by(is_active=False).order_by(Listing.created_at.desc()).all()
     elif listing_filter == 'all':
@@ -21,9 +22,15 @@ def view(user_id):
         listing_filter = 'active'
         displayed = base_q.filter_by(is_active=True).order_by(Listing.created_at.desc()).all()
 
-    total_listings = base_q.count()
-    active_count = base_q.filter_by(is_active=True).count()
-    sold_count = base_q.filter_by(is_active=False).count()
+    all_seller_listings = base_q.all()
+
+    total_listings = len(all_seller_listings)
+    active_count = sum(1 for listing in all_seller_listings if listing.is_active)
+    sold_count = sum(1 for listing in all_seller_listings if not listing.is_active)
+
+    # Seller data / analytics
+    total_views = sum((listing.view_count or 0) for listing in all_seller_listings)
+    total_saves = sum(listing.save_count for listing in all_seller_listings)
 
     reviews = Review.query.filter_by(reviewed_user_id=user_id).order_by(Review.created_at.desc()).all()
 
@@ -39,6 +46,8 @@ def view(user_id):
         active_count=active_count,
         total_listings=total_listings,
         sold_count=sold_count,
+        total_views=total_views,
+        total_saves=total_saves,
         reviews=reviews,
         avg_rating=avg_rating,
     )
@@ -118,9 +127,11 @@ def wishlist_create():
     name = request.json.get('name', '').strip() if request.is_json else request.form.get('name', '').strip()
     if not name:
         return jsonify({'error': 'Name required'}), 400
+
     wl = Wishlist(name=name, user_id=current_user.id)
     db.session.add(wl)
     db.session.commit()
+
     return jsonify({'id': wl.id, 'name': wl.name})
 
 
@@ -130,10 +141,13 @@ def wishlist_rename(wl_id):
     """AJAX: rename a wishlist."""
     wl = Wishlist.query.filter_by(id=wl_id, user_id=current_user.id).first_or_404()
     name = request.json.get('name', '').strip() if request.is_json else request.form.get('name', '').strip()
+
     if not name:
         return jsonify({'error': 'Name required'}), 400
+
     wl.name = name
     db.session.commit()
+
     return jsonify({'id': wl.id, 'name': wl.name})
 
 
@@ -144,25 +158,33 @@ def wishlist_delete(wl_id):
     wl = Wishlist.query.filter_by(id=wl_id, user_id=current_user.id).first_or_404()
     db.session.delete(wl)
     db.session.commit()
+
     return jsonify({'success': True})
 
 
 @bp.route('/wishlist/<int:wl_id>/move/<int:listing_id>', methods=['POST'])
 @login_required
 def wishlist_move(wl_id, listing_id):
-    """AJAX: move a listing from wl_id into target_id (remove from source, add to target)."""
+    """AJAX: move a listing from wl_id into target_id."""
     target_id = request.json.get('target_id') if request.is_json else request.form.get('target_id')
+
     if not target_id:
         return jsonify({'error': 'target_id required'}), 400
+
     source_wl = Wishlist.query.filter_by(id=wl_id, user_id=current_user.id).first_or_404()
     target_wl = Wishlist.query.filter_by(id=int(target_id), user_id=current_user.id).first_or_404()
     listing = Listing.query.get_or_404(listing_id)
+
     if listing in source_wl.listings:
         source_wl.listings.remove(listing)
+
     if listing not in target_wl.listings:
         target_wl.listings.append(listing)
+
     db.session.commit()
+
     return jsonify({'success': True})
+
 
 @bp.route('/<int:user_id>/toggle-ban', methods=['POST'])
 @login_required
@@ -173,10 +195,10 @@ def toggle_user_ban(user_id):
 
     if current_user.id == user_id:
         flash("You cannot ban your own account!", "danger")
-        return redirect(url_for('profile.view_profile', user_id=user_id))
+        return redirect(url_for('profile.view', user_id=user_id))
 
     user = User.query.get_or_404(user_id)
-    user.is_active = not user.is_active # Toggle active status
+    user.is_active = not user.is_active
 
     for listing in user.listings:
         listing.is_active = False
@@ -185,5 +207,5 @@ def toggle_user_ban(user_id):
 
     action_taken = "banned" if not user.is_active else "unbanned"
     flash(f"User {user.username} has been {action_taken}.", "warning")
-    
+
     return redirect(url_for('profile.view', user_id=user.id))

@@ -126,6 +126,13 @@ def api_search():
 @bp.route('/<int:listing_id>')
 def detail(listing_id):
     listing = Listing.query.get_or_404(listing_id)
+
+    # Count views for seller analytics.
+    # Do not count the seller viewing their own listing.
+    if not current_user.is_authenticated or current_user.id != listing.seller_id:
+        listing.view_count = (listing.view_count or 0) + 1
+        db.session.commit()
+
     return render_template('listings/detail.html', listing=listing)
 
 
