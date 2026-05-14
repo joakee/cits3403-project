@@ -44,6 +44,11 @@ def chat_room(conversation_id):
         return "Unauthorized", 403
     
     messages = conversation.messages.order_by(Message.timestamp.asc()).all()
+    # Mark all messages from the other party as read
+    for msg in messages:
+        if msg.sender_id != current_user.id and not msg.is_read:
+            msg.is_read = True
+    db.session.commit()
     return render_template('chat/chat.html', conversation=conversation, messages=messages,User=User)
 
 @bp.route('/inbox')

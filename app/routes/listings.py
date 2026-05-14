@@ -6,7 +6,8 @@ from flask import (
 )
 from flask_login import login_required, current_user
 from app import db
-from app.models import Listing, ListingEdit, User, Wishlist
+from sqlalchemy import func
+from app.models import Listing, ListingEdit, User, Wishlist, ListingView, wishlist_items
 from app.forms import ListingForm, EditListingForm
 
 bp = Blueprint('listings', __name__, url_prefix='/listings')
@@ -28,12 +29,53 @@ def _save_image(file_storage):
     return url_for('static', filename=f'uploads/{filename}')
 
 
+VALID_SORTS = {'newest', 'price_asc', 'price_desc', 'saves'}
+VALID_SOURCES = {'all', 'stores', 'users'}
+CATEGORIES = [
+    ('books', 'Books & Notes'),
+    ('electronics', 'Electronics'),
+    ('clothing', 'Clothing'),
+    ('furniture', 'Furniture'),
+    ('other', 'Other'),
+]
+PER_PAGE = 20
+
+
+def _apply_sort(query, sort):
+    if sort == 'price_asc':
+        return query.order_by(Listing.price.asc())
+    if sort == 'price_desc':
+        return query.order_by(Listing.price.desc())
+    if sort == 'saves':
+        saves_subq = (
+            db.session.query(
+                wishlist_items.c.listing_id,
+                func.count(func.distinct(Wishlist.user_id)).label('n')
+            )
+            .join(Wishlist, Wishlist.id == wishlist_items.c.wishlist_id)
+            .group_by(wishlist_items.c.listing_id)
+            .subquery()
+        )
+        return (query
+                .outerjoin(saves_subq, Listing.id == saves_subq.c.listing_id)
+                .order_by(func.coalesce(saves_subq.c.n, 0).desc()))
+    return query.order_by(Listing.created_at.desc())
+
+
 @bp.route('/')
 def index():
     q = request.args.get('q', '').strip()
     cat = request.args.get('category', '').strip()
+    sort = request.args.get('sort', 'newest')
+    source = request.args.get('source', 'all').strip()
     min_price = request.args.get('min_price', '').strip()
     max_price = request.args.get('max_price', '').strip()
+    page = request.args.get('page', 1, type=int)
+
+    if sort not in VALID_SORTS:
+        sort = 'newest'
+    if source not in VALID_SOURCES:
+        source = 'all'
 
     query = Listing.query.filter_by(is_active=True)
 
@@ -60,13 +102,23 @@ def index():
         except ValueError:
             flash('Maximum price must be a number.', 'warning')
 
-    listings = query.order_by(Listing.created_at.desc()).all()
+    if source == 'stores':
+        query = query.filter(Listing.posted_as_store == True)
+    elif source == 'users':
+        query = query.filter(Listing.posted_as_store == False)
+
+    query = _apply_sort(query, sort)
+    pagination = query.paginate(page=page, per_page=PER_PAGE, error_out=False)
 
     return render_template(
         'listings/index.html',
-        listings=listings,
+        listings=pagination.items,
+        pagination=pagination,
+        categories=CATEGORIES,
         q=q,
         cat=cat,
+        sort=sort,
+        source=source,
         min_price=min_price,
         max_price=max_price
     )
@@ -75,37 +127,12 @@ def index():
 @bp.route('/api/search')
 def api_search():
     q = request.args.get('q', '').strip()
-    cat = request.args.get('category', '').strip()
-    min_price = request.args.get('min_price', '').strip()
-    max_price = request.args.get('max_price', '').strip()
-
     query = Listing.query.filter_by(is_active=True)
 
     if q:
-        query = query.filter(
-            db.or_(
-                Listing.title.ilike(f'%{q}%'),
-                Listing.description.ilike(f'%{q}%')
-            )
-        )
-
-    if cat:
-        query = query.filter(Listing.category == cat)
-
-    if min_price:
-        try:
-            query = query.filter(Listing.price >= float(min_price))
-        except ValueError:
-            pass
-
-    if max_price:
-        try:
-            query = query.filter(Listing.price <= float(max_price))
-        except ValueError:
-            pass
-
+        query = query.filter(Listing.title.ilike(f'%{q}%'))
     results = query.order_by(Listing.created_at.desc()).limit(20).all()
-
+    
     wishlisted_ids = set()
     if current_user.is_authenticated:
         wishlisted_ids = {l.id for l in current_user.wishlist_listings}
@@ -118,6 +145,9 @@ def api_search():
         'image_url': l.image_url,
         'seller_id': l.seller.id,
         'seller_username': l.seller.username,
+        'posted_as_store': l.posted_as_store,
+        'seller_is_verified': l.seller.is_verified,
+        'seller_store_name': l.seller.store_name,
         'is_wishlisted': l.id in wishlisted_ids,
         'wishlist_count': l.wishlisted_by.count()
     } for l in results])
@@ -126,6 +156,9 @@ def api_search():
 @bp.route('/<int:listing_id>')
 def detail(listing_id):
     listing = Listing.query.get_or_404(listing_id)
+    view = ListingView(listing_id=listing_id)
+    db.session.add(view)
+    db.session.commit()
     return render_template('listings/detail.html', listing=listing)
 
 
@@ -134,6 +167,7 @@ def detail(listing_id):
 def new():
     form = ListingForm()
     if form.validate_on_submit():
+        posted_as_store = current_user.is_store and request.form.get('post_as') == 'store'
         image_url = _save_image(form.image.data)
         listing = Listing(
             title=form.title.data,
@@ -141,13 +175,16 @@ def new():
             price=float(form.price.data),
             category=form.category.data,
             image_url=image_url,
+            stock_quantity=form.stock_quantity.data if posted_as_store else None,
+            posted_as_store=posted_as_store,
             seller_id=current_user.id,
         )
         db.session.add(listing)
         db.session.commit()
         flash('Listing posted!', 'success')
         return redirect(url_for('listings.detail', listing_id=listing.id))
-    return render_template('listings/new.html', form=form)
+    default_post_as = request.args.get('as', 'personal')
+    return render_template('listings/new.html', form=form, default_post_as=default_post_as)
 
 
 @bp.route('/<int:listing_id>/close', methods=['POST'])
@@ -157,10 +194,32 @@ def close(listing_id):
     if listing.seller_id != current_user.id:
         flash('Not authorised.', 'error')
         return redirect(url_for('listings.detail', listing_id=listing_id))
-    listing.is_active = False
+    if listing.posted_as_store and listing.stock_quantity is not None:
+        listing.stock_quantity = max(0, listing.stock_quantity - 1)
+        if listing.stock_quantity == 0:
+            listing.is_active = False
+            flash('Stock depleted — listing marked as sold.', 'success')
+        else:
+            flash(f'Sale recorded. {listing.stock_quantity} remaining in stock.', 'success')
+    else:
+        listing.is_active = False
+        flash('Listing marked as sold.', 'success')
     db.session.commit()
-    flash('Listing marked as sold.', 'success')
-    return redirect(url_for('profile.view', user_id=current_user.id))
+    return redirect(url_for('listings.detail', listing_id=listing_id))
+
+
+@bp.route('/<int:listing_id>/toggle_active', methods=['POST'])
+@login_required
+def toggle_listing_active(listing_id):
+    listing = Listing.query.get_or_404(listing_id)
+    if not (current_user.is_admin or current_user.is_moderator):
+        flash('Not authorised.', 'error')
+        return redirect(url_for('listings.detail', listing_id=listing_id))
+    listing.is_active = not listing.is_active
+    db.session.commit()
+    status = 'restored' if listing.is_active else 'taken down'
+    flash(f'Listing {status}.', 'success')
+    return redirect(url_for('listings.detail', listing_id=listing_id))
 
 
 @bp.route('/<int:listing_id>/edit', methods=['GET', 'POST'])
@@ -176,6 +235,8 @@ def edit(listing_id):
         changes_made = False
 
         fields_to_check = ['title', 'description', 'price', 'category']
+        if listing.posted_as_store:
+            fields_to_check.append('stock_quantity')
         for field in fields_to_check:
             old_val = getattr(listing, field)
             new_val = getattr(form, field).data

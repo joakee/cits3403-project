@@ -19,13 +19,36 @@
         <!-- Info -->
         <div class="flex-grow-1 min-width-0">
             <div class="d-flex align-items-center gap-3 flex-wrap">
-                <h2 class="mb-0 fw-bold" style="color: #1d3557;">{{ profile_user.username }}</h2>
+                <h2 class="mb-0 fw-bold d-inline-flex align-items-center gap-2" style="color: #1d3557;">
+                    {{ profile_user.username }}
+                    {% if profile_user.is_verified %}
+                        <span class="badge bg-primary d-inline-flex align-items-center gap-1" style="font-size:0.75rem;">
+                            <i class="bi bi-patch-check-fill"></i> Verified
+                        </span>
+                    {% endif %}
+                </h2>
                 {% if current_user.is_authenticated and current_user.id == profile_user.id %}
                     <a href="{{ url_for('profile.edit') }}" class="btn btn-outline-secondary btn-sm">
                         <i class="bi bi-pencil me-1"></i>Edit Profile
                     </a>
+                    <a href="{{ url_for('profile.settings') }}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-gear me-1"></i>Settings
+                    </a>
+                    {% if profile_user.is_store %}
+                        <a href="{{ url_for('store.storefront', user_id=profile_user.id) }}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-shop me-1"></i>My Store
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('store.setup') }}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-shop me-1"></i>Set Up Store
+                        </a>
+                    {% endif %}
                     <a href="{{ url_for('listings.new') }}" class="btn btn-primary btn-sm">
                         <i class="bi bi-plus-lg me-1"></i>New Listing
+                    </a>
+                {% elif profile_user.is_store %}
+                    <a href="{{ url_for('store.storefront', user_id=profile_user.id) }}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-shop me-1"></i>Visit Store
                     </a>
                 {% endif %}
             </div>
@@ -159,13 +182,40 @@
 
                     <div class="d-flex align-items-center justify-content-between mt-2">
                         <span class="category-badge">{{ listing.category|title }}</span>
-                        <small class="text-muted">{{ listing.created_at.strftime('%d %b') }}</small>
+                        <small class="text-muted" title="{{ listing.created_at.strftime('%d %b %Y') }}">
+                            {{ listing.created_at | timeago }}
+                        </small>
                     </div>
                 </div>
             </a>
         </div>
         {% endfor %}
     </div>
+
+    {% if pagination and pagination.pages > 1 %}
+    <nav class="mt-4 d-flex justify-content-center">
+        <ul class="pagination mb-0">
+            <li class="page-item {{ 'disabled' if not pagination.has_prev }}">
+                <a class="page-link"
+                   href="{{ url_for('profile.view', user_id=profile_user.id, filter=listing_filter, page=pagination.prev_num) if pagination.has_prev else '#' }}">&laquo;</a>
+            </li>
+            {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                {% if p %}
+                    <li class="page-item {{ 'active' if p == pagination.page }}">
+                        <a class="page-link" href="{{ url_for('profile.view', user_id=profile_user.id, filter=listing_filter, page=p) }}">{{ p }}</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">…</span></li>
+                {% endif %}
+            {% endfor %}
+            <li class="page-item {{ 'disabled' if not pagination.has_next }}">
+                <a class="page-link"
+                   href="{{ url_for('profile.view', user_id=profile_user.id, filter=listing_filter, page=pagination.next_num) if pagination.has_next else '#' }}">&raquo;</a>
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
+
 {% else %}
     <div class="empty-state">
         <i class="bi bi-inbox"></i>

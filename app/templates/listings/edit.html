@@ -39,6 +39,15 @@
                     </div>
                 </div>
 
+                {% if listing.posted_as_store %}
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">{{ form.stock_quantity.label.text }}</label>
+                    {{ form.stock_quantity(class_="form-control", placeholder="Leave blank for unlimited") }}
+                    <div class="form-text">Optional. Enter a number to track stock. Leave blank for unlimited.</div>
+                    {% for e in form.stock_quantity.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+                </div>
+                {% endif %}
+
                 <div class="mb-3">
                     <label class="form-label fw-semibold">{{ form.image.label.text }}</label>
                     {{ form.image(class_="form-control") }}
