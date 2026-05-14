@@ -9,7 +9,16 @@ from sqlalchemy import func
 from app import db 
 from app.models import User, Listing, Conversation, Message
 
-class SecureModelView(ModelView):
+ADMIN_EXTRA_CSS = [
+    '/static/css/style.css',
+    '/static/css/admin.css',
+]
+
+
+class SiteStyledModelView(ModelView):
+    extra_css = ADMIN_EXTRA_CSS
+
+class SecureModelView(SiteStyledModelView):
     def is_accessible(self):
         return current_user.is_authenticated and getattr(current_user, 'is_admin', False)
 
@@ -24,7 +33,7 @@ class UserAdminView(SecureModelView):
     
     column_list = ('username', 'email', 'is_admin', 'member_since')
 
-class ModeratorListingView(ModelView):
+class ModeratorListingView(SiteStyledModelView):
     # What they can do
     can_create = False
     can_edit = False  # They can't change prices/titles
@@ -50,6 +59,8 @@ class ModeratorListingView(ModelView):
         flash("Status updated.", "success")
 
 class SecureAdminIndexView(AdminIndexView):
+    extra_css = ADMIN_EXTRA_CSS
+
     def is_accessible(self):
         if not current_user.is_authenticated:
             return False
@@ -104,7 +115,7 @@ def init_admin(app):
     admin = Admin(
         app, 
         name='Marketplace Admin', 
-        theme=Bootstrap4Theme(swatch='darkly'),
+        theme=Bootstrap4Theme(),
         index_view=SecureAdminIndexView()
     )
     

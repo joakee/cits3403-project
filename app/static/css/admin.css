@@ -1,0 +1,97 @@
+/* Admin-specific polish layered on top of site styles. */
+
+body {
+    background-color: var(--bg);
+    color: #1f2937;
+}
+
+.navbar,
+.navbar.navbar-dark,
+.navbar.navbar-light,
+.navbar.navbar-inverse {
+    background-color: var(--navy) !important;
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    margin-bottom: 0 !important;
+    border-radius: 0;
+}
+
+.navbar > .container,
+.navbar > .container-fluid {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+.navbar .navbar-brand {
+    color: var(--white) !important;
+}
+
+.navbar .nav-link,
+.navbar .navbar-nav > li > a,
+.navbar .dropdown-toggle {
+    color: rgba(255, 255, 255, 0.92) !important;
+}
+
+.navbar .nav-link:hover,
+.navbar .navbar-nav > li > a:hover,
+.navbar .dropdown-toggle:hover {
+    color: var(--white) !important;
+}
+
+.card,
+.panel {
+    border: none;
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+}
+
+.panel-heading,
+.card-header,
+.page-header h1,
+h1,
+h2,
+h3,
+h4,
+h5 {
+    color: var(--navy);
+}
+
+.table thead th {
+    color: var(--navy);
+    border-bottom-color: var(--navy-light);
+}
+
+.badge-primary,
+.label-primary {
+    background-color: var(--navy) !important;
+}
+
+/* Flask-Admin breadcrumb bar — full-width gold strip below the navbar */
+h4.mb-4 {
+    background-color: var(--gold);
+    color: var(--navy) !important;
+    font-size: 0.875rem;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    margin-top: 0 !important;
+    margin-bottom: 1.5rem !important;
+    padding: 0.55rem 1rem;
+    /* break out of any centered container, same technique as the navbar */
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    border-radius: 0;
+}
+
+h4.mb-4 a {
+    color: var(--navy);
+    text-decoration: none;
+}
+
+h4.mb-4 a:hover {
+    text-decoration: underline;
+}

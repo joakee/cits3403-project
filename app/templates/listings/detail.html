@@ -30,6 +30,7 @@
                     </form>
                 </div>
             {% endif %}
+
             {% if listing.image_url %}
                 <img src="{{ listing.image_url }}" class="w-100" style="max-height: 380px; object-fit: cover;" alt="{{ listing.title }}">
             {% else %}
@@ -41,22 +42,29 @@
             <div class="card-body p-4">
                 <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap">
                     <div>
-                        <h3 class="fw-bold mb-1 d-flex align-items-center gap-2 flex-wrap" style="color:#1d3557;">
-                            {{ listing.title }}
-                            {% if listing.stock_quantity is not none and listing.is_active %}
-                                {% if listing.stock_quantity == 0 %}
-                                    <span class="badge bg-danger" style="font-size:0.6em;"><i class="bi bi-x-circle me-1"></i>Out of stock</span>
-                                {% elif listing.stock_quantity <= 5 %}
-                                    <span class="badge bg-warning text-dark" style="font-size:0.6em;"><i class="bi bi-exclamation-triangle me-1"></i>Only {{ listing.stock_quantity }} left!</span>
+                        <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                            <h3 class="fw-bold mb-0" style="color:#1d3557;">{{ listing.title }}</h3>
+
+                            {% if listing.is_active %}
+                                {% if listing.stock_quantity is not none %}
+                                    {% if listing.stock_quantity == 0 %}
+                                        <span class="badge bg-danger" style="font-size:0.6em;"><i class="bi bi-x-circle me-1"></i>Out of stock</span>
+                                    {% elif listing.stock_quantity <= 5 %}
+                                        <span class="badge bg-warning text-dark" style="font-size:0.6em;"><i class="bi bi-exclamation-triangle me-1"></i>Only {{ listing.stock_quantity }} left!</span>
+                                    {% else %}
+                                        <span class="badge bg-success" style="font-size:0.6em;"><i class="bi bi-check-circle me-1"></i>{{ listing.stock_quantity }} in stock</span>
+                                    {% endif %}
                                 {% else %}
-                                    <span class="badge bg-success" style="font-size:0.6em;"><i class="bi bi-check-circle me-1"></i>{{ listing.stock_quantity }} in stock</span>
+                                    <span class="listing-status-badge status-active">Active</span>
                                 {% endif %}
-                            {% elif not listing.is_active %}
-                                <span class="badge bg-secondary" style="font-size:0.6em;">Sold</span>
+                            {% else %}
+                                <span class="listing-status-badge status-sold">Sold</span>
                             {% endif %}
-                        </h3>
-                        <div class="d-flex align-items-center gap-3 mt-2">
+                        </div>
+
+                        <div class="d-flex align-items-center gap-3 mt-2 flex-wrap">
                             <span class="category-badge">{{ listing.category|title }}</span>
+
                             {% if current_user.is_authenticated and current_user.id != listing.seller_id %}
                                 <button type="button"
                                         class="btn btn-sm wishlist-btn {{ 'btn-outline-danger' if current_user.has_saved(listing) else 'btn-outline-secondary' }}"
@@ -68,10 +76,14 @@
                                     (<span class="wishlist-count">{{ listing.save_count }}</span>)
                                 </button>
                             {% else %}
-                                <span class="badge bg-light text-dark border"><i class="bi bi-heart-fill text-danger me-1"></i>Saved by {{ listing.save_count }} {{ 'person' if listing.save_count == 1 else 'people' }}</span>
+                                <span class="badge bg-light text-dark border">
+                                    <i class="bi bi-heart-fill text-danger me-1"></i>
+                                    Saved by {{ listing.save_count }} {{ 'person' if listing.save_count == 1 else 'people' }}
+                                </span>
                             {% endif %}
                         </div>
                     </div>
+
                     <div class="listing-price fs-3">${{ "%.2f"|format(listing.price) }}</div>
                 </div>
 
@@ -106,16 +118,17 @@
                             &middot; <i class="bi bi-eye me-1"></i>{{ listing.views|length }} view{{ 's' if listing.views|length != 1 }}
                         </div>
                     </div>
+
                     {% if current_user.id != listing.seller_id %}
                         {% if listing.is_active %}
-                        <a href="{{ url_for('chat.start_chat', listing_id=listing.id) }}" class="ms-auto btn btn-success">
-                            Message Seller
-                        </a>
+                            <a href="{{ url_for('chat.start_chat', listing_id=listing.id) }}" class="ms-auto btn btn-success">
+                                Message Seller
+                            </a>
                         {% else %}
-                        <span class="badge bg-secondary ms-auto">Sold</span>
+                            <span class="listing-status-badge status-sold ms-auto">Sold</span>
                         {% endif %}
                     {% else %}
-                    <p class="text-muted ms-auto">This is your listing</p>
+                        <p class="text-muted ms-auto">This is your listing</p>
                     {% endif %}
                 </div>
 
@@ -147,7 +160,6 @@
                 {% endif %}
             </div>
             
-            <!-- Edit History Timeline (Visible if toggle is ON and edits exist) -->
             {% set edits = listing.edits.all() %}
             {% if listing.show_history and edits %}
             <div class="card-footer bg-light p-4" style="border-top: 1px solid #e5e7eb;">
