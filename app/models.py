@@ -14,6 +14,12 @@ wishlist_items = db.Table(
     db.Column('listing_id', db.Integer, db.ForeignKey('listing.id'), primary_key=True)
 )
 
+store_follows = db.Table(
+    'store_follows',
+    db.Column('follower_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
+    db.Column('store_id', db.Integer, db.ForeignKey('user.id'), primary_key=True)
+)
+
 
 class Wishlist(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -48,13 +54,36 @@ class User(db.Model, UserMixin):
     is_moderator = db.Column(db.Boolean, default=False)
     is_active = db.Column(db.Boolean, default=True)
 
+    # Store / seller profile fields
+    is_store = db.Column(db.Boolean, default=False)
+    is_verified = db.Column(db.Boolean, default=False)
+    store_name = db.Column(db.String(128), nullable=True)
+    store_address = db.Column(db.String(256), nullable=True)
+    contact_phone = db.Column(db.String(32), nullable=True)
+    contact_email = db.Column(db.String(120), nullable=True)
+    store_bio = db.Column(db.Text, default='')
+
     listings = db.relationship('Listing', backref='seller', lazy='dynamic')
+
+    following_stores = db.relationship(
+        'User',
+        secondary=store_follows,
+        primaryjoin='User.id == store_follows.c.follower_id',
+        secondaryjoin='User.id == store_follows.c.store_id',
+        backref=db.backref('store_followers', lazy='dynamic'),
+        lazy='dynamic'
+    )
 
     def has_saved(self, listing):
         return db.session.query(wishlist_items).join(Wishlist).filter(
             Wishlist.user_id == self.id,
             wishlist_items.c.listing_id == listing.id
         ).first() is not None
+
+    def is_following_store(self, store_user):
+        return self.following_stores.filter(
+            store_follows.c.store_id == store_user.id
+        ).count() > 0
 
     def __repr__(self):
         return f'<User {self.username}>'
@@ -72,7 +101,9 @@ class Listing(db.Model):
     # Seller data / analytics
     view_count = db.Column(db.Integer, default=0)
 
-    show_history = db.Column(db.Boolean, default=True)   # seller can hide edit history
+    show_history = db.Column(db.Boolean, default=True)
+    stock_quantity = db.Column(db.Integer, nullable=True)
+    posted_as_store = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     seller_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
@@ -94,6 +125,7 @@ class Listing(db.Model):
             try:
                 original = float(first_price_edit.old_value)
                 current = float(self.price)
+
                 if abs(original - current) > 0.001:
                     return {
                         'original': original,
@@ -145,6 +177,7 @@ class Message(db.Model):
     sender_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     content = db.Column(db.Text, nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    is_read = db.Column(db.Boolean, default=False)
 
 
 class Review(db.Model):
@@ -152,12 +185,31 @@ class Review(db.Model):
     rating = db.Column(db.Integer, nullable=False)
     comment = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    reply_text = db.Column(db.Text, nullable=True)
+    reply_at = db.Column(db.DateTime, nullable=True)
 
     reviewer_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     reviewed_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
-    reviewer = db.relationship('User', foreign_keys=[reviewer_id], backref='reviews_written')
-    reviewed_user = db.relationship('User', foreign_keys=[reviewed_user_id], backref='reviews_received')
+    reviewer = db.relationship(
+        'User',
+        foreign_keys=[reviewer_id],
+        backref='reviews_written'
+    )
+
+    reviewed_user = db.relationship(
+        'User',
+        foreign_keys=[reviewed_user_id],
+        backref='reviews_received'
+    )
 
     def __repr__(self):
         return f'<Review {self.rating}/5 by {self.reviewer_id} for {self.reviewed_user_id}>'
+
+
+class ListingView(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    listing_id = db.Column(db.Integer, db.ForeignKey('listing.id'), nullable=False)
+    viewed_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    listing = db.relationship('Listing', backref='views')
