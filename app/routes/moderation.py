@@ -9,6 +9,37 @@ from app.forms import ReportForm
 bp = Blueprint('moderation', __name__, url_prefix='/moderation')
 
 
+def _apply_takedown(listing, moderator, reason=None, report=None):
+    """Mark listing as removed by moderation and emit live event."""
+    listing.is_active = False
+    listing.is_removed = True
+    listing.removed_at = datetime.utcnow()
+    listing.removed_reason = reason or (
+        f'Taken down via report #{report.id}' if report else 'Taken down by moderator'
+    )
+    listing.removed_by_id = moderator.id
+
+    if report:
+        report.status = 'resolved'
+        report.handled_by_id = moderator.id
+        report.admin_note = reason or 'Listing taken down'
+        report.updated_at = datetime.utcnow()
+
+    db.session.commit()
+    socketio.emit('listing_removed', {'listing_id': listing.id})
+
+
+def _apply_restore(listing):
+    """Clear moderation removal and emit live event."""
+    listing.is_active = True
+    listing.is_removed = False
+    listing.removed_at = None
+    listing.removed_reason = None
+    listing.removed_by_id = None
+    db.session.commit()
+    socketio.emit('listing_restored', {'listing_id': listing.id})
+
+
 def admin_or_mod_required(f):
     """Decorator that requires admin or moderator role."""
     from functools import wraps
@@ -191,21 +222,7 @@ def takedown_listing(report_id):
         return redirect(url_for('moderation.report_detail', report_id=report_id))
 
     reason = request.form.get('admin_note', '').strip()
-
-    listing.is_active = False
-    listing.is_removed = True
-    listing.removed_at = datetime.utcnow()
-    listing.removed_reason = reason or f'Taken down via report #{report.id}'
-    listing.removed_by_id = current_user.id
-
-    report.status = 'resolved'
-    report.handled_by_id = current_user.id
-    report.admin_note = reason or 'Listing taken down'
-    report.updated_at = datetime.utcnow()
-
-    db.session.commit()
-    print(f'[moderation] Emitting listing_removed for listing_id={listing.id}')
-    socketio.emit('listing_removed', {'listing_id': listing.id})
+    _apply_takedown(listing, current_user, reason=reason, report=report)
     flash(f'Listing "{listing.title}" has been taken down.', 'success')
     return redirect(url_for('moderation.reports_list'))
 
@@ -224,16 +241,28 @@ def restore_listing(report_id):
         flash('Listing not found.', 'error')
         return redirect(url_for('moderation.report_detail', report_id=report_id))
 
-    listing.is_active = True
-    listing.is_removed = False
-    listing.removed_at = None
-    listing.removed_reason = None
-    listing.removed_by_id = None
-
-    db.session.commit()
-    socketio.emit('listing_restored', {'listing_id': listing.id})
+    _apply_restore(listing)
     flash(f'Listing "{listing.title}" has been restored.', 'success')
     return redirect(url_for('moderation.report_detail', report_id=report_id))
+
+
+@bp.route('/listing/<int:listing_id>/takedown', methods=['POST'])
+@admin_or_mod_required
+def takedown_listing_direct(listing_id):
+    listing = Listing.query.get_or_404(listing_id)
+    reason = request.form.get('admin_note', '').strip()
+    _apply_takedown(listing, current_user, reason=reason)
+    flash(f'Listing "{listing.title}" has been taken down.', 'success')
+    return redirect(url_for('listings.detail', listing_id=listing.id))
+
+
+@bp.route('/listing/<int:listing_id>/restore', methods=['POST'])
+@admin_or_mod_required
+def restore_listing_direct(listing_id):
+    listing = Listing.query.get_or_404(listing_id)
+    _apply_restore(listing)
+    flash(f'Listing "{listing.title}" has been restored.', 'success')
+    return redirect(url_for('listings.detail', listing_id=listing.id))
 
 
 @bp.route('/reports/<int:report_id>/ban-user', methods=['POST'])

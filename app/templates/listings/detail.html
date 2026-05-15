@@ -24,15 +24,18 @@
                             <span class="badge bg-warning text-dark">Hidden</span>
                         {% endif %}
                     </span>
-                    <form action="{{ url_for('listings.toggle_listing_active', listing_id=listing.id) }}" method="POST" style="margin:0;">
+                    {% if listing.is_removed %}
+                    <form action="{{ url_for('moderation.restore_listing_direct', listing_id=listing.id) }}" method="POST" style="margin:0;">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-                        {% if listing.is_active %}
-                            <button type="submit" class="btn btn-danger btn-sm">Take Down Post</button>
-                        {% else %}
-                            <button type="submit" class="btn btn-success btn-sm">Restore Post</button>
-                        {% endif %}
+                        <button type="submit" class="btn btn-success btn-sm">Restore Post</button>
                     </form>
+                    {% else %}
+                    <form action="{{ url_for('moderation.takedown_listing_direct', listing_id=listing.id) }}" method="POST" style="margin:0;"
+                          onsubmit="return confirm('Take down this listing?')">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-danger btn-sm">Take Down Post</button>
+                    </form>
+                    {% endif %}
                 </div>
             {% endif %}
             {% if listing.image_url %}

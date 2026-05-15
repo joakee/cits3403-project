@@ -194,6 +194,90 @@ class TestAdminActions:
             assert report.status == 'dismissed'
 
 
+class TestDirectTakedownRestore:
+    """Tests for the report-independent takedown/restore endpoints."""
+
+    def test_listing_page_takedown_sets_is_removed(self, client, admin_user, regular_user, sample_listing, app):
+        """Moderator hitting direct takedown sets all removed_* fields."""
+        login(client, 'admin@example.com')
+        resp = client.post(f'/moderation/listing/{sample_listing}/takedown', data={
+            'admin_note': 'Policy violation',
+        }, follow_redirects=True)
+        assert resp.status_code == 200
+
+        with app.app_context():
+            listing = db.session.get(Listing, sample_listing)
+            assert listing.is_removed is True
+            assert listing.is_active is False
+            assert listing.removed_by_id == admin_user
+            assert listing.removed_at is not None
+            assert listing.removed_reason == 'Policy violation'
+
+    def test_listing_page_takedown_default_reason(self, client, admin_user, regular_user, sample_listing, app):
+        """Direct takedown without admin_note uses default reason."""
+        login(client, 'admin@example.com')
+        client.post(f'/moderation/listing/{sample_listing}/takedown')
+
+        with app.app_context():
+            listing = db.session.get(Listing, sample_listing)
+            assert listing.is_removed is True
+            assert listing.removed_reason == 'Taken down by moderator'
+
+    def test_listing_page_takedown_hides_from_browse(self, client, admin_user, regular_user, sample_listing, app):
+        """After direct takedown, listing is hidden from public browse."""
+        login(client, 'admin@example.com')
+        client.post(f'/moderation/listing/{sample_listing}/takedown', data={
+            'admin_note': 'Test',
+        })
+        client.get('/auth/logout')
+
+        login(client, 'test@example.com')
+        resp = client.get('/listings/')
+        assert b'Test Textbook' not in resp.data
+
+    def test_listing_page_restore_clears_removal_fields(self, client, admin_user, regular_user, sample_listing, app):
+        """Restoring via direct endpoint clears all removed_* fields."""
+        login(client, 'admin@example.com')
+        client.post(f'/moderation/listing/{sample_listing}/takedown', data={
+            'admin_note': 'Test takedown',
+        })
+        resp = client.post(f'/moderation/listing/{sample_listing}/restore', follow_redirects=True)
+        assert resp.status_code == 200
+
+        with app.app_context():
+            listing = db.session.get(Listing, sample_listing)
+            assert listing.is_removed is False
+            assert listing.is_active is True
+            assert listing.removed_at is None
+            assert listing.removed_reason is None
+            assert listing.removed_by_id is None
+
+    def test_regular_user_cannot_use_direct_takedown(self, client, regular_user, sample_listing):
+        """Non-admin/mod users get 403 from direct takedown."""
+        login(client, 'test@example.com')
+        resp = client.post(f'/moderation/listing/{sample_listing}/takedown')
+        assert resp.status_code == 403
+
+    def test_regular_user_cannot_use_direct_restore(self, client, regular_user, sample_listing):
+        """Non-admin/mod users get 403 from direct restore."""
+        login(client, 'test@example.com')
+        resp = client.post(f'/moderation/listing/{sample_listing}/restore')
+        assert resp.status_code == 403
+
+    def test_moderator_can_use_direct_takedown(self, client, moderator_user, regular_user, sample_listing, app):
+        """Moderator (non-admin) can use the direct takedown endpoint."""
+        login(client, 'mod@example.com')
+        resp = client.post(f'/moderation/listing/{sample_listing}/takedown', data={
+            'admin_note': 'Mod action',
+        }, follow_redirects=True)
+        assert resp.status_code == 200
+
+        with app.app_context():
+            listing = db.session.get(Listing, sample_listing)
+            assert listing.is_removed is True
+            assert listing.removed_by_id == moderator_user
+
+
 class TestEnforcement:
     def test_removed_listing_not_in_browse(self, client, admin_user, regular_user, sample_listing, app):
         """Removed listings do not appear in the public browse page."""
