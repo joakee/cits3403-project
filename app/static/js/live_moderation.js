@@ -109,6 +109,12 @@
     return d.innerHTML;
   }
 
+  window.addEventListener('pageshow', function (e) {
+    if (e.persisted) {
+      location.reload();
+    }
+  });
+
   if (document.readyState === 'complete') {
     setTimeout(connect, 0);
   } else {
