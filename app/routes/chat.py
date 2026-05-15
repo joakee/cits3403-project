@@ -10,6 +10,14 @@ import emoji
 bp = Blueprint('chat', __name__, url_prefix='/chat')
 
 # --- ROUTES ---
+@bp.before_request
+def check_verification():
+    if current_user.is_authenticated:
+        # Allow them to access the verify page, static files, and logout
+        allowed_routes = ['auth.verify_email', 'auth.logout', 'static']
+        if not current_user.is_verified and request.endpoint not in allowed_routes:
+            flash("Please verify your email to continue.", "info")
+            return redirect(url_for('auth.verify_email'))
 
 @bp.route('/start/<int:listing_id>')
 @login_required

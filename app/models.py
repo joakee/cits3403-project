@@ -1,7 +1,7 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask_login import UserMixin
 from app import db, login_manager
-
+import random
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -21,6 +21,7 @@ class Wishlist(db.Model):
 
     # A wishlist belongs to a user
     user = db.relationship('User', backref=db.backref('wishlists', lazy='dynamic'))
+    
 
     # A wishlist contains many listings
     listings = db.relationship('Listing', secondary=wishlist_items, lazy='dynamic', backref=db.backref('saved_in_wishlists', lazy='dynamic'))
@@ -41,6 +42,15 @@ class User(db.Model, UserMixin):
     is_admin = db.Column(db.Boolean, default=False)
     is_moderator = db.Column(db.Boolean, default=False)
     is_active = db.Column(db.Boolean, default=True)
+    is_verified = db.Column(db.Boolean, default=False)
+    otp_code = db.Column(db.String(6), nullable=True)
+    otp_expiry = db.Column(db.DateTime, nullable=True)
+    otp_attempts = db.Column(db.Integer, default=0)
+
+    def generate_otp(self):
+        self.otp_code = f"{random.randint(100000, 999999)}"
+        self.otp_expiry = datetime.utcnow() + timedelta(minutes=10)
+        return self.otp_code
 
     listings = db.relationship('Listing', backref='seller', lazy='dynamic')
 

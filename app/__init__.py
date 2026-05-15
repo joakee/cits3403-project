@@ -5,6 +5,10 @@ from flask_login import LoginManager, current_user
 from flask_wtf.csrf import CSRFProtect
 from config import Config
 from flask_socketio import SocketIO
+from flask_mail import Mail, Message
+
+mail = Mail()
+
 
 socketio = SocketIO()
 db = SQLAlchemy()
@@ -37,6 +41,8 @@ def create_app(config_class=Config):
     init_admin(app)
 
     socketio.init_app(app)
+    
+    mail.init_app(app)
 
     @app.context_processor
     def inject_wishlist_count():

@@ -6,6 +6,14 @@ from app.forms import EditProfileForm, ReviewForm
 
 bp = Blueprint('profile', __name__, url_prefix='/user')
 
+@bp.before_request
+def check_verification():
+    if current_user.is_authenticated:
+        # Allow them to access the verify page, static files, and logout
+        allowed_routes = ['auth.verify_email', 'auth.logout', 'static']
+        if not current_user.is_verified and request.endpoint not in allowed_routes:
+            flash("Please verify your email to continue.", "info")
+            return redirect(url_for('auth.verify_email'))
 
 @bp.route('/<int:user_id>')
 def view(user_id):
