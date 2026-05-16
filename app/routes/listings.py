@@ -32,7 +32,16 @@ def _save_image(file_storage):
     return url_for('static', filename=f'uploads/{filename}')
 
 
-VALID_SORTS = {'newest', 'price_asc', 'price_desc', 'saves'}
+VALID_SORTS = {
+    'newest',
+    'oldest',
+    'price_asc',
+    'price_desc',
+    'price_low',
+    'price_high',
+    'saves'
+}
+
 VALID_SOURCES = {'all', 'stores', 'users'}
 
 CATEGORIES = [
@@ -47,11 +56,14 @@ PER_PAGE = 20
 
 
 def _apply_sort(query, sort):
-    if sort == 'price_asc':
+    if sort in ['price_asc', 'price_low']:
         return query.order_by(Listing.price.asc())
 
-    if sort == 'price_desc':
+    if sort in ['price_desc', 'price_high']:
         return query.order_by(Listing.price.desc())
+
+    if sort == 'oldest':
+        return query.order_by(Listing.created_at.asc())
 
     if sort == 'saves':
         saves_subq = (
@@ -77,7 +89,7 @@ def _apply_sort(query, sort):
 def index():
     q = request.args.get('q', '').strip()
     cat = request.args.get('category', '').strip()
-    sort = request.args.get('sort', 'newest')
+    sort = request.args.get('sort', 'newest').strip()
     source = request.args.get('source', 'all').strip()
     min_price = request.args.get('min_price', '').strip()
     max_price = request.args.get('max_price', '').strip()
