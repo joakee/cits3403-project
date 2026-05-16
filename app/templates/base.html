@@ -13,7 +13,7 @@
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #1d3557;">
+    <nav class="navbar navbar-expand-lg navbar-dark site-navbar">
         <div class="container">
             <a class="navbar-brand fw-bold" href="{{ url_for('index') }}">
                 <i class="bi bi-shop me-1"></i>UWA Marketplace
@@ -34,20 +34,38 @@
                     <div class="mx-auto"></div>
                 {% endif %}
 
+                {% set ep = request.endpoint %}
                 <div class="ms-auto d-flex gap-2 align-items-center">
-                    <a href="{{ url_for('listings.index') }}" class="btn btn-sm btn-outline-light">
+                    <a href="{{ url_for('listings.index') }}"
+                       class="btn btn-sm {{ 'btn-light' if ep == 'listings.index' else 'btn-outline-light' }}">
                         <i class="bi bi-grid me-1"></i>Listings
                     </a>
                     {% if current_user.is_authenticated %}
-                        <a href="{{ url_for('listings.new') }}" class="btn btn-sm btn-light">
+                        <a href="{{ url_for('listings.new') }}"
+                           class="btn btn-sm {{ 'btn-light' if ep == 'listings.new' else 'btn-light' }}">
                             <i class="bi bi-plus-lg me-1"></i>List Item
                         </a>
 
-                        <a href="{{ url_for('profile.view', user_id=current_user.id) }}" class="btn btn-sm btn-outline-light">
+                        {% if current_user.is_store %}
+                            <a href="{{ url_for('store.dashboard') }}"
+                               class="btn btn-sm {{ 'btn-light' if ep == 'store.dashboard' else 'btn-outline-light' }}">
+                                <i class="bi bi-bar-chart me-1"></i>Dashboard
+                            </a>
+                        {% endif %}
+
+                        <a href="{{ url_for('profile.view', user_id=current_user.id) }}"
+                           class="btn btn-sm {{ 'btn-light' if ep in ['profile.view', 'profile.edit', 'profile.settings'] else 'btn-outline-light' }}">
                             <i class="bi bi-person-circle me-1"></i>{{ current_user.username.split()[0] }}
                         </a>
-                        <a href="{{ url_for('chat.inbox') }}" class="btn btn-sm btn-outline-light">
-                            Messages <span id="global-unread-dot" style="display:none; color:red;">●</span>
+                        <a href="{{ url_for('chat.inbox') }}"
+                           class="btn btn-sm {{ 'btn-light' if ep in ['chat.inbox', 'chat.chat_room'] else 'btn-outline-light' }} position-relative">
+                            <i class="bi bi-chat me-1"></i>Messages
+                            {% if unread_count > 0 %}
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                      style="font-size:0.65rem;">
+                                    {{ unread_count if unread_count < 100 else '99+' }}
+                                </span>
+                            {% endif %}
                         </a>
                         <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-outline-light">
                             Logout

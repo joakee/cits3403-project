@@ -38,6 +38,7 @@
                     {% endif %}
                 </div>
             {% endif %}
+
             {% if listing.image_url %}
                 <img src="{{ listing.image_url }}" class="w-100" style="max-height: 380px; object-fit: cover;" alt="{{ listing.title }}">
             {% else %}
@@ -49,9 +50,29 @@
             <div class="card-body p-4">
                 <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap">
                     <div>
-                        <h3 class="fw-bold mb-1" style="color:#1d3557;">{{ listing.title }}</h3>
-                        <div class="d-flex align-items-center gap-3 mt-2">
+                        <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                            <h3 class="fw-bold mb-0" style="color:#1d3557;">{{ listing.title }}</h3>
+
+                            {% if listing.is_active %}
+                                {% if listing.stock_quantity is not none %}
+                                    {% if listing.stock_quantity == 0 %}
+                                        <span class="badge bg-danger" style="font-size:0.6em;"><i class="bi bi-x-circle me-1"></i>Out of stock</span>
+                                    {% elif listing.stock_quantity <= 5 %}
+                                        <span class="badge bg-warning text-dark" style="font-size:0.6em;"><i class="bi bi-exclamation-triangle me-1"></i>Only {{ listing.stock_quantity }} left!</span>
+                                    {% else %}
+                                        <span class="badge bg-success" style="font-size:0.6em;"><i class="bi bi-check-circle me-1"></i>{{ listing.stock_quantity }} in stock</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="listing-status-badge status-active">Active</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="listing-status-badge status-sold">Sold</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex align-items-center gap-3 mt-2 flex-wrap">
                             <span class="category-badge">{{ listing.category|title }}</span>
+
                             {% if current_user.is_authenticated and current_user.id != listing.seller_id %}
                                 <button type="button"
                                         class="btn btn-sm wishlist-btn {{ 'btn-outline-danger' if current_user.has_saved(listing) else 'btn-outline-secondary' }}"
@@ -63,10 +84,14 @@
                                     (<span class="wishlist-count">{{ listing.save_count }}</span>)
                                 </button>
                             {% else %}
-                                <span class="badge bg-light text-dark border"><i class="bi bi-heart-fill text-danger me-1"></i>Saved by {{ listing.save_count }} {{ 'person' if listing.save_count == 1 else 'people' }}</span>
+                                <span class="badge bg-light text-dark border">
+                                    <i class="bi bi-heart-fill text-danger me-1"></i>
+                                    Saved by {{ listing.save_count }} {{ 'person' if listing.save_count == 1 else 'people' }}
+                                </span>
                             {% endif %}
                         </div>
                     </div>
+
                     <div class="listing-price fs-3">${{ "%.2f"|format(listing.price) }}</div>
                 </div>
 
@@ -82,12 +107,23 @@
                         {{ listing.seller.username[0].upper() }}
                     </div>
                     <div>
-                        <a href="{{ url_for('profile.view', user_id=listing.seller.id) }}"
-                           class="fw-semibold text-decoration-none" style="color:#1d3557;">
-                            {{ listing.seller.username }}
-                        </a>
+                        {% if listing.posted_as_store %}
+                            <a href="{{ url_for('store.storefront', user_id=listing.seller.id) }}"
+                               class="fw-semibold text-decoration-none d-inline-flex align-items-center gap-1" style="color:#1d3557;">
+                                {{ listing.seller.store_name or listing.seller.username }}
+                                {% if listing.seller.is_verified %}
+                                    <i class="bi bi-patch-check-fill text-primary" title="Verified Store"></i>
+                                {% endif %}
+                            </a>
+                        {% else %}
+                            <a href="{{ url_for('profile.view', user_id=listing.seller.id) }}"
+                               class="fw-semibold text-decoration-none" style="color:#1d3557;">
+                                {{ listing.seller.username }}
+                            </a>
+                        {% endif %}
                         <div class="text-muted" style="font-size:12px;">
                             Listed {{ listing.created_at.strftime('%d %B %Y') }}
+                            &middot; <i class="bi bi-eye me-1"></i>{{ listing.views|length }} view{{ 's' if listing.views|length != 1 }}
                         </div>
                     </div>
                     {% if current_user.is_authenticated and current_user.id != listing.seller_id %}
@@ -97,7 +133,7 @@
                                 Message Seller
                             </a>
                             {% else %}
-                            <span class="badge bg-secondary">Sold</span>
+                            <span class="listing-status-badge status-sold">Sold</span>
                             {% endif %}
                             <a href="{{ url_for('moderation.report_listing', listing_id=listing.id) }}"
                                class="btn btn-outline-danger btn-sm" title="Report this listing">
@@ -105,7 +141,7 @@
                             </a>
                         </div>
                     {% elif current_user.is_authenticated and current_user.id == listing.seller_id %}
-                    <p class="text-muted ms-auto">This is your listing</p>
+                        <p class="text-muted ms-auto">This is your listing</p>
                     {% endif %}
                 </div>
 
@@ -116,6 +152,15 @@
                     <a href="{{ url_for('listings.edit', listing_id=listing.id) }}" class="btn btn-outline-primary btn-sm">
                         <i class="bi bi-pencil me-1"></i>Edit Listing
                     </a>
+                    {% if listing.posted_as_store and listing.stock_quantity is not none %}
+                    <form method="POST" action="{{ url_for('listings.close', listing_id=listing.id) }}"
+                          onsubmit="return confirm('Record a sale? Stock will decrease by 1.')">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-cart-check me-1"></i>Record a Sale
+                        </button>
+                    </form>
+                    {% else %}
                     <form method="POST" action="{{ url_for('listings.close', listing_id=listing.id) }}"
                           onsubmit="return confirm('Mark this item as sold? It will no longer appear in search results.')">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -123,11 +168,11 @@
                             <i class="bi bi-check-circle me-1"></i>Mark as Sold
                         </button>
                     </form>
+                    {% endif %}
                 </div>
                 {% endif %}
             </div>
             
-            <!-- Edit History Timeline (Visible if toggle is ON and edits exist) -->
             {% set edits = listing.edits.all() %}
             {% if listing.show_history and edits %}
             <div class="card-footer bg-light p-4" style="border-top: 1px solid #e5e7eb;">
