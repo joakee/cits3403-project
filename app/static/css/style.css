@@ -1007,6 +1007,33 @@ html.dark-mode .dropdown-item:hover {
     background-color: var(--navy-light);
 }
 
+/* Navbar buttons — translucent instead of bright white in dark mode */
+html.dark-mode .site-navbar .btn-light {
+    background-color: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.25);
+    color: #fff;
+}
+
+html.dark-mode .site-navbar .btn-light:hover {
+    background-color: rgba(255, 255, 255, 0.22);
+    border-color: rgba(255, 255, 255, 0.4);
+    color: #fff;
+}
+
+html.dark-mode .site-navbar .btn-outline-light {
+    border-color: rgba(255, 255, 255, 0.4);
+    color: rgba(255, 255, 255, 0.9);
+}
+
+html.dark-mode .site-navbar .btn-outline-light:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    color: #fff;
+}
+
+html.dark-mode .btn-warning.text-dark {
+    color: #212529 !important;
+}
+
 /* ─── Responsive adjustments ──────────────────────────────────── */
 @media (max-width: 767px) {
     .listings-filter-bar {
