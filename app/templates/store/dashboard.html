@@ -4,7 +4,7 @@
 {% block content %}
 
 <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
-    <h4 class="mb-0 fw-bold" style="color:#1d3557;">
+    <h4 class="mb-0 fw-bold" style="color:var(--navy);">
         <i class="bi bi-bar-chart me-2"></i>Store Dashboard
     </h4>
     <div class="d-flex gap-2">
@@ -25,25 +25,25 @@
     <div class="col-6 col-md-3">
         <div class="card p-3 text-center shadow-sm h-100">
             <div class="text-muted" style="font-size:0.8rem;">Views Today</div>
-            <div class="fw-bold" style="font-size:2rem; color:#1d3557;">{{ views_today }}</div>
+            <div class="fw-bold" style="font-size:2rem; color:var(--navy);">{{ views_today }}</div>
         </div>
     </div>
     <div class="col-6 col-md-3">
         <div class="card p-3 text-center shadow-sm h-100">
             <div class="text-muted" style="font-size:0.8rem;">Views (7 days)</div>
-            <div class="fw-bold" style="font-size:2rem; color:#1d3557;">{{ views_7d }}</div>
+            <div class="fw-bold" style="font-size:2rem; color:var(--navy);">{{ views_7d }}</div>
         </div>
     </div>
     <div class="col-6 col-md-3">
         <div class="card p-3 text-center shadow-sm h-100">
             <div class="text-muted" style="font-size:0.8rem;">Views (30 days)</div>
-            <div class="fw-bold" style="font-size:2rem; color:#1d3557;">{{ views_30d }}</div>
+            <div class="fw-bold" style="font-size:2rem; color:var(--navy);">{{ views_30d }}</div>
         </div>
     </div>
     <div class="col-6 col-md-3">
         <div class="card p-3 text-center shadow-sm h-100">
             <div class="text-muted" style="font-size:0.8rem;">Total Views</div>
-            <div class="fw-bold" style="font-size:2rem; color:#1d3557;">{{ total_views }}</div>
+            <div class="fw-bold" style="font-size:2rem; color:var(--navy);">{{ total_views }}</div>
         </div>
     </div>
 </div>
@@ -52,25 +52,25 @@
     <div class="col-6 col-md-3">
         <div class="card p-3 text-center shadow-sm h-100">
             <div class="text-muted" style="font-size:0.8rem;">Active Listings</div>
-            <div class="fw-bold" style="font-size:2rem; color:#1d3557;">{{ active_listings|length }}</div>
+            <div class="fw-bold" style="font-size:2rem; color:var(--navy);">{{ active_listings|length }}</div>
         </div>
     </div>
     <div class="col-6 col-md-3">
         <div class="card p-3 text-center shadow-sm h-100">
             <div class="text-muted" style="font-size:0.8rem;">Items Sold</div>
-            <div class="fw-bold" style="font-size:2rem; color:#1d3557;">{{ sold_count }}</div>
+            <div class="fw-bold" style="font-size:2rem; color:var(--navy);">{{ sold_count }}</div>
         </div>
     </div>
     <div class="col-6 col-md-3">
         <div class="card p-3 text-center shadow-sm h-100">
             <div class="text-muted" style="font-size:0.8rem;">Total Saves</div>
-            <div class="fw-bold" style="font-size:2rem; color:#1d3557;">{{ total_saves }}</div>
+            <div class="fw-bold" style="font-size:2rem; color:var(--navy);">{{ total_saves }}</div>
         </div>
     </div>
     <div class="col-6 col-md-3">
         <div class="card p-3 text-center shadow-sm h-100">
             <div class="text-muted" style="font-size:0.8rem;">Revenue (sold)</div>
-            <div class="fw-bold" style="font-size:2rem; color:#1d3557;">${{ "%.0f"|format(revenue) }}</div>
+            <div class="fw-bold" style="font-size:2rem; color:var(--navy);">${{ "%.0f"|format(revenue) }}</div>
         </div>
     </div>
 </div>
@@ -99,7 +99,7 @@
                         <tr>
                             <td>
                                 <a href="{{ url_for('listings.detail', listing_id=listing.id) }}"
-                                   class="text-decoration-none fw-semibold" style="color:#1d3557;">
+                                   class="text-decoration-none fw-semibold" style="color:var(--navy);">
                                     {{ listing.title|truncate(35) }}
                                 </a>
                                 <div><span class="category-badge" style="font-size:10px;">{{ listing.category|title }}</span></div>
@@ -165,13 +165,13 @@
         <!-- Stock warnings -->
         {% if stock_warnings %}
         <div class="card p-4 shadow-sm border-warning">
-            <h5 class="section-heading mb-3" style="color:#b45309;">
+            <h5 class="section-heading mb-3" style="color:var(--gold);">
                 <i class="bi bi-exclamation-triangle me-2"></i>Low / No Stock
             </h5>
             {% for listing in stock_warnings %}
             <div class="d-flex align-items-center justify-content-between mb-2 gap-2">
                 <a href="{{ url_for('listings.detail', listing_id=listing.id) }}"
-                   class="text-decoration-none text-truncate" style="max-width:120px; color:#1d3557; font-size:0.875rem;">
+                   class="text-decoration-none text-truncate" style="max-width:120px; color:var(--navy); font-size:0.875rem;">
                     {{ listing.title }}
                 </a>
                 <div class="d-inline-flex align-items-center gap-1 stock-inline" data-listing-id="{{ listing.id }}">

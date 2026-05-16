@@ -21,12 +21,12 @@
 
     <hr>
     <div id="chat-box"
-        style="height: 400px; overflow-y: scroll; border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; display: flex; flex-direction: column-reverse;">
+        style="height: 400px; overflow-y: scroll; border: 1px solid var(--border-light); padding: 15px; margin-bottom: 20px; display: flex; flex-direction: column-reverse;">
         {% for msg in messages[::-1] %}
         {% if msg.sender_id == current_user.id %}
-        <p style="align-self: flex-end; background-color: #1d3557; padding: 5px 10px; color: white; border-radius: 10px;">{{ msg.content }}</p>
+        <p style="align-self: flex-end; background-color: var(--navy); padding: 5px 10px; color: white; border-radius: 10px;">{{ msg.content }}</p>
         {% else %}
-        <div><p style="max-width: fit-content; align-self: flex-start; background-color: lightgray; padding: 5px 10px; border-radius: 10px;"> {{ msg.content }}</p></div>
+        <div><p style="max-width: fit-content; align-self: flex-start; background-color: var(--navy-light); padding: 5px 10px; border-radius: 10px;"> {{ msg.content }}</p></div>
         {% endif %}
         {% endfor %}
     </div>
@@ -70,10 +70,10 @@
         const msgElement = document.createElement('p');
         console.log(data.sender, current_user)
         if (data.sender === Number(current_user)) {
-            msgElement.style = "align-self: flex-end; background-color: #1d3557; padding: 5px 10px; color: white; border-radius: 10px;"
+            msgElement.style = "align-self: flex-end; background-color: var(--navy); padding: 5px 10px; color: white; border-radius: 10px;"
             msgElement.innerHTML = `${data.message}`;
         } else {
-            msgElement.style = "align-self: flex-start; background-color: lightgray; padding: 5px 10px; border-radius: 10px;"
+            msgElement.style = "align-self: flex-start; background-color: var(--navy-light); padding: 5px 10px; border-radius: 10px;"
             msgElement.innerHTML = `${data.message}`; 
         }
         

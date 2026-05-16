@@ -19,7 +19,7 @@
         <!-- Info -->
         <div class="flex-grow-1 min-width-0">
             <div class="d-flex align-items-center gap-3 flex-wrap">
-                <h2 class="mb-0 fw-bold d-inline-flex align-items-center gap-2" style="color: #1d3557;">
+                <h2 class="mb-0 fw-bold d-inline-flex align-items-center gap-2" style="color: var(--navy);">
                     {{ profile_user.username }}
                     {% if profile_user.is_verified %}
                         <span class="badge bg-primary d-inline-flex align-items-center gap-1" style="font-size:0.75rem;">
@@ -60,7 +60,7 @@
                 Member since {{ profile_user.member_since.strftime('%B %Y') }}
             </p>
             {% if profile_user.bio %}
-                <p class="mt-2 mb-0" style="color: #374151;">{{ profile_user.bio }}</p>
+                <p class="mt-2 mb-0" style="color: var(--text-primary);">{{ profile_user.bio }}</p>
             {% endif %}
         </div>
         {% if current_user.is_authenticated and current_user.id != profile_user.id %}

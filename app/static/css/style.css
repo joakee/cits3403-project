@@ -12,6 +12,22 @@
     --radius-card: 14px;
     --radius-input: 8px;
     --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.07);
+    --text-primary: #1f2937;
+    --border-light: #e5e7eb;
+}
+
+html.dark-mode {
+    --navy:        #3b82f6;
+    --navy-dark:   #2563eb;
+    --navy-light:  #374151;
+    --gold:        #f0c000;
+    --text-muted:  #9ca3af;
+    --bg:          #111827;
+    --white:       #1f2937;
+    --success:     #22c55e;
+    --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.3);
+    --text-primary: #e5e7eb;
+    --border-light: #374151;
 }
 
 /* ─── Fonts/Typefaces ─────────────────────────────────────────── */
@@ -38,7 +54,29 @@
 body {
     background-color: var(--bg);
     font-family: 'Plus Jakarta Sans', sans-serif;
-    color: #1f2937;
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Smooth transitions for common elements */
+.card,
+.form-control,
+.form-select,
+.btn,
+.navbar,
+.listings-filter-bar,
+.profile-header,
+.profile-stat,
+.home-stats-bar,
+.home-cat-card,
+.home-sidebar-panel,
+.home-sponsor-card,
+.auth-card,
+.switch-text,
+.section-heading,
+.listing-card,
+.listing-img-placeholder {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 @keyframes flash {
@@ -75,6 +113,7 @@ body {
     border: none;
     border-radius: var(--radius-card);
     box-shadow: var(--shadow-card);
+    background-color: var(--white);
 }
 
 .card-img-top {
@@ -277,7 +316,7 @@ body {
 /* ─── Listings filter bar ─────────────────────────────────────── */
 .listings-filter-bar {
     background: var(--white);
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--border-light);
     border-radius: var(--radius-card);
     padding: 16px;
     margin-bottom: 24px;
@@ -429,8 +468,9 @@ body {
 }
 
 body {
-    background-color: #f3f4f6;
-    color: #1f2937;
+    background-color: var(--bg);
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .page-container {
@@ -439,12 +479,13 @@ body {
     justify-content: center;
     align-items: center;
     padding: 24px;
+    background-color: var(--bg);
 }
 
 .form-card {
     width: 100%;
     max-width: 420px;
-    background-color: #ffffff;
+    background-color: var(--white);
     padding: 32px;
     border-radius: 14px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
@@ -453,13 +494,13 @@ body {
 .form-card h1 {
     text-align: center;
     margin-bottom: 10px;
-    color: #1d3557;
+    color: var(--navy);
 }
 
 .subtitle {
     text-align: center;
     margin-bottom: 24px;
-    color: #6b7280;
+    color: var(--text-muted);
     font-size: 15px;
 }
 
@@ -472,24 +513,27 @@ body {
     margin-bottom: 8px;
     margin-top: 12px;
     font-weight: 600;
+    color: var(--text-primary);
 }
 
 .auth-form input {
     padding: 12px;
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--border-light);
     border-radius: 8px;
     font-size: 14px;
     outline: none;
+    background-color: var(--bg);
+    color: var(--text-primary);
 }
 
 .auth-form input:focus {
-    border-color: #1d3557;
+    border-color: var(--navy);
 }
 
 .helper-text {
     margin-top: 6px;
     font-size: 13px;
-    color: #6b7280;
+    color: var(--text-muted);
     text-align: center;
 }
 
@@ -499,8 +543,8 @@ body {
     padding: 12px;
     border: none;
     border-radius: 8px;
-    background-color: #1d3557;
-    color: white;
+    background-color: var(--navy);
+    color: var(--white);
     font-size: 15px;
     font-weight: 600;
     cursor: pointer;
@@ -509,7 +553,7 @@ body {
 
 .auth-form input[type="submit"]:hover,
 .auth-form button:hover {
-    background-color: #16324f;
+    background-color: var(--navy-dark);
 }
 
 /* ─── Wishlist Header Controls ─────────────────────────────────── */
@@ -525,9 +569,9 @@ body {
     padding-right: 1.5rem !important;
     background-position: right 0.4rem center;
     background-size: 8px 8px;
-    background-color: #ffffff !important;
-    color: #212529 !important;
-    border: 1px solid #dee2e6;
+    background-color: var(--white) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-light);
 }
 
 .accordion-button.collapsed ~ .header-controls .wl-sort-select {
@@ -553,11 +597,11 @@ body {
     text-align: center;
     margin-top: 18px;
     font-size: 14px;
-    color: #4b5563;
+    color: var(--text-muted);
 }
 
 .switch-text a {
-    color: #1d3557;
+    color: var(--navy);
     text-decoration: none;
     font-weight: 600;
 }
@@ -762,6 +806,191 @@ h1, h2, h3, h4, h5 {
     font-family: var(--font-brand);
     font-weight: 400;
     letter-spacing: 0.01em;
+}
+
+/* ─── Dark mode overrides ──────────────────────────────────────── */
+html.dark-mode .switch-text {
+    color: var(--text-muted);
+}
+
+html.dark-mode .switch-text a {
+    color: var(--navy);
+}
+
+html.dark-mode .btn-outline-secondary {
+    color: var(--text-muted);
+    border-color: var(--border-light);
+}
+
+html.dark-mode .btn-outline-secondary:hover {
+    background-color: var(--navy-light);
+    border-color: var(--text-muted);
+    color: var(--text-primary);
+}
+
+html.dark-mode .profile-stat:hover {
+    background: var(--navy-light);
+}
+
+html.dark-mode .home-sponsor-card:hover {
+    background: var(--navy-light);
+}
+
+html.dark-mode .listing-img-placeholder {
+    background: var(--navy-light);
+    color: var(--text-muted);
+}
+
+html.dark-mode .form-control,
+html.dark-mode .form-select {
+    background-color: var(--white);
+    border-color: var(--border-light);
+    color: var(--text-primary);
+}
+
+html.dark-mode .form-control:focus,
+html.dark-mode .form-select:focus {
+    background-color: var(--white);
+    color: var(--text-primary);
+}
+
+html.dark-mode .form-control::placeholder {
+    color: var(--text-muted);
+}
+
+html.dark-mode .page-container {
+    background-color: var(--bg);
+}
+
+html.dark-mode .form-card {
+    background-color: var(--white);
+}
+
+html.dark-mode .form-card h1 {
+    color: var(--navy);
+}
+
+html.dark-mode .auth-form input {
+    background-color: var(--bg);
+    border-color: var(--border-light);
+    color: var(--text-primary);
+}
+
+html.dark-mode .auth-form input:focus {
+    border-color: var(--navy);
+}
+
+html.dark-mode .auth-form input[type="submit"],
+html.dark-mode .auth-form button {
+    background-color: var(--navy);
+    color: var(--white);
+}
+
+html.dark-mode .auth-form input[type="submit"]:hover,
+html.dark-mode .auth-form button:hover {
+    background-color: var(--navy-dark);
+}
+
+html.dark-mode .helper-text {
+    color: var(--text-muted);
+}
+
+html.dark-mode .navbar-dark .navbar-toggler {
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+html.dark-mode .alert {
+    color: var(--text-primary);
+}
+
+html.dark-mode .accordion-header .wl-sort-select {
+    background-color: var(--white) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-light);
+}
+
+html.dark-mode .text-dark {
+    color: var(--text-primary) !important;
+}
+
+html.dark-mode .bg-white {
+    background-color: var(--white) !important;
+}
+
+html.dark-mode .border {
+    border-color: var(--border-light) !important;
+}
+
+html.dark-mode .bg-light {
+    background-color: var(--navy-light) !important;
+}
+
+html.dark-mode .list-group-item {
+    background-color: var(--white);
+    color: var(--text-primary);
+    border-color: var(--border-light);
+}
+
+html.dark-mode .modal-content {
+    background-color: var(--white);
+    border-color: var(--border-light);
+}
+
+html.dark-mode .card-header,
+html.dark-mode .card-footer {
+    background-color: var(--navy-light);
+    border-color: var(--border-light);
+}
+
+html.dark-mode .page-link {
+    background-color: var(--white);
+    color: var(--navy);
+    border-color: var(--border-light);
+}
+
+html.dark-mode .page-link:hover {
+    background-color: var(--navy-light);
+    color: var(--navy);
+}
+
+html.dark-mode .page-item.disabled .page-link {
+    background-color: var(--navy-light);
+    color: var(--text-muted);
+    border-color: var(--border-light);
+}
+
+html.dark-mode .page-item.active .page-link {
+    background-color: var(--navy);
+    border-color: var(--navy);
+    color: #fff;
+}
+
+html.dark-mode .input-group-text {
+    background-color: var(--navy-light);
+    color: var(--text-primary);
+    border-color: var(--border-light);
+}
+
+html.dark-mode .table {
+    color: var(--text-primary);
+}
+
+html.dark-mode .table-light {
+    background-color: var(--navy-light) !important;
+    color: var(--text-primary);
+}
+
+html.dark-mode .dropdown-menu {
+    background-color: var(--white);
+    border-color: var(--border-light);
+}
+
+html.dark-mode .dropdown-item {
+    color: var(--text-primary);
+}
+
+html.dark-mode .dropdown-item:hover {
+    background-color: var(--navy-light);
 }
 
 /* ─── Responsive adjustments ──────────────────────────────────── */
