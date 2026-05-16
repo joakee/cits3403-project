@@ -6,7 +6,7 @@ from flask_wtf.csrf import CSRFProtect
 from config import Config
 from flask_socketio import SocketIO
 
-socketio = SocketIO()
+socketio = SocketIO(cors_allowed_origins='*')
 db = SQLAlchemy()
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
@@ -27,18 +27,28 @@ def create_app(config_class=Config):
     from app.routes.profile import bp as profile_bp
     from app.routes.listings import bp as listings_bp
     from app.routes.chat import bp as chat_bp
+    from app.routes.moderation import bp as moderation_bp
     from app.routes.store import bp as store_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(profile_bp)
     app.register_blueprint(listings_bp)
     app.register_blueprint(chat_bp)
+    app.register_blueprint(moderation_bp)
     app.register_blueprint(store_bp)
 
     from app.admin import init_admin
     init_admin(app)
 
     socketio.init_app(app)
+
+    @socketio.on('connect')
+    def handle_connect():
+        print('[socketio] Client connected')
+
+    @socketio.on('disconnect')
+    def handle_disconnect():
+        print('[socketio] Client disconnected')
 
     @app.template_filter('timeago')
     def timeago_filter(dt):
@@ -95,16 +105,16 @@ def create_app(config_class=Config):
         from sqlalchemy import func
 
         recent_listings = (Listing.query
-                           .filter_by(is_active=True)
+                           .filter_by(is_active=True, is_removed=False)
                            .order_by(Listing.created_at.desc())
                            .limit(8).all())
 
         category_counts_raw = (db.session.query(Listing.category, func.count(Listing.id))
-                               .filter_by(is_active=True)
+                               .filter(Listing.is_active == True, Listing.is_removed == False)
                                .group_by(Listing.category).all())
         category_counts = {cat: count for cat, count in category_counts_raw}
 
-        total_listings = Listing.query.filter_by(is_active=True).count()
+        total_listings = Listing.query.filter_by(is_active=True, is_removed=False).count()
         total_users    = User.query.count()
 
         events = [

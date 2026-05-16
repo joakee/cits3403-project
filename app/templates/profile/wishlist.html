@@ -63,7 +63,7 @@
                  data-bs-parent="#wishlistAccordion">
                 <div class="accordion-body">
                     <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3" id="wl-grid-{{ wl.id }}">
-                        {% for listing in wl.listings %}
+                        {% for listing in wl.listings if not listing.is_removed %}
                         {% set pci = listing.price_change_info %}
                         <div class="col wl-card-col"
                              id="wl-item-{{ wl.id }}-{{ listing.id }}"

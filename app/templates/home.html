@@ -3,6 +3,9 @@
 
 {% block content %}
 
+<div class="dev-banner">STRICTLY FOR INTERNAL DEVELOPMENT AND TESTING PURPOSES ONLY<br><br>
+<span class="dev-banner-warn">NOT FOR PUBLIC USE</span></div>
+
 <!-- Hero -->
 <div class="home-hero">
     <h1 class="home-hero-title"><i class="bi bi-shop me-2"></i>UWA Student Marketplace</h1>
@@ -94,7 +97,7 @@
             <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
                 {% for listing in recent_listings %}
                 <div class="col">
-                    <div class="listing-card card">
+                    <div class="listing-card card" data-listing-id="{{ listing.id }}">
                         {% if listing.image_url %}
                             <img src="{{ listing.image_url }}" class="listing-img" alt="{{ listing.title }}">
                         {% else %}
