@@ -1,0 +1,481 @@
+{% extends "base.html" %}
+{% block title %}{{ store_user.store_name or store_user.username }} | UWA Marketplace{% endblock %}
+
+{% block content %}
+
+<!-- Store header -->
+<div class="profile-header mb-4">
+    <div class="d-flex align-items-start gap-4 flex-wrap">
+
+        <!-- Avatar -->
+        <div class="avatar-circle" style="width:80px;height:80px;font-size:2rem;flex-shrink:0;">
+            {% if store_user.avatar_url %}
+                <img src="{{ store_user.avatar_url }}" alt="{{ store_user.username }}">
+            {% else %}
+                <i class="bi bi-shop"></i>
+            {% endif %}
+        </div>
+
+        <!-- Store info -->
+        <div class="flex-grow-1 min-width-0">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <h2 class="mb-0 fw-bold" style="color:#1d3557;">
+                    {{ store_user.store_name or store_user.username }}
+                </h2>
+                {% if store_user.is_verified %}
+                    <span class="badge bg-primary d-inline-flex align-items-center gap-1" title="Verified Store"
+                          style="font-size:0.8rem;">
+                        <i class="bi bi-patch-check-fill"></i> Verified
+                    </span>
+                {% endif %}
+
+                {% if current_user.is_authenticated and current_user.id == store_user.id %}
+                    <a href="{{ url_for('store.setup') }}" class="btn btn-outline-secondary btn-sm ms-1">
+                        <i class="bi bi-pencil me-1"></i>Edit Store
+                    </a>
+                    <a href="{{ url_for('listings.new', **{'as': 'store'}) }}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-plus-lg me-1"></i>Add Listing
+                    </a>
+                    <a href="{{ url_for('store.dashboard') }}" class="btn btn-primary btn-sm">
+                        <i class="bi bi-bar-chart me-1"></i>Dashboard
+                    </a>
+                {% endif %}
+
+                {% if current_user.is_authenticated and current_user.id != store_user.id %}
+                    <button id="follow-btn"
+                            class="btn btn-sm {{ 'btn-primary' if is_following else 'btn-outline-primary' }}"
+                            data-store-id="{{ store_user.id }}"
+                            data-following="{{ 'true' if is_following else 'false' }}">
+                        <i class="bi {{ 'bi-person-check-fill' if is_following else 'bi-person-plus' }} me-1"></i>
+                        <span id="follow-label">{{ 'Following' if is_following else 'Follow' }}</span>
+                    </button>
+                {% endif %}
+
+                <button class="btn btn-outline-secondary btn-sm" id="share-btn" title="Copy store link">
+                    <i class="bi bi-share" id="share-icon"></i>
+                </button>
+
+                {% if current_user.is_authenticated and current_user.is_admin %}
+                    <form method="POST" action="{{ url_for('store.admin_verify', user_id=store_user.id) }}" class="d-inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm {{ 'btn-warning' if store_user.is_verified else 'btn-outline-primary' }}">
+                            <i class="bi bi-patch-check me-1"></i>
+                            {{ 'Unverify' if store_user.is_verified else 'Verify Store' }}
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
+
+            {% if store_user.store_name %}
+                <p class="text-muted mb-1 mt-1">
+                    <i class="bi bi-person me-1"></i>{{ store_user.username }}
+                </p>
+            {% endif %}
+
+            {% if store_user.store_address %}
+                <p class="text-muted mb-1">
+                    <i class="bi bi-geo-alt me-1"></i>{{ store_user.store_address }}
+                </p>
+            {% endif %}
+
+            <div class="d-flex flex-wrap gap-3 mt-1">
+                {% if store_user.contact_phone %}
+                    <span class="text-muted d-inline-flex align-items-center gap-1" style="font-size:13px;">
+                        <i class="bi bi-telephone me-1"></i>{{ store_user.contact_phone }}
+                        <button class="btn btn-link p-0 copy-btn text-muted"
+                                data-copy="{{ store_user.contact_phone }}"
+                                title="Copy phone number" style="font-size:12px; line-height:1;">
+                            <i class="bi bi-clipboard"></i>
+                        </button>
+                    </span>
+                {% endif %}
+                {% if store_user.contact_email %}
+                    <span class="text-muted d-inline-flex align-items-center gap-1" style="font-size:13px;">
+                        <a href="mailto:{{ store_user.contact_email }}" class="text-muted text-decoration-none">
+                            <i class="bi bi-envelope me-1"></i>{{ store_user.contact_email }}
+                        </a>
+                        <button class="btn btn-link p-0 copy-btn text-muted"
+                                data-copy="{{ store_user.contact_email }}"
+                                title="Copy email" style="font-size:12px; line-height:1;">
+                            <i class="bi bi-clipboard"></i>
+                        </button>
+                    </span>
+                {% endif %}
+            </div>
+
+            {% if store_user.store_bio %}
+                <p class="mt-2 mb-0" style="color:#374151;">{{ store_user.store_bio }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Stats row -->
+    <div class="row g-3 mt-3">
+        <div class="col-3 col-sm-3">
+            <div class="profile-stat">
+                <div class="stat-value">{{ listings|length }}</div>
+                <div class="stat-label">Active</div>
+            </div>
+        </div>
+        <div class="col-3 col-sm-3">
+            <div class="profile-stat">
+                <div class="stat-value">{{ sold_count }}</div>
+                <div class="stat-label">Sold</div>
+            </div>
+        </div>
+        <div class="col-3 col-sm-3">
+            <div class="profile-stat">
+                <div class="stat-value">{{ avg_rating or '—' }}</div>
+                <div class="stat-label">Avg Rating</div>
+            </div>
+        </div>
+        <div class="col-3 col-sm-3">
+            <div class="profile-stat">
+                <div class="stat-value" id="follower-count">{{ follower_count }}</div>
+                <div class="stat-label">Followers</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Active listings -->
+<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+    <h5 class="section-heading mb-0">
+        <i class="bi bi-grid me-2"></i>Listings
+    </h5>
+    {% if listings %}
+    <div class="d-flex gap-2 flex-wrap align-items-center">
+        <div class="btn-group btn-group-sm" id="category-filter" role="group">
+            <button type="button" class="btn btn-outline-secondary active" data-cat="all">All</button>
+            {% set cats = listings | map(attribute='category') | list | unique | list %}
+            {% for cat in cats %}
+                <button type="button" class="btn btn-outline-secondary" data-cat="{{ cat }}">{{ cat|title }}</button>
+            {% endfor %}
+        </div>
+        <select id="listing-sort" class="form-select form-select-sm" style="width:auto;">
+            <option value="newest">Newest</option>
+            <option value="price-asc">Price ↑</option>
+            <option value="price-desc">Price ↓</option>
+        </select>
+    </div>
+    {% endif %}
+</div>
+
+{% if listings %}
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3 mb-5" id="listings-grid">
+        {% for listing in listings %}
+        <div class="col listing-col"
+             data-category="{{ listing.category }}"
+             data-price="{{ listing.price }}"
+             data-date="{{ listing.created_at.timestamp() }}">
+            <a href="{{ url_for('listings.detail', listing_id=listing.id) }}" class="listing-card card text-decoration-none">
+                {% if listing.image_url %}
+                    <img src="{{ listing.image_url }}" class="listing-img" alt="{{ listing.title }}">
+                {% else %}
+                    <div class="listing-img-placeholder">
+                        {% set icons = {'books': 'bi-book', 'electronics': 'bi-cpu', 'clothing': 'bi-bag',
+                                        'furniture': 'bi-house', 'other': 'bi-box-seam'} %}
+                        <i class="bi {{ icons.get(listing.category, 'bi-box-seam') }}"></i>
+                    </div>
+                {% endif %}
+                <div class="card-body p-3">
+                    <h6 class="card-title mb-1 text-truncate text-dark" title="{{ listing.title }}">
+                        {{ listing.title }}
+                    </h6>
+                    <div class="listing-price">${{ "%.2f"|format(listing.price) }}</div>
+                    <div class="d-flex align-items-center justify-content-between mt-2">
+                        <span class="category-badge">{{ listing.category|title }}</span>
+                        {% if listing.stock_quantity is not none %}
+                            {% if listing.stock_quantity == 0 %}
+                                <span class="badge bg-danger" style="font-size:10px;">Out of stock</span>
+                            {% elif listing.stock_quantity <= 5 %}
+                                <span class="badge bg-warning text-dark" style="font-size:10px;">{{ listing.stock_quantity }} left</span>
+                            {% else %}
+                                <span class="badge bg-success" style="font-size:10px;">{{ listing.stock_quantity }} in stock</span>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    <div id="no-results" class="empty-state mb-5 d-none">
+        <i class="bi bi-search"></i>
+        <p>No listings in this category.</p>
+    </div>
+    <div id="scroll-sentinel" class="text-center py-3 d-none">
+        <div class="spinner-border spinner-border-sm text-secondary" role="status"></div>
+    </div>
+{% else %}
+    <div class="empty-state mb-5">
+        <i class="bi bi-inbox"></i>
+        <p>No active listings at the moment.</p>
+    </div>
+{% endif %}
+
+<!-- Reviews -->
+<div class="card p-4 shadow-sm">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <h5 class="section-heading mb-2">
+                <i class="bi bi-star-fill me-2"></i>Reviews
+            </h5>
+            {% if avg_rating %}
+                <p class="mb-0"><strong>{{ avg_rating }}/5</strong> from {{ reviews|length }} review{{ 's' if reviews|length != 1 }}</p>
+            {% else %}
+                <p class="mb-0 text-muted">No reviews yet.</p>
+            {% endif %}
+        </div>
+        {% if current_user.is_authenticated and current_user.id != store_user.id %}
+            <a href="{{ url_for('profile.review_user', user_id=store_user.id) }}"
+               class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-pencil-square me-1"></i>Leave a Review
+            </a>
+        {% endif %}
+    </div>
+
+    <div class="mt-3">
+        {% if reviews %}
+            {% for review in reviews %}
+                <div class="border rounded p-3 mb-3 bg-white">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            {% for i in range(review.rating) %}<i class="bi bi-star-fill text-warning"></i>{% endfor %}
+                            {% for i in range(5 - review.rating) %}<i class="bi bi-star text-muted"></i>{% endfor %}
+                        </div>
+                        <small class="text-muted">
+                            {{ review.reviewer.username }} &middot; {{ review.created_at.strftime('%d %b %Y') }}
+                        </small>
+                    </div>
+                    {% if review.comment %}
+                        <p class="mb-0 mt-2">{{ review.comment }}</p>
+                    {% endif %}
+
+                    <!-- Reply -->
+                    {% if review.reply_text %}
+                        <div class="mt-3 ps-3 border-start border-2 border-primary">
+                            <small class="text-muted fw-semibold">
+                                <i class="bi bi-shop me-1"></i>{{ store_user.store_name or store_user.username }} replied
+                                &middot; {{ review.reply_at.strftime('%d %b %Y') }}
+                            </small>
+                            <p class="mb-0 mt-1 reply-text-display">{{ review.reply_text }}</p>
+                            {% if current_user.is_authenticated and current_user.id == store_user.id %}
+                                <button class="btn btn-link btn-sm p-0 mt-1 text-muted edit-reply-btn"
+                                        data-review-id="{{ review.id }}">Edit reply</button>
+                            {% endif %}
+                        </div>
+                    {% elif current_user.is_authenticated and current_user.id == store_user.id %}
+                        <div class="mt-2">
+                            <button class="btn btn-link btn-sm p-0 text-muted reply-toggle-btn"
+                                    data-review-id="{{ review.id }}">
+                                <i class="bi bi-reply me-1"></i>Reply
+                            </button>
+                        </div>
+                    {% endif %}
+
+                    <!-- Reply form (hidden by default) -->
+                    {% if current_user.is_authenticated and current_user.id == store_user.id %}
+                    <div class="reply-form mt-2 d-none" data-review-id="{{ review.id }}">
+                        <textarea class="form-control form-control-sm reply-textarea" rows="2"
+                                  maxlength="1000" placeholder="Write a reply…">{{ review.reply_text or '' }}</textarea>
+                        <div class="d-flex gap-2 mt-1">
+                            <button class="btn btn-primary btn-sm reply-submit-btn"
+                                    data-review-id="{{ review.id }}">Save</button>
+                            <button class="btn btn-outline-secondary btn-sm reply-cancel-btn"
+                                    data-review-id="{{ review.id }}">Cancel</button>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% else %}
+            <p class="text-muted mb-0">No reviews yet.</p>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Copy contact info buttons
+document.querySelectorAll('.copy-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        navigator.clipboard.writeText(btn.dataset.copy).then(function() {
+            var icon = btn.querySelector('i');
+            icon.className = 'bi bi-clipboard-check text-success';
+            setTimeout(function() { icon.className = 'bi bi-clipboard'; }, 2000);
+        });
+    });
+});
+
+// Share store link
+var shareBtn = document.getElementById('share-btn');
+if (shareBtn) {
+    shareBtn.addEventListener('click', function() {
+        navigator.clipboard.writeText(window.location.href).then(function() {
+            var icon = document.getElementById('share-icon');
+            icon.className = 'bi bi-check2 text-success';
+            setTimeout(function() { icon.className = 'bi bi-share'; }, 2000);
+        });
+    });
+}
+
+// Follow / unfollow
+var followBtn = document.getElementById('follow-btn');
+if (followBtn) {
+    followBtn.addEventListener('click', function() {
+        var storeId = followBtn.dataset.storeId;
+        fetch('/store/follow/' + storeId, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            }
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            var label = document.getElementById('follow-label');
+            var icon = followBtn.querySelector('i');
+            if (data.following) {
+                followBtn.classList.replace('btn-outline-primary', 'btn-primary');
+                icon.className = 'bi bi-person-check-fill me-1';
+                label.textContent = 'Following';
+            } else {
+                followBtn.classList.replace('btn-primary', 'btn-outline-primary');
+                icon.className = 'bi bi-person-plus me-1';
+                label.textContent = 'Follow';
+            }
+            var countEl = document.getElementById('follower-count');
+            if (countEl) countEl.textContent = data.follower_count;
+        });
+    });
+}
+
+// Listings filter + sort + infinite scroll
+(function() {
+    var grid = document.getElementById('listings-grid');
+    if (!grid) return;
+
+    var PAGE_SIZE = 12;
+    var filterBtns = document.querySelectorAll('#category-filter button');
+    var sortSelect = document.getElementById('listing-sort');
+    var noResults = document.getElementById('no-results');
+    var sentinel = document.getElementById('scroll-sentinel');
+    var activeCat = 'all';
+    // visibleOrdered: the current sorted/filtered list; revealedCount tracks how many are shown
+    var visibleOrdered = [];
+    var revealedCount = 0;
+
+    function getAllCols() {
+        return Array.from(grid.querySelectorAll('.listing-col'));
+    }
+
+    function revealNext() {
+        var toReveal = visibleOrdered.slice(revealedCount, revealedCount + PAGE_SIZE);
+        toReveal.forEach(function(col) { col.style.display = ''; });
+        revealedCount += toReveal.length;
+        var hasMore = revealedCount < visibleOrdered.length;
+        sentinel.classList.toggle('d-none', !hasMore);
+    }
+
+    function applyFilterSort() {
+        var cols = getAllCols();
+        // Hide all first
+        cols.forEach(function(col) { col.style.display = 'none'; });
+
+        var matched = cols.filter(function(col) {
+            return activeCat === 'all' || col.dataset.category === activeCat;
+        });
+
+        noResults.classList.toggle('d-none', matched.length > 0);
+
+        var sortVal = sortSelect.value;
+        matched.sort(function(a, b) {
+            if (sortVal === 'price-asc') return parseFloat(a.dataset.price) - parseFloat(b.dataset.price);
+            if (sortVal === 'price-desc') return parseFloat(b.dataset.price) - parseFloat(a.dataset.price);
+            return parseFloat(b.dataset.date) - parseFloat(a.dataset.date);
+        });
+        // Re-append in sorted order while keeping them hidden
+        matched.forEach(function(col) { grid.appendChild(col); });
+
+        visibleOrdered = matched;
+        revealedCount = 0;
+        revealNext();
+    }
+
+    // IntersectionObserver to load next page when sentinel comes into view
+    if ('IntersectionObserver' in window) {
+        var observer = new IntersectionObserver(function(entries) {
+            if (entries[0].isIntersecting) revealNext();
+        }, { rootMargin: '200px' });
+        observer.observe(sentinel);
+    } else {
+        // Fallback: show all
+        sentinel.classList.add('d-none');
+    }
+
+    filterBtns.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            filterBtns.forEach(function(b) { b.classList.remove('active'); });
+            btn.classList.add('active');
+            activeCat = btn.dataset.cat;
+            applyFilterSort();
+        });
+    });
+
+    sortSelect.addEventListener('change', applyFilterSort);
+
+    // Initial render
+    applyFilterSort();
+})();
+
+// Review replies
+(function() {
+    var CSRF = '{{ csrf_token() }}';
+
+    function showForm(reviewId) {
+        var form = document.querySelector('.reply-form[data-review-id="' + reviewId + '"]');
+        if (form) form.classList.remove('d-none');
+    }
+    function hideForm(reviewId) {
+        var form = document.querySelector('.reply-form[data-review-id="' + reviewId + '"]');
+        if (form) form.classList.add('d-none');
+    }
+
+    document.querySelectorAll('.reply-toggle-btn, .edit-reply-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() { showForm(btn.dataset.reviewId); });
+    });
+
+    document.querySelectorAll('.reply-cancel-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() { hideForm(btn.dataset.reviewId); });
+    });
+
+    document.querySelectorAll('.reply-submit-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var reviewId = btn.dataset.reviewId;
+            var form = document.querySelector('.reply-form[data-review-id="' + reviewId + '"]');
+            var textarea = form.querySelector('.reply-textarea');
+            var text = textarea.value.trim();
+            if (!text) return;
+
+            fetch('/store/review/' + reviewId + '/reply', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': CSRF
+                },
+                body: JSON.stringify({ reply_text: text })
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (!data.success) return;
+                // Reload page to show updated reply cleanly
+                window.location.reload();
+            });
+        });
+    });
+})();
+</script>
+{% endblock %}
