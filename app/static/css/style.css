@@ -913,6 +913,20 @@ html.dark-mode .text-dark {
     color: var(--text-primary) !important;
 }
 
+html.dark-mode .text-muted {
+    color: var(--text-muted) !important;
+}
+
+html.dark-mode .text-secondary {
+    color: var(--text-muted) !important;
+}
+
+/* Preserve dark text on light badge backgrounds in both themes */
+html.dark-mode .badge.bg-warning,
+html.dark-mode .badge.bg-info {
+    color: #212529 !important;
+}
+
 html.dark-mode .bg-white {
     background-color: var(--white) !important;
 }
