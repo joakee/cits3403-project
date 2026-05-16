@@ -43,9 +43,6 @@ class User(db.Model, UserMixin):
     is_moderator = db.Column(db.Boolean, default=False)
     is_active = db.Column(db.Boolean, default=True)
     is_verified = db.Column(db.Boolean, default=False)
-    otp_code = db.Column(db.String(6), nullable=True)
-    otp_expiry = db.Column(db.DateTime, nullable=True)
-    otp_attempts = db.Column(db.Integer, default=0)
 
     def generate_otp(self):
         self.otp_code = f"{random.randint(100000, 999999)}"
