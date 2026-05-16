@@ -19,18 +19,22 @@ def _save_image(file_storage):
     """Save an uploaded image and return its URL path, or None."""
     if not file_storage or file_storage.filename == '':
         return None
+
     ext = file_storage.filename.rsplit('.', 1)[-1].lower()
     if ext not in ALLOWED_EXTENSIONS:
         return None
+
     filename = f"{uuid.uuid4().hex}.{ext}"
     upload_folder = current_app.config['UPLOAD_FOLDER']
     os.makedirs(upload_folder, exist_ok=True)
     file_storage.save(os.path.join(upload_folder, filename))
+
     return url_for('static', filename=f'uploads/{filename}')
 
 
 VALID_SORTS = {'newest', 'price_asc', 'price_desc', 'saves'}
 VALID_SOURCES = {'all', 'stores', 'users'}
+
 CATEGORIES = [
     ('books', 'Books & Notes'),
     ('electronics', 'Electronics'),
@@ -38,14 +42,17 @@ CATEGORIES = [
     ('furniture', 'Furniture'),
     ('other', 'Other'),
 ]
+
 PER_PAGE = 20
 
 
 def _apply_sort(query, sort):
     if sort == 'price_asc':
         return query.order_by(Listing.price.asc())
+
     if sort == 'price_desc':
         return query.order_by(Listing.price.desc())
+
     if sort == 'saves':
         saves_subq = (
             db.session.query(
@@ -56,9 +63,13 @@ def _apply_sort(query, sort):
             .group_by(wishlist_items.c.listing_id)
             .subquery()
         )
-        return (query
-                .outerjoin(saves_subq, Listing.id == saves_subq.c.listing_id)
-                .order_by(func.coalesce(saves_subq.c.n, 0).desc()))
+
+        return (
+            query
+            .outerjoin(saves_subq, Listing.id == saves_subq.c.listing_id)
+            .order_by(func.coalesce(saves_subq.c.n, 0).desc())
+        )
+
     return query.order_by(Listing.created_at.desc())
 
 
@@ -74,6 +85,7 @@ def index():
 
     if sort not in VALID_SORTS:
         sort = 'newest'
+
     if source not in VALID_SOURCES:
         source = 'all'
 
@@ -127,45 +139,55 @@ def index():
 @bp.route('/api/search')
 def api_search():
     q = request.args.get('q', '').strip()
+
     query = Listing.query.filter_by(is_active=True, is_removed=False)
 
     if q:
         query = query.filter(Listing.title.ilike(f'%{q}%'))
-    results = query.order_by(Listing.created_at.desc()).limit(20).all()
-    
-    wishlisted_ids = set()
-    if current_user.is_authenticated:
-        wishlisted_ids = {l.id for l in current_user.wishlist_listings}
 
-    return jsonify([{
-        'id': l.id,
-        'title': l.title,
-        'price': l.price,
-        'category': l.category,
-        'image_url': l.image_url,
-        'seller_id': l.seller.id,
-        'seller_username': l.seller.username,
-        'posted_as_store': l.posted_as_store,
-        'seller_is_verified': l.seller.is_verified,
-        'seller_store_name': l.seller.store_name,
-        'is_wishlisted': l.id in wishlisted_ids,
-        'wishlist_count': l.wishlisted_by.count()
-    } for l in results])
+    results = query.order_by(Listing.created_at.desc()).limit(20).all()
+
+    return jsonify([
+        {
+            'id': l.id,
+            'title': l.title,
+            'price': l.price,
+            'category': l.category,
+            'image_url': l.image_url,
+            'seller_id': l.seller.id,
+            'seller_username': l.seller.username,
+            'posted_as_store': l.posted_as_store,
+            'seller_is_verified': l.seller.is_verified,
+            'seller_store_name': l.seller.store_name,
+            'is_wishlisted': current_user.has_saved(l) if current_user.is_authenticated else False,
+            'wishlist_count': l.save_count
+        }
+        for l in results
+    ])
 
 
 @bp.route('/<int:listing_id>')
 def detail(listing_id):
     listing = Listing.query.get_or_404(listing_id)
+
     if listing.is_removed:
         if current_user.is_authenticated and (current_user.is_admin or current_user.is_moderator):
             pass
         else:
             flash('This listing has been removed by moderation.', 'warning')
             return redirect(url_for('listings.index'))
-    if not listing.is_removed:
-        view = ListingView(listing_id=listing_id)
+
+    # Count views for seller analytics.
+    # Do not count the seller viewing their own listing.
+    if not current_user.is_authenticated or current_user.id != listing.seller_id:
+        view = ListingView(listing_id=listing.id)
         db.session.add(view)
+
+        if hasattr(listing, 'view_count'):
+            listing.view_count = (listing.view_count or 0) + 1
+
         db.session.commit()
+
     return render_template('listings/detail.html', listing=listing)
 
 
@@ -173,9 +195,11 @@ def detail(listing_id):
 @login_required
 def new():
     form = ListingForm()
+
     if form.validate_on_submit():
         posted_as_store = current_user.is_store and request.form.get('post_as') == 'store'
         image_url = _save_image(form.image.data)
+
         listing = Listing(
             title=form.title.data,
             description=form.description.data,
@@ -186,10 +210,13 @@ def new():
             posted_as_store=posted_as_store,
             seller_id=current_user.id,
         )
+
         db.session.add(listing)
         db.session.commit()
+
         flash('Listing posted!', 'success')
         return redirect(url_for('listings.detail', listing_id=listing.id))
+
     default_post_as = request.args.get('as', 'personal')
     return render_template('listings/new.html', form=form, default_post_as=default_post_as)
 
@@ -198,13 +225,17 @@ def new():
 @login_required
 def close(listing_id):
     listing = Listing.query.get_or_404(listing_id)
+
     if listing.seller_id != current_user.id:
         flash('Not authorised.', 'error')
         return redirect(url_for('listings.detail', listing_id=listing_id))
+
     if listing.is_removed and not (current_user.is_admin or current_user.is_moderator):
         abort(404)
+
     if listing.posted_as_store and listing.stock_quantity is not None:
         listing.stock_quantity = max(0, listing.stock_quantity - 1)
+
         if listing.stock_quantity == 0:
             listing.is_active = False
             flash('Stock depleted — listing marked as sold.', 'success')
@@ -213,28 +244,52 @@ def close(listing_id):
     else:
         listing.is_active = False
         flash('Listing marked as sold.', 'success')
+
     db.session.commit()
+
     return redirect(url_for('listings.detail', listing_id=listing_id))
 
+
+@bp.route('/<int:listing_id>/toggle_active', methods=['POST'])
+@login_required
+def toggle_listing_active(listing_id):
+    listing = Listing.query.get_or_404(listing_id)
+
+    if not (current_user.is_admin or current_user.is_moderator):
+        flash('Not authorised.', 'error')
+        return redirect(url_for('listings.detail', listing_id=listing_id))
+
+    listing.is_active = not listing.is_active
+    db.session.commit()
+
+    status = 'restored' if listing.is_active else 'taken down'
+    flash(f'Listing {status}.', 'success')
+
+    return redirect(url_for('listings.detail', listing_id=listing_id))
 
 
 @bp.route('/<int:listing_id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit(listing_id):
     listing = Listing.query.get_or_404(listing_id)
+
     if listing.seller_id != current_user.id:
         flash('Not authorised.', 'error')
         return redirect(url_for('listings.detail', listing_id=listing_id))
+
     if listing.is_removed and not (current_user.is_admin or current_user.is_moderator):
         abort(404)
 
     form = EditListingForm(obj=listing)
+
     if form.validate_on_submit():
         changes_made = False
 
         fields_to_check = ['title', 'description', 'price', 'category']
+
         if listing.posted_as_store:
             fields_to_check.append('stock_quantity')
+
         for field in fields_to_check:
             old_val = getattr(listing, field)
             new_val = getattr(form, field).data
@@ -249,6 +304,7 @@ def edit(listing_id):
                     old_value=str(old_val),
                     new_value=str(new_val)
                 )
+
                 db.session.add(edit_log)
                 setattr(listing, field, new_val)
                 changes_made = True
@@ -282,11 +338,14 @@ def edit(listing_id):
 def toggle_wishlist(listing_id):
     """Legacy toggle - saves to first/default wishlist. Kept for non-JS fallback."""
     listing = Listing.query.get_or_404(listing_id)
+
     if listing.is_removed and not (current_user.is_admin or current_user.is_moderator):
         abort(404)
+
     added = False
 
     default_wl = current_user.wishlists.order_by(Wishlist.created_at.asc()).first()
+
     if not default_wl:
         default_wl = Wishlist(name="Saved Items", user_id=current_user.id)
         db.session.add(default_wl)
@@ -299,6 +358,7 @@ def toggle_wishlist(listing_id):
         default_wl.listings.append(listing)
         added = True
         flash('Added to wishlist.', 'success')
+
     db.session.commit()
 
     wishlist_count = listing.save_count
@@ -315,8 +375,10 @@ def toggle_wishlist(listing_id):
 def get_wishlists_for_listing(listing_id):
     """Return user's wishlists with checked status for this listing."""
     listing = Listing.query.get_or_404(listing_id)
+
     if listing.is_removed and not (current_user.is_admin or current_user.is_moderator):
         return jsonify({'error': 'Listing not found'}), 404
+
     wishlists = current_user.wishlists.order_by(Wishlist.created_at.asc()).all()
 
     if not wishlists:
@@ -326,11 +388,14 @@ def get_wishlists_for_listing(listing_id):
         wishlists = [default_wl]
 
     return jsonify({
-        'wishlists': [{
-            'id': wl.id,
-            'name': wl.name,
-            'checked': listing in wl.listings
-        } for wl in wishlists],
+        'wishlists': [
+            {
+                'id': wl.id,
+                'name': wl.name,
+                'checked': listing in wl.listings
+            }
+            for wl in wishlists
+        ],
         'save_count': listing.save_count,
         'is_saved': current_user.has_saved(listing)
     })
@@ -341,8 +406,10 @@ def get_wishlists_for_listing(listing_id):
 def toggle_wishlist_item(listing_id, wishlist_id):
     """Toggle a listing in a specific wishlist."""
     listing = Listing.query.get_or_404(listing_id)
+
     if listing.is_removed and not (current_user.is_admin or current_user.is_moderator):
         return jsonify({'error': 'Listing not found'}), 404
+
     wl = Wishlist.query.filter_by(id=wishlist_id, user_id=current_user.id).first_or_404()
 
     if listing in wl.listings:
@@ -351,6 +418,7 @@ def toggle_wishlist_item(listing_id, wishlist_id):
     else:
         wl.listings.append(listing)
         checked = True
+
     db.session.commit()
 
     return jsonify({
