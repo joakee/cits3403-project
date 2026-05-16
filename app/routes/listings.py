@@ -2,7 +2,7 @@ import os
 import uuid
 from flask import (
     Blueprint, render_template, redirect, url_for,
-    flash, request, jsonify, current_app
+    flash, request, jsonify, current_app, abort
 )
 from flask_login import login_required, current_user
 from app import db
@@ -77,7 +77,7 @@ def index():
     if source not in VALID_SOURCES:
         source = 'all'
 
-    query = Listing.query.filter_by(is_active=True)
+    query = Listing.query.filter_by(is_active=True, is_removed=False)
 
     if q:
         query = query.filter(
@@ -127,7 +127,7 @@ def index():
 @bp.route('/api/search')
 def api_search():
     q = request.args.get('q', '').strip()
-    query = Listing.query.filter_by(is_active=True)
+    query = Listing.query.filter_by(is_active=True, is_removed=False)
 
     if q:
         query = query.filter(Listing.title.ilike(f'%{q}%'))
@@ -156,9 +156,16 @@ def api_search():
 @bp.route('/<int:listing_id>')
 def detail(listing_id):
     listing = Listing.query.get_or_404(listing_id)
-    view = ListingView(listing_id=listing_id)
-    db.session.add(view)
-    db.session.commit()
+    if listing.is_removed:
+        if current_user.is_authenticated and (current_user.is_admin or current_user.is_moderator):
+            pass
+        else:
+            flash('This listing has been removed by moderation.', 'warning')
+            return redirect(url_for('listings.index'))
+    if not listing.is_removed:
+        view = ListingView(listing_id=listing_id)
+        db.session.add(view)
+        db.session.commit()
     return render_template('listings/detail.html', listing=listing)
 
 
@@ -194,6 +201,8 @@ def close(listing_id):
     if listing.seller_id != current_user.id:
         flash('Not authorised.', 'error')
         return redirect(url_for('listings.detail', listing_id=listing_id))
+    if listing.is_removed and not (current_user.is_admin or current_user.is_moderator):
+        abort(404)
     if listing.posted_as_store and listing.stock_quantity is not None:
         listing.stock_quantity = max(0, listing.stock_quantity - 1)
         if listing.stock_quantity == 0:
@@ -208,19 +217,6 @@ def close(listing_id):
     return redirect(url_for('listings.detail', listing_id=listing_id))
 
 
-@bp.route('/<int:listing_id>/toggle_active', methods=['POST'])
-@login_required
-def toggle_listing_active(listing_id):
-    listing = Listing.query.get_or_404(listing_id)
-    if not (current_user.is_admin or current_user.is_moderator):
-        flash('Not authorised.', 'error')
-        return redirect(url_for('listings.detail', listing_id=listing_id))
-    listing.is_active = not listing.is_active
-    db.session.commit()
-    status = 'restored' if listing.is_active else 'taken down'
-    flash(f'Listing {status}.', 'success')
-    return redirect(url_for('listings.detail', listing_id=listing_id))
-
 
 @bp.route('/<int:listing_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -229,6 +225,8 @@ def edit(listing_id):
     if listing.seller_id != current_user.id:
         flash('Not authorised.', 'error')
         return redirect(url_for('listings.detail', listing_id=listing_id))
+    if listing.is_removed and not (current_user.is_admin or current_user.is_moderator):
+        abort(404)
 
     form = EditListingForm(obj=listing)
     if form.validate_on_submit():
@@ -284,6 +282,8 @@ def edit(listing_id):
 def toggle_wishlist(listing_id):
     """Legacy toggle - saves to first/default wishlist. Kept for non-JS fallback."""
     listing = Listing.query.get_or_404(listing_id)
+    if listing.is_removed and not (current_user.is_admin or current_user.is_moderator):
+        abort(404)
     added = False
 
     default_wl = current_user.wishlists.order_by(Wishlist.created_at.asc()).first()
@@ -315,6 +315,8 @@ def toggle_wishlist(listing_id):
 def get_wishlists_for_listing(listing_id):
     """Return user's wishlists with checked status for this listing."""
     listing = Listing.query.get_or_404(listing_id)
+    if listing.is_removed and not (current_user.is_admin or current_user.is_moderator):
+        return jsonify({'error': 'Listing not found'}), 404
     wishlists = current_user.wishlists.order_by(Wishlist.created_at.asc()).all()
 
     if not wishlists:
@@ -339,6 +341,8 @@ def get_wishlists_for_listing(listing_id):
 def toggle_wishlist_item(listing_id, wishlist_id):
     """Toggle a listing in a specific wishlist."""
     listing = Listing.query.get_or_404(listing_id)
+    if listing.is_removed and not (current_user.is_admin or current_user.is_moderator):
+        return jsonify({'error': 'Listing not found'}), 404
     wl = Wishlist.query.filter_by(id=wishlist_id, user_id=current_user.id).first_or_404()
 
     if listing in wl.listings:
