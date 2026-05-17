@@ -120,8 +120,8 @@ def init_admin(app):
     )
     
     # Add views to the admin panel
-    admin.add_view(UserAdminView(User, db.session, category="Management"))
-    admin.add_view(SecureModelView(Conversation, db.session, category="Logs"))
-    admin.add_view(SecureModelView(Message, db.session, category="Logs"))
+    admin.add_view(UserAdminView(User, db, category="Management"))
+    admin.add_view(SecureModelView(Conversation, db, category="Logs"))
+    admin.add_view(SecureModelView(Message, db, category="Logs"))
 
-    admin.add_view(ModeratorListingView(Listing, db.session, name="Moderation"))
+    admin.add_view(ModeratorListingView(Listing, db, name="Moderation"))

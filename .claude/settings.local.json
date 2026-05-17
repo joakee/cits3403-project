@@ -5,7 +5,16 @@
       "Bash(git commit -m ' *)",
       "Bash(gh pr *)",
       "Bash(git push *)",
-      "Bash(git remote *)"
+      "Bash(git remote *)",
+      "Bash(Get-ChildItem -Path \"d:\\\\UWA\\\\Agile Web Dev\\\\cits3403-project\" -Recurse -Depth 2)",
+      "Bash(Select-Object FullName)",
+      "Bash(pip install *)",
+      "Bash(.venv\\\\Scripts\\\\python.exe -c \"from webdriver_manager.microsoft import EdgeChromiumDriverManager; print\\('Edge manager OK'\\)\")",
+      "Bash(python -c \"from webdriver_manager.microsoft import EdgeChromiumDriverManager; print\\('Edge manager OK'\\)\")",
+      "Bash(python -m pytest tests/test_selenium.py -v --no-header -x)",
+      "Bash(python -c ' *)",
+      "Bash(python -m pytest tests/test_selenium.py -v --no-header)",
+      "Bash(python -m pytest tests/test_selenium.py::test_home_page_loads -v --no-header --tb=short)"
     ]
   }
 }

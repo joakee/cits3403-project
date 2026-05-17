@@ -17,6 +17,7 @@ def _migrate_columns():
         'is_store':       'BOOLEAN DEFAULT 0',
         'is_verified':    'BOOLEAN DEFAULT 0',
         'is_admin':       'BOOLEAN DEFAULT 0',
+        'is_moderator':   'BOOLEAN DEFAULT 0',
         'store_name':     'VARCHAR(128)',
         'store_address':  'VARCHAR(256)',
         'contact_phone':  'VARCHAR(32)',
@@ -24,6 +25,8 @@ def _migrate_columns():
         'store_bio':      'TEXT',
         'banned_at':      'DATETIME',
         'ban_reason':     'TEXT',
+        'otp_code':       'VARCHAR(6)',
+        'otp_expiry':     'DATETIME',
     }
     new_listing_cols = {
         'stock_quantity':  'INTEGER',
@@ -32,6 +35,7 @@ def _migrate_columns():
         'removed_at':      'DATETIME',
         'removed_reason':  'TEXT',
         'removed_by_id':   'INTEGER',
+        'show_history':    'BOOLEAN DEFAULT 0',
     }
 
     message_cols = {c['name'] for c in inspector.get_columns('message')}
