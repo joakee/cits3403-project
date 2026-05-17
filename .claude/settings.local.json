@@ -8,7 +8,9 @@
       "Bash(python -c ' *)",
       "Bash(git fetch *)",
       "Bash(git merge *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(.venv\\\\Scripts\\\\python.exe seed_db.py)",
+      "PowerShell(.venv\\\\Scripts\\\\python.exe seed_db.py 2>&1)"
     ]
   }
 }

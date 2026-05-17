@@ -53,25 +53,26 @@ with app.app_context():
     sam    = get_or_create_user('sam',     'sam@example.com',     bio='Selling a bit of everything.')
 
     # ── Store accounts ──────────────────────────────────────────────────────
-    techbazaar    = get_or_create_user('techbazaar',     'techbazaar@store.com',     bio='Your go-to store for quality refurbished electronics and accessories.')
-    bookshelf_co  = get_or_create_user('bookshelf_co',   'bookshelf@store.com',      bio='New and second-hand textbooks for all courses. Fast dispatch.')
-    campusgear    = get_or_create_user('campusgear',     'campusgear@store.com',     bio='Everything a student needs — stationery, bags, and study gear.')
-    stylevault    = get_or_create_user('stylevault',     'stylevault@store.com',     bio='Curated second-hand fashion. New stock every week.')
-    furnifinds    = get_or_create_user('furnifinds',     'furnifinds@store.com',     bio='Affordable pre-loved furniture. Perfect for student accommodation.')
-    gadgetshop    = get_or_create_user('gadgetshop',     'gadgetshop@store.com',     bio='Gadgets, cables, and peripherals at unbeatable prices.')
-    textbookdepot = get_or_create_user('textbookdepot',  'textbookdepot@store.com',  bio='Huge range of uni textbooks. All editions available.')
-    sportzone     = get_or_create_user('sportzone',      'sportzone@store.com',      bio='Second-hand sports equipment for every sport and budget.')
-    homehaven     = get_or_create_user('homehaven',      'homehaven@store.com',      bio='Homewares, kitchen items, and decor at student-friendly prices.')
-    nerdnook      = get_or_create_user('nerdnook',       'nerdnook@store.com',       bio='Collectibles, comics, board games, and all things nerdy.')
+    techbazaar    = get_or_create_user('techbazaar',     'techbazaar@store.com',     bio='Your go-to store for quality refurbished electronics and accessories.', is_store=True, store_name='TechBazaar')
+    bookshelf_co  = get_or_create_user('bookshelf_co',   'bookshelf@store.com',      bio='New and second-hand textbooks for all courses. Fast dispatch.',         is_store=True, store_name='Bookshelf Co.')
+    campusgear    = get_or_create_user('campusgear',     'campusgear@store.com',     bio='Everything a student needs — stationery, bags, and study gear.',         is_store=True, store_name='Campus Gear')
+    stylevault    = get_or_create_user('stylevault',     'stylevault@store.com',     bio='Curated second-hand fashion. New stock every week.',                     is_store=True, store_name='Style Vault')
+    furnifinds    = get_or_create_user('furnifinds',     'furnifinds@store.com',     bio='Affordable pre-loved furniture. Perfect for student accommodation.',     is_store=True, store_name='FurniFinds')
+    gadgetshop    = get_or_create_user('gadgetshop',     'gadgetshop@store.com',     bio='Gadgets, cables, and peripherals at unbeatable prices.',                 is_store=True, store_name='Gadget Shop')
+    textbookdepot = get_or_create_user('textbookdepot',  'textbookdepot@store.com',  bio='Huge range of uni textbooks. All editions available.',                   is_store=True, store_name='Textbook Depot')
+    sportzone     = get_or_create_user('sportzone',      'sportzone@store.com',      bio='Second-hand sports equipment for every sport and budget.',               is_store=True, store_name='Sport Zone')
+    homehaven     = get_or_create_user('homehaven',      'homehaven@store.com',      bio='Homewares, kitchen items, and decor at student-friendly prices.',        is_store=True, store_name='Home Haven')
+    nerdnook      = get_or_create_user('nerdnook',       'nerdnook@store.com',       bio='Collectibles, comics, board games, and all things nerdy.',               is_store=True, store_name='Nerd Nook')
 
     db.session.commit()
 
     # ── Listings ─────────────────────────────────────────────────────────────
     print("Creating listings...")
 
-    def listing(title, desc, price, cat, seller, is_active=True, image_url=None):
+    def listing(title, desc, price, cat, seller, is_active=True, image_url=None, posted_as_store=False):
         l = Listing(title=title, description=desc, price=price,
-                    category=cat, seller_id=seller.id, is_active=is_active, image_url=image_url)
+                    category=cat, seller_id=seller.id, is_active=is_active, image_url=image_url,
+                    posted_as_store=posted_as_store)
         db.session.add(l)
         return l
 
@@ -161,82 +162,82 @@ with app.app_context():
     # ── Store listings ───────────────────────────────────────────────────────
 
     # techbazaar
-    listing('Refurbished iPhone 12', 'Unlocked, 64GB, 85% battery health. Includes charger.', 399.0, 'electronics', techbazaar)
-    listing('Refurbished MacBook Air (2020)', 'M1 chip, 8GB RAM, 256GB SSD. Excellent condition.', 849.0, 'electronics', techbazaar)
-    listing('iPad 9th Gen', '64GB WiFi. Screen protector applied. Good condition.', 280.0, 'electronics', techbazaar)
-    listing('AirPods Pro (Gen 1)', 'Noise cancelling. Case and tips included.', 140.0, 'electronics', techbazaar)
-    listing('Samsung Galaxy S22', '128GB, unlocked. Light wear on edges.', 320.0, 'electronics', techbazaar)
-    listing('Apple Watch SE', '40mm, GPS. Strap included.', 160.0, 'electronics', techbazaar)
+    listing('Refurbished iPhone 12', 'Unlocked, 64GB, 85% battery health. Includes charger.', 399.0, 'electronics', techbazaar, posted_as_store=True)
+    listing('Refurbished MacBook Air (2020)', 'M1 chip, 8GB RAM, 256GB SSD. Excellent condition.', 849.0, 'electronics', techbazaar, posted_as_store=True)
+    listing('iPad 9th Gen', '64GB WiFi. Screen protector applied. Good condition.', 280.0, 'electronics', techbazaar, posted_as_store=True)
+    listing('AirPods Pro (Gen 1)', 'Noise cancelling. Case and tips included.', 140.0, 'electronics', techbazaar, posted_as_store=True)
+    listing('Samsung Galaxy S22', '128GB, unlocked. Light wear on edges.', 320.0, 'electronics', techbazaar, posted_as_store=True)
+    listing('Apple Watch SE', '40mm, GPS. Strap included.', 160.0, 'electronics', techbazaar, posted_as_store=True)
 
     # bookshelf_co
-    listing('Fundamentals of Physics (Halliday)', '10th edition. Clean pages, no writing.', 65.0, 'books', bookshelf_co)
-    listing('Organic Chemistry (McMurry)', '9th edition. Good condition, minor highlighting.', 50.0, 'books', bookshelf_co)
-    listing('Introduction to Algorithms (CLRS)', '3rd edition. Light wear on cover.', 70.0, 'books', bookshelf_co)
-    listing('Human Anatomy & Physiology', '11th edition. Very clean.', 60.0, 'books', bookshelf_co)
-    listing('Principles of Economics (Mankiw)', '8th edition. Some highlighting.', 45.0, 'books', bookshelf_co)
-    listing('Data Structures and Algorithms in Python', 'First printing. No markings.', 55.0, 'books', bookshelf_co)
-    listing('Molecular Biology of the Cell', '6th edition. Excellent condition.', 68.0, 'books', bookshelf_co)
+    listing('Fundamentals of Physics (Halliday)', '10th edition. Clean pages, no writing.', 65.0, 'books', bookshelf_co, posted_as_store=True)
+    listing('Organic Chemistry (McMurry)', '9th edition. Good condition, minor highlighting.', 50.0, 'books', bookshelf_co, posted_as_store=True)
+    listing('Introduction to Algorithms (CLRS)', '3rd edition. Light wear on cover.', 70.0, 'books', bookshelf_co, posted_as_store=True)
+    listing('Human Anatomy & Physiology', '11th edition. Very clean.', 60.0, 'books', bookshelf_co, posted_as_store=True)
+    listing('Principles of Economics (Mankiw)', '8th edition. Some highlighting.', 45.0, 'books', bookshelf_co, posted_as_store=True)
+    listing('Data Structures and Algorithms in Python', 'First printing. No markings.', 55.0, 'books', bookshelf_co, posted_as_store=True)
+    listing('Molecular Biology of the Cell', '6th edition. Excellent condition.', 68.0, 'books', bookshelf_co, posted_as_store=True)
 
     # campusgear
-    listing('Laptop Backpack (30L)', 'Padded compartment, USB charging port. Black.', 35.0, 'other', campusgear)
-    listing('A4 Notebooks x5 Pack', 'Ruled, 200 pages each. Sealed.', 12.0, 'books', campusgear)
-    listing('Staedtler Pen Set', '12 fineliner pens. Various colours.', 9.0, 'other', campusgear)
-    listing('Graphing Calculator (Casio FX-9750)', 'Works perfectly. Batteries included.', 40.0, 'electronics', campusgear)
-    listing('Ergonomic Laptop Stand', 'Portable, adjustable height.', 25.0, 'electronics', campusgear)
+    listing('Laptop Backpack (30L)', 'Padded compartment, USB charging port. Black.', 35.0, 'other', campusgear, posted_as_store=True)
+    listing('A4 Notebooks x5 Pack', 'Ruled, 200 pages each. Sealed.', 12.0, 'books', campusgear, posted_as_store=True)
+    listing('Staedtler Pen Set', '12 fineliner pens. Various colours.', 9.0, 'other', campusgear, posted_as_store=True)
+    listing('Graphing Calculator (Casio FX-9750)', 'Works perfectly. Batteries included.', 40.0, 'electronics', campusgear, posted_as_store=True)
+    listing('Ergonomic Laptop Stand', 'Portable, adjustable height.', 25.0, 'electronics', campusgear, posted_as_store=True)
 
     # stylevault
-    listing('Vintage Denim Jacket (M)', 'Light wash, 90s style. Great condition.', 38.0, 'clothing', stylevault)
-    listing('Floral Summer Dress (S)', 'Barely worn. Midi length.', 22.0, 'clothing', stylevault)
-    listing('Oversized Knit Sweater (L)', 'Cream colour. Very cosy.', 28.0, 'clothing', stylevault)
-    listing('Black Blazer (M)', 'Classic fit. Good condition.', 30.0, 'clothing', stylevault)
-    listing('Leather Boots (EU 38)', 'Genuine leather ankle boots. Minor wear on soles.', 55.0, 'clothing', stylevault)
-    listing('Linen Trousers (S)', 'Beige, wide-leg. Never worn.', 24.0, 'clothing', stylevault)
+    listing('Vintage Denim Jacket (M)', 'Light wash, 90s style. Great condition.', 38.0, 'clothing', stylevault, posted_as_store=True)
+    listing('Floral Summer Dress (S)', 'Barely worn. Midi length.', 22.0, 'clothing', stylevault, posted_as_store=True)
+    listing('Oversized Knit Sweater (L)', 'Cream colour. Very cosy.', 28.0, 'clothing', stylevault, posted_as_store=True)
+    listing('Black Blazer (M)', 'Classic fit. Good condition.', 30.0, 'clothing', stylevault, posted_as_store=True)
+    listing('Leather Boots (EU 38)', 'Genuine leather ankle boots. Minor wear on soles.', 55.0, 'clothing', stylevault, posted_as_store=True)
+    listing('Linen Trousers (S)', 'Beige, wide-leg. Never worn.', 24.0, 'clothing', stylevault, posted_as_store=True)
 
     # furnifinds
-    listing('Study Desk (100cm)', 'White MDF. Good condition, minor surface marks.', 55.0, 'furniture', furnifinds)
-    listing('Office Chair', 'Adjustable height, lumbar support. Black mesh.', 70.0, 'furniture', furnifinds)
-    listing('Wardrobe (2-door)', 'White. Requires flat-pack assembly. All parts present.', 80.0, 'furniture', furnifinds)
-    listing('Chest of Drawers (4-drawer)', 'Solid pine. Good condition.', 50.0, 'furniture', furnifinds)
-    listing('Bedside Table', 'Small with single drawer. White.', 20.0, 'furniture', furnifinds)
-    listing('Sofa (2-seater)', 'Grey fabric. Some wear on armrests.', 120.0, 'furniture', furnifinds)
+    listing('Study Desk (100cm)', 'White MDF. Good condition, minor surface marks.', 55.0, 'furniture', furnifinds, posted_as_store=True)
+    listing('Office Chair', 'Adjustable height, lumbar support. Black mesh.', 70.0, 'furniture', furnifinds, posted_as_store=True)
+    listing('Wardrobe (2-door)', 'White. Requires flat-pack assembly. All parts present.', 80.0, 'furniture', furnifinds, posted_as_store=True)
+    listing('Chest of Drawers (4-drawer)', 'Solid pine. Good condition.', 50.0, 'furniture', furnifinds, posted_as_store=True)
+    listing('Bedside Table', 'Small with single drawer. White.', 20.0, 'furniture', furnifinds, posted_as_store=True)
+    listing('Sofa (2-seater)', 'Grey fabric. Some wear on armrests.', 120.0, 'furniture', furnifinds, posted_as_store=True)
 
     # gadgetshop
-    listing('HDMI Cable 2m (2-pack)', 'High-speed, 4K compatible.', 8.0, 'electronics', gadgetshop)
-    listing('USB-C Charging Cable (3-pack)', 'Braided nylon, 1m each.', 10.0, 'electronics', gadgetshop)
-    listing('Webcam 1080p', 'Plug and play, built-in mic. Works on all OS.', 30.0, 'electronics', gadgetshop)
-    listing('External Hard Drive 1TB', 'Western Digital. USB 3.0.', 48.0, 'electronics', gadgetshop)
-    listing('Portable Charger 20000mAh', 'Dual USB + USB-C output. Fast charge.', 28.0, 'electronics', gadgetshop)
+    listing('HDMI Cable 2m (2-pack)', 'High-speed, 4K compatible.', 8.0, 'electronics', gadgetshop, posted_as_store=True)
+    listing('USB-C Charging Cable (3-pack)', 'Braided nylon, 1m each.', 10.0, 'electronics', gadgetshop, posted_as_store=True)
+    listing('Webcam 1080p', 'Plug and play, built-in mic. Works on all OS.', 30.0, 'electronics', gadgetshop, posted_as_store=True)
+    listing('External Hard Drive 1TB', 'Western Digital. USB 3.0.', 48.0, 'electronics', gadgetshop, posted_as_store=True)
+    listing('Portable Charger 20000mAh', 'Dual USB + USB-C output. Fast charge.', 28.0, 'electronics', gadgetshop, posted_as_store=True)
 
     # textbookdepot
-    listing('Business Law (Nickolas James)', '4th edition. Minor highlighting.', 42.0, 'books', textbookdepot)
-    listing('Clinical Psychology (Barlow)', '9th edition. Good condition.', 58.0, 'books', textbookdepot)
-    listing('Environmental Science (Botkin)', '9th edition. Clean copy.', 52.0, 'books', textbookdepot)
-    listing('Financial Accounting (Weygandt)', '9th edition. Some pencil notes.', 48.0, 'books', textbookdepot)
-    listing('Sociology: The Core (Hughes)', '11th edition. No markings.', 38.0, 'books', textbookdepot)
+    listing('Business Law (Nickolas James)', '4th edition. Minor highlighting.', 42.0, 'books', textbookdepot, posted_as_store=True)
+    listing('Clinical Psychology (Barlow)', '9th edition. Good condition.', 58.0, 'books', textbookdepot, posted_as_store=True)
+    listing('Environmental Science (Botkin)', '9th edition. Clean copy.', 52.0, 'books', textbookdepot, posted_as_store=True)
+    listing('Financial Accounting (Weygandt)', '9th edition. Some pencil notes.', 48.0, 'books', textbookdepot, posted_as_store=True)
+    listing('Sociology: The Core (Hughes)', '11th edition. No markings.', 38.0, 'books', textbookdepot, posted_as_store=True)
 
     # sportzone
-    listing('Basketball', 'Wilson Evolution. Indoor/outdoor. Size 7.', 28.0, 'other', sportzone)
-    listing('Swim Goggles', 'Anti-fog, UV protection. One size fits most.', 12.0, 'other', sportzone)
-    listing('Jump Rope (Speed)', 'Adjustable length, ball bearings.', 9.0, 'other', sportzone)
-    listing('Resistance Bands Set', '5 levels, includes door anchor and handles.', 18.0, 'other', sportzone)
-    listing('Water Bottle 1L (Insulated)', 'Keeps cold 24h. Stainless steel.', 15.0, 'other', sportzone)
-    listing('Foam Roller', 'High density, 60cm. Good for recovery.', 16.0, 'other', sportzone)
+    listing('Basketball', 'Wilson Evolution. Indoor/outdoor. Size 7.', 28.0, 'other', sportzone, posted_as_store=True)
+    listing('Swim Goggles', 'Anti-fog, UV protection. One size fits most.', 12.0, 'other', sportzone, posted_as_store=True)
+    listing('Jump Rope (Speed)', 'Adjustable length, ball bearings.', 9.0, 'other', sportzone, posted_as_store=True)
+    listing('Resistance Bands Set', '5 levels, includes door anchor and handles.', 18.0, 'other', sportzone, posted_as_store=True)
+    listing('Water Bottle 1L (Insulated)', 'Keeps cold 24h. Stainless steel.', 15.0, 'other', sportzone, posted_as_store=True)
+    listing('Foam Roller', 'High density, 60cm. Good for recovery.', 16.0, 'other', sportzone, posted_as_store=True)
 
     # homehaven
-    listing('Kettle (1.7L)', 'Russell Hobbs. Fast boil. Good condition.', 18.0, 'other', homehaven)
-    listing('Toaster (2-slice)', 'White. Works perfectly.', 12.0, 'other', homehaven)
-    listing('Duvet (Double, 10.5 tog)', 'Machine washable. Good condition.', 22.0, 'other', homehaven)
-    listing('Pillow Pair', 'Medium firmness. Clean.', 10.0, 'other', homehaven)
-    listing('Cutlery Set (16 piece)', 'Stainless steel. Complete set.', 14.0, 'other', homehaven)
-    listing('Plant Pot Set (3 sizes)', 'Terracotta-style ceramic. Good condition.', 12.0, 'other', homehaven)
+    listing('Kettle (1.7L)', 'Russell Hobbs. Fast boil. Good condition.', 18.0, 'other', homehaven, posted_as_store=True)
+    listing('Toaster (2-slice)', 'White. Works perfectly.', 12.0, 'other', homehaven, posted_as_store=True)
+    listing('Duvet (Double, 10.5 tog)', 'Machine washable. Good condition.', 22.0, 'other', homehaven, posted_as_store=True)
+    listing('Pillow Pair', 'Medium firmness. Clean.', 10.0, 'other', homehaven, posted_as_store=True)
+    listing('Cutlery Set (16 piece)', 'Stainless steel. Complete set.', 14.0, 'other', homehaven, posted_as_store=True)
+    listing('Plant Pot Set (3 sizes)', 'Terracotta-style ceramic. Good condition.', 12.0, 'other', homehaven, posted_as_store=True)
 
     # nerdnook
-    listing('Catan Board Game', 'Complete set, all pieces present. Light wear on box.', 25.0, 'other', nerdnook)
-    listing('Magic: The Gathering Card Bundle', '200 mixed cards including rares.', 20.0, 'other', nerdnook)
-    listing('Funko Pop — Spider-Man', 'Unopened in box.', 14.0, 'other', nerdnook)
-    listing('Dungeons & Dragons Starter Set', 'Complete, lightly used once.', 18.0, 'other', nerdnook)
-    listing('Graphic Novel: Watchmen', 'Paperback. Good condition.', 10.0, 'other', nerdnook)
-    listing('Ticket to Ride (Europe)', 'Complete set. All cards and tokens present.', 30.0, 'other', nerdnook, image_url='/static/uploads/ticket_to_ride_europe.png')
+    listing('Catan Board Game', 'Complete set, all pieces present. Light wear on box.', 25.0, 'other', nerdnook, posted_as_store=True)
+    listing('Magic: The Gathering Card Bundle', '200 mixed cards including rares.', 20.0, 'other', nerdnook, posted_as_store=True)
+    listing('Funko Pop — Spider-Man', 'Unopened in box.', 14.0, 'other', nerdnook, posted_as_store=True)
+    listing('Dungeons & Dragons Starter Set', 'Complete, lightly used once.', 18.0, 'other', nerdnook, posted_as_store=True)
+    listing('Graphic Novel: Watchmen', 'Paperback. Good condition.', 10.0, 'other', nerdnook, posted_as_store=True)
+    listing('Ticket to Ride (Europe)', 'Complete set. All cards and tokens present.', 30.0, 'other', nerdnook, image_url='/static/uploads/ticket_to_ride_europe.png', posted_as_store=True)
 
     db.session.commit()
 

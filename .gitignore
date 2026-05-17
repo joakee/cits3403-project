@@ -6,3 +6,4 @@ marketplace.db
 /.venv
 marketplace.db
 .env
+.claude/
