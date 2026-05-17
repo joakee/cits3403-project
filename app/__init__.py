@@ -113,7 +113,7 @@ def create_app(config_class=Config):
         recent_listings = (Listing.query
                            .filter_by(is_active=True, is_removed=False)
                            .order_by(Listing.created_at.desc())
-                           .limit(8).all())
+                           .limit(9).all())
 
         category_counts_raw = (db.session.query(Listing.category, func.count(Listing.id))
                                .filter(Listing.is_active == True, Listing.is_removed == False)

@@ -39,8 +39,50 @@
                 </div>
             {% endif %}
 
-            {% if listing.image_url %}
-                <img src="{{ listing.image_url }}" class="w-100" style="max-height: 380px; object-fit: cover;" alt="{{ listing.title }}">
+            <!-- Lightbox modal (always present) -->
+            <div class="modal fade" id="imgLightbox" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-xl">
+                    <div class="modal-content border-0 position-relative" style="background:transparent;">
+                        <img id="lightboxImg" src="" alt="" style="width:100%; max-height:90vh; object-fit:contain;">
+                        {% if listing.images.count() > 1 %}
+                        <button id="lightboxPrev" type="button"
+                                style="position:absolute; left:0; top:50%; transform:translateY(-50%); background:rgba(0,0,0,0.45); border:none; color:#fff; font-size:1.8rem; padding:0.4rem 0.8rem; border-radius:0 6px 6px 0;">&#8249;</button>
+                        <button id="lightboxNext" type="button"
+                                style="position:absolute; right:0; top:50%; transform:translateY(-50%); background:rgba(0,0,0,0.45); border:none; color:#fff; font-size:1.8rem; padding:0.4rem 0.8rem; border-radius:6px 0 0 6px;">&#8250;</button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            {% set gallery = listing.images.all() %}
+            {% if gallery %}
+                <div id="listingCarousel" class="carousel slide position-relative" data-bs-ride="false">
+                    <div class="carousel-inner">
+                        {% for img in gallery %}
+                        <div class="carousel-item {% if loop.first %}active{% endif %}">
+                            <img src="{{ img.image_url }}" class="d-block w-100 listing-zoomable-img"
+                                 style="max-height: 420px; object-fit: contain; background:var(--img-letterbox); cursor:zoom-in;"
+                                 alt="{{ listing.title }} photo {{ loop.index }}">
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% if gallery|length > 1 %}
+                    <span id="carouselCounter"
+                          style="position:absolute; top:10px; right:12px; background:rgba(0,0,0,0.5); color:#fff; font-size:0.8rem; padding:2px 8px; border-radius:20px; pointer-events:none;">
+                        1&nbsp;/&nbsp;{{ gallery|length }}
+                    </span>
+                    <button class="carousel-control-prev" type="button" data-bs-target="#listingCarousel" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon"></span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#listingCarousel" data-bs-slide="next">
+                        <span class="carousel-control-next-icon"></span>
+                    </button>
+                    {% endif %}
+                </div>
+            {% elif listing.image_url %}
+                <img src="{{ listing.image_url }}" class="w-100 listing-zoomable-img"
+                     style="max-height: 380px; object-fit: cover; cursor:zoom-in;"
+                     alt="{{ listing.title }}">
             {% else %}
                 <div class="listing-img-placeholder" style="height:220px; border-radius:0;">
                     <i class="bi bi-box-seam" style="font-size:4rem;"></i>
@@ -207,4 +249,51 @@
         </div>
     </div>
 </div>
+
+{% block extra_js %}
+<script>
+(function () {
+    var lightboxEl  = document.getElementById('imgLightbox');
+    var lightbox    = new bootstrap.Modal(lightboxEl);
+    var lightboxImg = document.getElementById('lightboxImg');
+    var imgs        = Array.from(document.querySelectorAll('.listing-zoomable-img'));
+    var currentIdx  = 0;
+
+    {% if listing.images.count() > 1 %}
+    var bsCarousel = bootstrap.Carousel.getOrCreateInstance(document.getElementById('listingCarousel'));
+    var counter    = document.getElementById('carouselCounter');
+
+    document.getElementById('listingCarousel').addEventListener('slid.bs.carousel', function (e) {
+        counter.innerHTML = (e.to + 1) + '&nbsp;/&nbsp;{{ listing.images.count() }}';
+    });
+
+    function showLightboxAt(idx) {
+        currentIdx = (idx + imgs.length) % imgs.length;
+        lightboxImg.src = imgs[currentIdx].src;
+        lightboxImg.alt = imgs[currentIdx].alt;
+        bsCarousel.to(currentIdx);
+        counter.innerHTML = (currentIdx + 1) + '&nbsp;/&nbsp;{{ listing.images.count() }}';
+    }
+
+    document.getElementById('lightboxPrev').addEventListener('click', function () { showLightboxAt(currentIdx - 1); });
+    document.getElementById('lightboxNext').addEventListener('click', function () { showLightboxAt(currentIdx + 1); });
+
+    document.addEventListener('keydown', function (e) {
+        if (!lightboxEl.classList.contains('show')) return;
+        if (e.key === 'ArrowLeft')  showLightboxAt(currentIdx - 1);
+        if (e.key === 'ArrowRight') showLightboxAt(currentIdx + 1);
+    });
+    {% endif %}
+
+    imgs.forEach(function (img, idx) {
+        img.addEventListener('click', function () {
+            currentIdx = idx;
+            lightboxImg.src = img.src;
+            lightboxImg.alt = img.alt;
+            lightbox.show();
+        });
+    });
+})();
+</script>
+{% endblock %}
 {% endblock %}
