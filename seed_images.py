@@ -16,10 +16,13 @@ def seed_images():
         print(f"Generating images for {len(listings)} listings...")
         
         for listing in listings:
+            if listing.image_url:
+                continue
+
             safe_title = re.sub(r'[^a-z0-9]', '_', listing.title.lower().strip('_'))
             filename = f"{safe_title}_{listing.id}_v3.jpg"
             filepath = os.path.join(upload_folder, filename)
-            
+
             if not os.path.exists(filepath):
                 print(f"Downloading image for: {listing.title}...")
                 prompt = urllib.parse.quote(f"A clear product photo of {listing.title}, {listing.category}")

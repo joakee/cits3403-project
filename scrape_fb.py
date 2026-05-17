@@ -11,6 +11,17 @@ from app.models import Listing
 
 app = create_app()
 
+RESULT_SKIP = {
+    'white dress shirts': 1,
+}
+
+def _skip_count(title):
+    t = title.lower()
+    for key, n in RESULT_SKIP.items():
+        if key in t:
+            return n
+    return 0
+
 async def scrape_all_listings():
     with app.app_context():
         listings = Listing.query.all()
@@ -29,10 +40,14 @@ async def scrape_all_listings():
             page = await context.new_page()
             
             for index, listing in enumerate(listings):
+                if listing.image_url:
+                    print(f"[{index+1}/{len(listings)}] Skipping '{listing.title}' (already has image).")
+                    continue
+
                 safe_title = re.sub(r'[^a-z0-9]', '_', listing.title.lower().strip('_'))
                 filename = f"{safe_title}_{listing.id}_fb.jpg"
                 filepath = os.path.join(upload_folder, filename)
-                
+
                 print(f"[{index+1}/{len(listings)}] Searching FB Marketplace for: '{listing.title}'...")
                 
                 encoded_query = urllib.parse.quote(listing.title)
@@ -44,13 +59,18 @@ async def scrape_all_listings():
                     await page.wait_for_timeout(3000)
                     
                     image_src = None
+                    skip = _skip_count(listing.title)
+                    skipped = 0
                     images = await page.locator("img").all()
-                    
+
                     for img in images:
                         src = await img.get_attribute("src")
                         if not src:
                             continue
                         if "scontent" in src and "fbcdn.net" in src:
+                            if skipped < skip:
+                                skipped += 1
+                                continue
                             image_src = src
                             break
                             

@@ -170,6 +170,15 @@ class Listing(db.Model):
         return f'<Listing {self.title}>'
 
 
+class ListingImage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    listing_id = db.Column(db.Integer, db.ForeignKey('listing.id'), nullable=False)
+    image_url = db.Column(db.String(256), nullable=False)
+    order = db.Column(db.Integer, default=0)
+
+    listing = db.relationship('Listing', backref=db.backref('images', lazy='dynamic', order_by='ListingImage.order'))
+
+
 class ListingEdit(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     listing_id = db.Column(db.Integer, db.ForeignKey('listing.id'), nullable=False)
