@@ -1062,3 +1062,14 @@ html.dark-mode .btn-warning.text-dark {
         flex-direction: column;
     }
 }
+/* ─── Fix listing filter Apply/Clear button alignment ─────────── */
+.listings-filter-actions .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 44px;
+    line-height: 1;
+    padding-top: 0;
+    padding-bottom: 0;
+}

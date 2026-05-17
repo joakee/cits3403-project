@@ -1,6 +1,7 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask_login import UserMixin
 from app import db, login_manager
+import random
 
 
 @login_manager.user_loader
@@ -11,12 +12,14 @@ def load_user(user_id):
     return user
 
 
-wishlist_items = db.Table('wishlist_items',
+wishlist_items = db.Table(
+    'wishlist_items',
     db.Column('wishlist_id', db.Integer, db.ForeignKey('wishlist.id'), primary_key=True),
     db.Column('listing_id', db.Integer, db.ForeignKey('listing.id'), primary_key=True)
 )
 
-store_follows = db.Table('store_follows',
+store_follows = db.Table(
+    'store_follows',
     db.Column('follower_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
     db.Column('store_id', db.Integer, db.ForeignKey('user.id'), primary_key=True)
 )
@@ -30,6 +33,7 @@ class Wishlist(db.Model):
 
     user = db.relationship('User', backref=db.backref('wishlists', lazy='dynamic'))
 
+    # A wishlist contains many listings
     listings = db.relationship(
         'Listing',
         secondary=wishlist_items,
@@ -52,11 +56,15 @@ class User(db.Model, UserMixin):
     is_admin = db.Column(db.Boolean, default=False)
     is_moderator = db.Column(db.Boolean, default=False)
     is_active = db.Column(db.Boolean, default=True)
+
+    is_verified = db.Column(db.Boolean, default=False)
+    otp_code = db.Column(db.String(6), nullable=True)
+    otp_expiry = db.Column(db.DateTime, nullable=True)
+
     banned_at = db.Column(db.DateTime, nullable=True)
     ban_reason = db.Column(db.Text, nullable=True)
 
     is_store = db.Column(db.Boolean, default=False)
-    is_verified = db.Column(db.Boolean, default=False)
     store_name = db.Column(db.String(128), nullable=True)
     store_address = db.Column(db.String(256), nullable=True)
     contact_phone = db.Column(db.String(32), nullable=True)
@@ -78,6 +86,11 @@ class User(db.Model, UserMixin):
         backref=db.backref('store_followers', lazy='dynamic'),
         lazy='dynamic'
     )
+
+    def generate_otp(self):
+        self.otp_code = f"{random.randint(100000, 999999)}"
+        self.otp_expiry = datetime.utcnow() + timedelta(minutes=10)
+        return self.otp_code
 
     def has_saved(self, listing):
         return db.session.query(wishlist_items).join(Wishlist).filter(
@@ -102,10 +115,16 @@ class Listing(db.Model):
     category = db.Column(db.String(64), nullable=False)
     image_url = db.Column(db.String(256), nullable=True)
     is_active = db.Column(db.Boolean, default=True)
+
+    # Seller data / analytics
+    view_count = db.Column(db.Integer, default=0)
+
+    # Moderation/removal fields
     is_removed = db.Column(db.Boolean, default=False)
     removed_at = db.Column(db.DateTime, nullable=True)
     removed_reason = db.Column(db.Text, nullable=True)
     removed_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+
     show_history = db.Column(db.Boolean, default=True)
     stock_quantity = db.Column(db.Integer, nullable=True)
     posted_as_store = db.Column(db.Boolean, default=False)

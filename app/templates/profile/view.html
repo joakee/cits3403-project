@@ -27,6 +27,7 @@
                         </span>
                     {% endif %}
                 </h2>
+
                 {% if current_user.is_authenticated and current_user.id == profile_user.id %}
                     <a href="{{ url_for('profile.edit') }}" class="btn btn-outline-secondary btn-sm">
                         <i class="bi bi-pencil me-1"></i>Edit Profile
@@ -52,29 +53,34 @@
                     </a>
                 {% endif %}
             </div>
+
             <p class="text-muted mb-1 mt-1">
                 <i class="bi bi-envelope me-1"></i>{{ profile_user.email }}
             </p>
+
             <p class="text-muted mb-0" style="font-size: 13px;">
                 <i class="bi bi-calendar3 me-1"></i>
                 Member since {{ profile_user.member_since.strftime('%B %Y') }}
             </p>
+
             {% if profile_user.bio %}
                 <p class="mt-2 mb-0" style="color: var(--text-primary);">{{ profile_user.bio }}</p>
             {% endif %}
         </div>
+
         {% if current_user.is_authenticated and current_user.id != profile_user.id %}
             <div class="d-flex flex-column gap-2">
                 {% if current_user.is_admin %}
-                <form action="{{ url_for('profile.toggle_user_ban', user_id=profile_user.id) }}" method="POST">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    {% if profile_user.is_active %}
-                        <button type="submit" class="btn btn-outline-danger w-100">Ban User</button>
-                    {% else %}
-                        <button type="submit" class="btn btn-outline-success w-100">Unban User (Restore Access)</button>
-                    {% endif %}
-                </form>
+                    <form action="{{ url_for('profile.toggle_user_ban', user_id=profile_user.id) }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        {% if profile_user.is_active %}
+                            <button type="submit" class="btn btn-outline-danger w-100">Ban User</button>
+                        {% else %}
+                            <button type="submit" class="btn btn-outline-success w-100">Unban User (Restore Access)</button>
+                        {% endif %}
+                    </form>
                 {% endif %}
+
                 <a href="{{ url_for('moderation.report_user', user_id=profile_user.id) }}"
                    class="btn btn-outline-danger btn-sm">
                     <i class="bi bi-flag me-1"></i>Report User
@@ -92,6 +98,7 @@
                 <div class="stat-label">Total Listed</div>
             </a>
         </div>
+
         <div class="col-4 col-sm-3">
             <a href="{{ url_for('profile.view', user_id=profile_user.id, filter='active') }}"
                class="profile-stat d-block text-decoration-none {{ 'stat-active' if listing_filter == 'active' }}">
@@ -99,6 +106,7 @@
                 <div class="stat-label">Active</div>
             </a>
         </div>
+
         <div class="col-4 col-sm-3">
             <a href="{{ url_for('profile.view', user_id=profile_user.id, filter='sold') }}"
                class="profile-stat d-block text-decoration-none {{ 'stat-active' if listing_filter == 'sold' }}">
@@ -109,6 +117,49 @@
     </div>
 </div>
 
+<!-- ── Seller data section ────────────────────────────────────── -->
+{% if current_user.is_authenticated and current_user.id == profile_user.id %}
+<div class="card p-4 mb-4 shadow-sm">
+    <h5 class="section-heading mb-3">
+        <i class="bi bi-bar-chart-line me-2"></i>Seller Data
+    </h5>
+
+    <div class="row g-3">
+        <div class="col-6 col-md-3">
+            <div class="profile-stat">
+                <div class="stat-value">{{ total_views }}</div>
+                <div class="stat-label">Total Views</div>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-3">
+            <div class="profile-stat">
+                <div class="stat-value">{{ total_saves }}</div>
+                <div class="stat-label">Total Saves</div>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-3">
+            <div class="profile-stat">
+                <div class="stat-value">{{ active_count }}</div>
+                <div class="stat-label">Active Listings</div>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-3">
+            <div class="profile-stat">
+                <div class="stat-value">{{ sold_count }}</div>
+                <div class="stat-label">Sold Listings</div>
+            </div>
+        </div>
+    </div>
+
+    <p class="text-muted mt-3 mb-0" style="font-size: 13px;">
+        These stats help you understand how your listings are performing.
+    </p>
+</div>
+{% endif %}
+
 <!-- ── Reviews section ───────────────────────────────────────── -->
 <div class="card p-4 mb-4 shadow-sm">
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -116,6 +167,7 @@
             <h5 class="section-heading mb-2">
                 <i class="bi bi-star-fill me-2"></i>Reviews
             </h5>
+
             {% if avg_rating %}
                 <p class="mb-0"><strong>Average Rating:</strong> {{ avg_rating }}/5</p>
             {% else %}
@@ -165,11 +217,17 @@
                     <img src="{{ listing.image_url }}" class="listing-img" alt="{{ listing.title }}">
                 {% else %}
                     <div class="listing-img-placeholder">
-                        {% set icons = {'books': 'bi-book', 'electronics': 'bi-cpu', 'clothing': 'bi-bag',
-                                        'furniture': 'bi-house', 'other': 'bi-box-seam'} %}
+                        {% set icons = {
+                            'books': 'bi-book',
+                            'electronics': 'bi-cpu',
+                            'clothing': 'bi-bag',
+                            'furniture': 'bi-house',
+                            'other': 'bi-box-seam'
+                        } %}
                         <i class="bi {{ icons.get(listing.category, 'bi-box-seam') }}"></i>
                     </div>
                 {% endif %}
+
                 <div class="card-body p-3">
                     <h6 class="card-title mb-1 text-truncate" title="{{ listing.title }}">
                         {{ listing.title }}
@@ -191,6 +249,13 @@
                             {{ listing.created_at | timeago }}
                         </small>
                     </div>
+
+                    {% if current_user.is_authenticated and current_user.id == profile_user.id %}
+                        <div class="d-flex justify-content-between mt-2 text-muted" style="font-size: 12px;">
+                            <span><i class="bi bi-eye me-1"></i>{{ listing.view_count or 0 }} views</span>
+                            <span><i class="bi bi-heart me-1"></i>{{ listing.save_count }} saves</span>
+                        </div>
+                    {% endif %}
                 </div>
             </a>
         </div>
@@ -204,6 +269,7 @@
                 <a class="page-link"
                    href="{{ url_for('profile.view', user_id=profile_user.id, filter=listing_filter, page=pagination.prev_num) if pagination.has_prev else '#' }}">&laquo;</a>
             </li>
+
             {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
                 {% if p %}
                     <li class="page-item {{ 'active' if p == pagination.page }}">
@@ -213,6 +279,7 @@
                     <li class="page-item disabled"><span class="page-link">…</span></li>
                 {% endif %}
             {% endfor %}
+
             <li class="page-item {{ 'disabled' if not pagination.has_next }}">
                 <a class="page-link"
                    href="{{ url_for('profile.view', user_id=profile_user.id, filter=listing_filter, page=pagination.next_num) if pagination.has_next else '#' }}">&raquo;</a>
@@ -224,6 +291,7 @@
 {% else %}
     <div class="empty-state">
         <i class="bi bi-inbox"></i>
+
         {% if listing_filter == 'sold' %}
             <p>No sold listings yet.</p>
         {% elif current_user.is_authenticated and current_user.id == profile_user.id %}

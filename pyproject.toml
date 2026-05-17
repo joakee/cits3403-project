@@ -1,0 +1,17 @@
+[project]
+name = "cits3403-project"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "email-validator>=2.0",
+    "emoji>=2.15.0",
+    "flask>=3.0",
+    "flask-admin>=2.1.0",
+    "flask-login>=0.6",
+    "flask-mail>=0.10.0",
+    "flask-socketio>=5.3",
+    "flask-sqlalchemy>=3.1",
+    "flask-wtf>=1.2",
+    "python-dotenv>=1.2.2",
+    "werkzeug>=3.0",
+]
