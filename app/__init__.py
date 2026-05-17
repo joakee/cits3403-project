@@ -27,6 +27,9 @@ def create_app(config_class=Config):
     login_manager.init_app(app)
     csrf.init_app(app)
 
+    from app.oauth import init_oauth
+    init_oauth(app)
+
     from app.routes.auth import bp as auth_bp
     from app.routes.profile import bp as profile_bp
     from app.routes.listings import bp as listings_bp
