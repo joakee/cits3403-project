@@ -14,7 +14,7 @@ PW = generate_password_hash('password123', method='pbkdf2:sha256')
 def get_or_create_user(username, email, **kwargs):
     u = User.query.filter_by(username=username).first()
     if not u:
-        u = User(username=username, email=email, password_hash=PW, **kwargs)
+        u = User(username=username, email=email, password_hash=PW, is_verified=True, **kwargs)
         db.session.add(u)
         db.session.flush()
     return u
