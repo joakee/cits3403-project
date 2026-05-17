@@ -5,8 +5,8 @@ from datetime import datetime
 
 import pytest
 from selenium import webdriver
-from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
 from werkzeug.security import generate_password_hash
 from werkzeug.serving import make_server
 
@@ -127,7 +127,10 @@ def selenium_login(driver, base_url):
     email_input.send_keys("selenium_buyer@test.com")
     password_input.send_keys("password123")
 
-    submit_button = driver.find_element(By.CSS_SELECTOR, "button[type='submit'], input[type='submit']")
+    submit_button = driver.find_element(
+        By.CSS_SELECTOR,
+        "button[type='submit'], input[type='submit']"
+    )
     submit_button.click()
 
     time.sleep(1)
