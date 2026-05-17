@@ -1,12 +1,12 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
+from flask import Blueprint, render_template, redirect, url_for, abort
 from flask_login import login_required, current_user
 from app import db, socketio
 from app.models import User, Message, Listing, Conversation
-from app.forms import EditProfileForm
 from flask_socketio import emit, join_room
 from datetime import timezone
 from zoneinfo import ZoneInfo
 import emoji
+
 
 bp = Blueprint('chat', __name__, url_prefix='/chat')
 
@@ -14,11 +14,12 @@ PERTH_TZ = ZoneInfo("Australia/Perth")
 
 
 def format_awst(timestamp):
-    """Convert stored UTC timestamp to Perth/AWST display time."""
+    """Format message timestamp as Perth/AWST time."""
     if timestamp is None:
         return ""
 
-    # Existing DB timestamps are likely naive UTC because models use datetime.utcnow.
+    # Database timestamps should be saved as UTC.
+    # If timestamp has no timezone, treat it as UTC.
     if timestamp.tzinfo is None:
         timestamp = timestamp.replace(tzinfo=timezone.utc)
 
@@ -40,12 +41,13 @@ def enforce_verification():
 @login_required
 def start_chat(listing_id):
     listing = Listing.query.get_or_404(listing_id)
+
     if listing.is_removed and not (current_user.is_admin or current_user.is_moderator):
         abort(404)
+
     if listing.seller_id == current_user.id:
         return "You cannot buy your own item!", 400
 
-    # Check if conversation already exists
     conversation = Conversation.query.filter_by(
         listing_id=listing_id,
         buyer_id=current_user.id
@@ -68,18 +70,16 @@ def start_chat(listing_id):
 def chat_room(conversation_id):
     conversation = Conversation.query.get_or_404(conversation_id)
 
-    # Security: Ensure current user is part of the chat
     if current_user.id not in [conversation.buyer_id, conversation.seller_id]:
         return "Unauthorized", 403
 
     messages = conversation.messages.order_by(Message.timestamp.asc()).all()
 
-    # Mark all messages from the other party as read
     for msg in messages:
         if msg.sender_id != current_user.id and not msg.is_read:
             msg.is_read = True
 
-        # Add formatted Perth/AWST timestamp for display in chat.html
+        # Used by chat.html for saved messages after page refresh
         msg.display_timestamp = format_awst(msg.timestamp)
 
     db.session.commit()
@@ -95,13 +95,11 @@ def chat_room(conversation_id):
 @bp.route('/inbox')
 @login_required
 def inbox():
-    # Fetch conversations where user is buyer OR seller
     conversations = Conversation.query.filter(
         (Conversation.buyer_id == current_user.id) |
         (Conversation.seller_id == current_user.id)
     ).all()
 
-    # Sort conversations by the timestamp of the last message
     conversations.sort(
         key=lambda x: x.messages.order_by(Message.timestamp.desc()).first().timestamp
         if x.messages.first()
@@ -141,6 +139,7 @@ def handle_message(data):
     db.session.add(new_msg)
     db.session.commit()
 
+    # Used by live Socket.IO messages before refresh
     message_time = format_awst(new_msg.timestamp)
 
     emit('receive_message', {

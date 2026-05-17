@@ -60,7 +60,7 @@ CATEGORIES = [
     ('other', 'Other'),
 ]
 
-PER_PAGE = 20
+VALID_PER_PAGE = {20, 40, 80}
 
 
 def _apply_sort(query, sort):
@@ -102,6 +102,9 @@ def index():
     min_price = request.args.get('min_price', '').strip()
     max_price = request.args.get('max_price', '').strip()
     page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 20, type=int)
+    if per_page not in VALID_PER_PAGE:
+        per_page = 20
 
     if sort not in VALID_SORTS:
         sort = 'newest'
@@ -140,7 +143,7 @@ def index():
         query = query.filter(Listing.posted_as_store == False)
 
     query = _apply_sort(query, sort)
-    pagination = query.paginate(page=page, per_page=PER_PAGE, error_out=False)
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
 
     return render_template(
         'listings/index.html',
@@ -152,7 +155,8 @@ def index():
         sort=sort,
         source=source,
         min_price=min_price,
-        max_price=max_price
+        max_price=max_price,
+        per_page=per_page
     )
 
 

@@ -21,7 +21,7 @@ def get_or_create_user(username, email, **kwargs):
 with app.app_context():
     db.create_all()
 
-    # ΓöÇΓöÇ Existing users ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    # ── Existing users ──────────────────────────────────────────────────────
     print("Creating users...")
     alice = get_or_create_user('alice', 'alice@example.com',
         bio='Selling stuff I no longer need. Based on campus.')
@@ -30,39 +30,39 @@ with app.app_context():
     admin = get_or_create_user('admin', 'admin@admin.com',
         bio='Site administrator.', is_admin=True)
 
-    # ΓöÇΓöÇ Regular users ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    # ── Regular users ───────────────────────────────────────────────────────
     sarah  = get_or_create_user('sarah',   'sarah@example.com',   bio='First-year student clearing out my room.')
     james  = get_or_create_user('james',   'james@example.com',   bio='Selling textbooks after finishing my degree.')
     priya  = get_or_create_user('priya',   'priya@example.com',   bio='Love finding good deals and passing them on.')
-    liam   = get_or_create_user('liam',    'liam@example.com',    bio='Moving out ΓÇö everything must go!')
+    liam   = get_or_create_user('liam',    'liam@example.com',    bio='Moving out — everything must go!')
     mei    = get_or_create_user('mei',     'mei@example.com',     bio='PhD student selling old course materials.')
     omar   = get_or_create_user('omar',    'omar@example.com',    bio='Casual seller. All items in good condition.')
     chloe  = get_or_create_user('chloe',   'chloe@example.com',   bio='Fashion lover selling clothes I no longer wear.')
     ethan  = get_or_create_user('ethan',   'ethan@example.com',   bio='Tech enthusiast upgrading my setup.')
     sofia  = get_or_create_user('sofia',   'sofia@example.com',   bio='Interior design student selling furniture.')
     noah   = get_or_create_user('noah',    'noah@example.com',    bio='Selling sports gear after switching hobbies.')
-    ava    = get_or_create_user('ava',     'ava@example.com',     bio='Minimalist ΓÇö decluttering regularly.')
+    ava    = get_or_create_user('ava',     'ava@example.com',     bio='Minimalist — decluttering regularly.')
     marcus = get_or_create_user('marcus',  'marcus@example.com',  bio='Engineering student selling old lab gear.')
     lily   = get_or_create_user('lily',    'lily@example.com',    bio='Bookworm selling my finished reads.')
     ryan   = get_or_create_user('ryan',    'ryan@example.com',    bio='Gamer selling hardware upgrades.')
     zoe    = get_or_create_user('zoe',     'zoe@example.com',     bio='Art student selling supplies and prints.')
     dan    = get_or_create_user('dan',     'dan@example.com',     bio='Just trying to fund my next project.')
     jess   = get_or_create_user('jessica', 'jessica@example.com', bio='Selling clothes and accessories I bought but never wore.')
-    tom    = get_or_create_user('tom',     'tom@example.com',     bio='Hobbyist seller ΓÇö mainly electronics.')
+    tom    = get_or_create_user('tom',     'tom@example.com',     bio='Hobbyist seller — mainly electronics.')
     angela = get_or_create_user('angela',  'angela@example.com',  bio='Clearing out years of accumulated stuff.')
     sam    = get_or_create_user('sam',     'sam@example.com',     bio='Selling a bit of everything.')
 
-    # ΓöÇΓöÇ Additional regular users ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    # ── Additional regular users ─────────────────────────────────────────────
     finn   = get_or_create_user('finn',   'finn@example.com',   bio='Music student offloading gear between semesters.')
-    grace  = get_or_create_user('grace',  'grace@example.com',  bio='Nursing student ΓÇö selling textbooks and uniforms.')
+    grace  = get_or_create_user('grace',  'grace@example.com',  bio='Nursing student — selling textbooks and uniforms.')
     henry  = get_or_create_user('henry',  'henry@example.com',  bio='Law student clearing out after graduation.')
-    isabel = get_or_create_user('isabel', 'isabel@example.com', bio='Exchange student ΓÇö selling before I fly home.')
+    isabel = get_or_create_user('isabel', 'isabel@example.com', bio='Exchange student — selling before I fly home.')
     jake   = get_or_create_user('jake',   'jake@example.com',   bio='Commerce student, good condition items only.')
     karen  = get_or_create_user('karen',  'karen@example.com',  bio='Mature-age student downsizing the kitchen.')
     leo    = get_or_create_user('leo',    'leo@example.com',    bio='Architecture student selling design tools.')
     mia    = get_or_create_user('mia',    'mia@example.com',    bio='Education student, craft supplies and books.')
     nina   = get_or_create_user('nina',   'nina@example.com',   bio='Science student offloading lab gear.')
-    oliver = get_or_create_user('oliver', 'oliver@example.com', bio='Med student ΓÇö too many textbooks, not enough shelf space.')
+    oliver = get_or_create_user('oliver', 'oliver@example.com', bio='Med student — too many textbooks, not enough shelf space.')
     pam    = get_or_create_user('pam',    'pam@example.com',    bio='Arts student selling prints and supplies.')
     quinn  = get_or_create_user('quinn',  'quinn@example.com',  bio='Enviro sci student, eco-friendly bits and pieces.')
     rob    = get_or_create_user('rob',    'rob@example.com',    bio='IT student upgrading my whole setup.')
@@ -87,7 +87,7 @@ with app.app_context():
     kate   = get_or_create_user('kate',   'kate@example.com',   bio='Biomedical student selling lab and study gear.')
     lance  = get_or_create_user('lance',  'lance@example.com',  bio='PE student selling sports equipment.')
     mona   = get_or_create_user('mona',   'mona@example.com',   bio='Politics student, books and debate prep.')
-    ned    = get_or_create_user('ned',    'ned@example.com',    bio='Creative writing student ΓÇö books, books, books.')
+    ned    = get_or_create_user('ned',    'ned@example.com',    bio='Creative writing student — books, books, books.')
     opal   = get_or_create_user('opal',   'opal@example.com',   bio='Anthropology student with global finds.')
     pete   = get_or_create_user('pete',   'pete@example.com',   bio='Civil engineering student selling textbooks and tools.')
     rosa   = get_or_create_user('rosa',   'rosa@example.com',   bio='Design student selling art supplies and gear.')
@@ -98,10 +98,10 @@ with app.app_context():
     will   = get_or_create_user('will',   'will@example.com',   bio='Agriculture student selling tools and outdoor gear.')
     xena   = get_or_create_user('xena',   'xena@example.com',   bio='Neuroscience student selling study materials.')
 
-    # ΓöÇΓöÇ Store accounts ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    # ── Store accounts ──────────────────────────────────────────────────────
     techbazaar    = get_or_create_user('techbazaar',     'techbazaar@store.com',     bio='Your go-to store for quality refurbished electronics and accessories.', is_store=True, store_name='TechBazaar')
     bookshelf_co  = get_or_create_user('bookshelf_co',   'bookshelf@store.com',      bio='New and second-hand textbooks for all courses. Fast dispatch.',         is_store=True, store_name='Bookshelf Co.')
-    campusgear    = get_or_create_user('campusgear',     'campusgear@store.com',     bio='Everything a student needs ΓÇö stationery, bags, and study gear.',         is_store=True, store_name='Campus Gear')
+    campusgear    = get_or_create_user('campusgear',     'campusgear@store.com',     bio='Everything a student needs — stationery, bags, and study gear.',         is_store=True, store_name='Campus Gear')
     stylevault    = get_or_create_user('stylevault',     'stylevault@store.com',     bio='Curated second-hand fashion. New stock every week.',                     is_store=True, store_name='Style Vault')
     furnifinds    = get_or_create_user('furnifinds',     'furnifinds@store.com',     bio='Affordable pre-loved furniture. Perfect for student accommodation.',     is_store=True, store_name='FurniFinds')
     gadgetshop    = get_or_create_user('gadgetshop',     'gadgetshop@store.com',     bio='Gadgets, cables, and peripherals at unbeatable prices.',                 is_store=True, store_name='Gadget Shop')
@@ -112,7 +112,7 @@ with app.app_context():
 
     db.session.commit()
 
-    # ΓöÇΓöÇ Listings ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    # ── Listings ─────────────────────────────────────────────────────────────
     print("Creating listings...")
 
     def listing(title, desc, price, cat, seller, is_active=True, image_url=None, posted_as_store=False):
@@ -205,7 +205,7 @@ with app.app_context():
 
     db.session.flush()
 
-    # ΓöÇΓöÇ Store listings ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    # ── Store listings ───────────────────────────────────────────────────────
 
     # techbazaar
     listing('Refurbished iPhone 12', 'Unlocked, 64GB, 85% battery health. Includes charger.', 399.0, 'electronics', techbazaar, posted_as_store=True)
@@ -280,12 +280,12 @@ with app.app_context():
     # nerdnook
     listing('Catan Board Game', 'Complete set, all pieces present. Light wear on box.', 25.0, 'other', nerdnook, posted_as_store=True)
     listing('Magic: The Gathering Card Bundle', '200 mixed cards including rares.', 20.0, 'other', nerdnook, posted_as_store=True)
-    listing('Funko Pop ΓÇö Spider-Man', 'Unopened in box.', 14.0, 'other', nerdnook, posted_as_store=True)
+    listing('Funko Pop — Spider-Man', 'Unopened in box.', 14.0, 'other', nerdnook, posted_as_store=True)
     listing('Dungeons & Dragons Starter Set', 'Complete, lightly used once.', 18.0, 'other', nerdnook, posted_as_store=True)
     listing('Graphic Novel: Watchmen', 'Paperback. Good condition.', 10.0, 'other', nerdnook, posted_as_store=True)
     listing('Ticket to Ride (Europe)', 'Complete set. All cards and tokens present.', 30.0, 'other', nerdnook, image_url='/static/uploads/ticket_to_ride_europe.png', posted_as_store=True)
 
-    # ΓöÇΓöÇ Additional user listings ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    # ── Additional user listings ─────────────────────────────────────────────
 
     # finn
     listing('Guitar Amplifier (15W)', 'Fender Frontman 15G. Great for practice. Minor tolex wear.', 90.0, 'other', finn)
@@ -311,7 +311,7 @@ with app.app_context():
     # isabel
     listing('Canon EOS M50 (Body Only)', 'Great condition. Low shutter count. Includes battery and charger.', 420.0, 'electronics', isabel)
     listing('Universal Travel Adapter', 'Works in 150+ countries. USB-A and USB-C ports.', 15.0, 'electronics', isabel)
-    listing('Japanese for Busy People (Vol 1ΓÇô3)', 'Complete set. Some pencil notes.', 30.0, 'books', isabel)
+    listing('Japanese for Busy People (Vol 1–3)', 'Complete set. Some pencil notes.', 30.0, 'books', isabel)
     listing('Samsonite Cabin Bag (20")', 'Hard shell, spinner wheels. Minor scratch on shell.', 75.0, 'other', isabel)
     listing('Portable Neck Pillow', 'Memory foam. Good condition, includes carry bag.', 12.0, 'other', isabel)
 
@@ -414,7 +414,7 @@ with app.app_context():
     listing('Kokuyo Campus Notebooks (x10)', 'B5 ruled. Unopened pack.', 12.0, 'other', yuki)
 
     # zach
-    listing('Adjustable Dumbbell Set (2ΓÇô24kg)', 'Bowflex SelectTech. Excellent condition.', 180.0, 'other', zach)
+    listing('Adjustable Dumbbell Set (2–24kg)', 'Bowflex SelectTech. Excellent condition.', 180.0, 'other', zach)
     listing('Foam Yoga Mat (10mm)', 'Extra thick. Purple. Good condition.', 18.0, 'other', zach)
     listing('Nike Running Shoes (UK 11)', 'Pegasus 39. Used twice. Like new.', 80.0, 'clothing', zach)
     listing('Gym Bag (Large)', 'Under Armour Undeniable 5.0. Good condition.', 25.0, 'other', zach)
@@ -477,7 +477,7 @@ with app.app_context():
 
     # kate
     listing('Molecular Cell Biology (Lodish)', '8th ed. Good condition.', 75.0, 'books', kate)
-    listing('Student Microscope', 'AmScope 40xΓÇô1000x. Excellent condition, includes slides.', 85.0, 'electronics', kate)
+    listing('Student Microscope', 'AmScope 40x–1000x. Excellent condition, includes slides.', 85.0, 'electronics', kate)
     listing('Dissection Kit', 'Complete set, stainless steel. Used twice.', 18.0, 'other', kate)
     listing('Lab Safety Goggles', 'Indirect vent. Brand new.', 7.0, 'other', kate)
 
@@ -548,7 +548,7 @@ with app.app_context():
 
     db.session.commit()
 
-    # ΓöÇΓöÇ Edit history ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    # ── Edit history ────────────────────────────────────────────────────────
     print("Creating edit history...")
 
     def add_edit(listing_obj, field, old_val, new_val):
@@ -570,7 +570,7 @@ with app.app_context():
 
     db.session.commit()
 
-    # ΓöÇΓöÇ Wishlists ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    # ── Wishlists ───────────────────────────────────────────────────────────
     print("Creating wishlists...")
 
     def ensure_wishlist(user):

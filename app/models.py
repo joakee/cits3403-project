@@ -3,6 +3,7 @@ from flask_login import UserMixin
 from app import db, login_manager
 import random
 
+
 @login_manager.user_loader
 def load_user(user_id):
     user = User.query.get(int(user_id))
@@ -30,9 +31,7 @@ class Wishlist(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # A wishlist belongs to a user
     user = db.relationship('User', backref=db.backref('wishlists', lazy='dynamic'))
-    
 
     # A wishlist contains many listings
     listings = db.relationship(
@@ -57,17 +56,15 @@ class User(db.Model, UserMixin):
     is_admin = db.Column(db.Boolean, default=False)
     is_moderator = db.Column(db.Boolean, default=False)
     is_active = db.Column(db.Boolean, default=True)
-    is_verified = db.Column(db.Boolean, default=False)
 
-    def generate_otp(self):
-        self.otp_code = f"{random.randint(100000, 999999)}"
-        self.otp_expiry = datetime.utcnow() + timedelta(minutes=10)
-        return self.otp_code
+    is_verified = db.Column(db.Boolean, default=False)
+    otp_code = db.Column(db.String(6), nullable=True)
+    otp_expiry = db.Column(db.DateTime, nullable=True)
+
     banned_at = db.Column(db.DateTime, nullable=True)
     ban_reason = db.Column(db.Text, nullable=True)
 
     is_store = db.Column(db.Boolean, default=False)
-    is_verified = db.Column(db.Boolean, default=False)
     store_name = db.Column(db.String(128), nullable=True)
     store_address = db.Column(db.String(256), nullable=True)
     contact_phone = db.Column(db.String(32), nullable=True)
@@ -89,6 +86,11 @@ class User(db.Model, UserMixin):
         backref=db.backref('store_followers', lazy='dynamic'),
         lazy='dynamic'
     )
+
+    def generate_otp(self):
+        self.otp_code = f"{random.randint(100000, 999999)}"
+        self.otp_expiry = datetime.utcnow() + timedelta(minutes=10)
+        return self.otp_code
 
     def has_saved(self, listing):
         return db.session.query(wishlist_items).join(Wishlist).filter(
@@ -170,6 +172,15 @@ class Listing(db.Model):
         return f'<Listing {self.title}>'
 
 
+class ListingImage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    listing_id = db.Column(db.Integer, db.ForeignKey('listing.id'), nullable=False)
+    image_url = db.Column(db.String(256), nullable=False)
+    order = db.Column(db.Integer, default=0)
+
+    listing = db.relationship('Listing', backref=db.backref('images', lazy='dynamic', order_by='ListingImage.order'))
+
+
 class ListingEdit(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     listing_id = db.Column(db.Integer, db.ForeignKey('listing.id'), nullable=False)
@@ -198,7 +209,11 @@ class Message(db.Model):
     conversation_id = db.Column(db.Integer, db.ForeignKey('conversation.id'), nullable=False)
     sender_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     content = db.Column(db.Text, nullable=False)
+
+    # Save message time in UTC.
+    # chat.py converts this to AWST/Perth time for display.
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
     is_read = db.Column(db.Boolean, default=False)
 
 
@@ -250,8 +265,17 @@ class Report(db.Model):
     handled_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     admin_note = db.Column(db.Text, nullable=True)
 
-    reporter = db.relationship('User', foreign_keys=[reporter_id], backref='reports_filed')
-    handled_by = db.relationship('User', foreign_keys=[handled_by_id], backref='reports_handled')
+    reporter = db.relationship(
+        'User',
+        foreign_keys=[reporter_id],
+        backref='reports_filed'
+    )
+
+    handled_by = db.relationship(
+        'User',
+        foreign_keys=[handled_by_id],
+        backref='reports_handled'
+    )
 
     REASON_CHOICES = [
         ('spam', 'Spam or misleading'),
