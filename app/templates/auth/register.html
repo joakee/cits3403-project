@@ -34,6 +34,22 @@
                 <div class="text-danger small mt-1">{{ error }}</div>
             {% endfor %}
 
+            <!-- T&C Checkbox -->
+            <div class="tos-check mt-3">
+                <div class="form-check">
+                    {{ form.agree_tos(id="signup-tos", class="form-check-input" + (' is-invalid' if form.agree_tos.errors else '')) }}
+                    <label class="form-check-label" for="signup-tos">
+                        I agree to the
+                        <a href="{{ url_for('legal.tos') }}" target="_blank" class="tos-link">Terms of Service</a>
+                        and
+                        <a href="{{ url_for('legal.privacy') }}" target="_blank" class="tos-link">Privacy Policy</a>
+                    </label>
+                    {% for error in form.agree_tos.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+
             {{ form.submit(value="Sign Up") }}
         </form>
 

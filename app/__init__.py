@@ -37,6 +37,7 @@ def create_app(config_class=Config):
     from app.routes.moderation import bp as moderation_bp
     from app.routes.store import bp as store_bp
     from app.routes.sso import bp as sso_bp
+    from app.routes.legal import bp as legal_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(profile_bp)
@@ -45,6 +46,7 @@ def create_app(config_class=Config):
     app.register_blueprint(moderation_bp)
     app.register_blueprint(store_bp)
     app.register_blueprint(sso_bp)
+    app.register_blueprint(legal_bp)
 
     from app.admin import init_admin
     init_admin(app)
@@ -107,8 +109,8 @@ def create_app(config_class=Config):
                 Message.is_read == False
             ).scalar() or 0
 
-            return {'wishlist_total_count': wishlist_count, 'unread_count': unread_count}
-        return {'wishlist_total_count': 0, 'unread_count': 0}
+            return {'wishlist_total_count': wishlist_count, 'unread_count': unread_count, 'now': datetime.utcnow()}
+        return {'wishlist_total_count': 0, 'unread_count': 0, 'now': datetime.utcnow()}
 
     @app.route('/')
     def index():
@@ -118,7 +120,7 @@ def create_app(config_class=Config):
         recent_listings = (Listing.query
                            .filter_by(is_active=True, is_removed=False)
                            .order_by(Listing.created_at.desc())
-                           .limit(8).all())
+                           .limit(9).all())
 
         category_counts_raw = (db.session.query(Listing.category, func.count(Listing.id))
                                .filter(Listing.is_active == True, Listing.is_removed == False)

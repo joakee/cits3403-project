@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
 from app import create_app, db
-from app.models import User, Listing, ListingEdit, Wishlist
+import re
+import os as _os
+from app.models import User, Listing, ListingEdit, Wishlist, ListingImage
 from werkzeug.security import generate_password_hash
 
 app = create_app()
@@ -12,7 +14,7 @@ PW = generate_password_hash('password123', method='pbkdf2:sha256')
 def get_or_create_user(username, email, **kwargs):
     u = User.query.filter_by(username=username).first()
     if not u:
-        u = User(username=username, email=email, password_hash=PW, **kwargs)
+        u = User(username=username, email=email, password_hash=PW, is_verified=True, **kwargs)
         db.session.add(u)
         db.session.flush()
     return u
@@ -603,6 +605,38 @@ with app.app_context():
     wl_tom    = ensure_wishlist(tom);    wl_tom.listings.append(l_marcus1)
     wl_angela = ensure_wishlist(angela); wl_angela.listings.append(l_liam2)
     wl_sam    = ensure_wishlist(sam);    wl_sam.listings.append(l_angela1)
+
+    db.session.commit()
+
+    # ── Wire up images ──────────────────────────────────────────────────────
+    print("Wiring up images...")
+    upload_folder = _os.path.join(app.root_path, 'static', 'uploads')
+    primary = {}   # listing_id -> url  (from _fb.jpg)
+    gallery = {}   # listing_id -> list of (order, url)  (from _fb_N.jpg)
+
+    for fname in _os.listdir(upload_folder):
+        m = re.match(r'.+?_(\d+)_fb(_(\d+))?\.jpg$', fname)
+        if not m:
+            continue
+        lid = int(m.group(1))
+        if m.group(2) is None:
+            primary[lid] = f'/static/uploads/{fname}'
+        else:
+            gallery.setdefault(lid, []).append((int(m.group(3)), f'/static/uploads/{fname}'))
+
+    for lid, url in primary.items():
+        l = db.session.get(Listing, lid)
+        if l:
+            l.image_url = url
+
+    for lid, imgs in gallery.items():
+        l = db.session.get(Listing, lid)
+        if not l:
+            continue
+        for idx, url in sorted(imgs):
+            db.session.add(ListingImage(listing_id=lid, image_url=url, order=idx))
+        if lid not in primary:
+            l.image_url = sorted(imgs)[0][1]
 
     db.session.commit()
 
