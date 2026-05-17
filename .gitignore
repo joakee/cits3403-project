@@ -4,3 +4,5 @@
 marketplace.db
 *.db
 /.venv
+marketplace.db
+.env

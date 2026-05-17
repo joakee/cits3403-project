@@ -5,7 +5,7 @@
 <div class="card p-4">
 
     <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
-        <h4 class="mb-0 fw-bold" style="color:#1d3557;">
+        <h4 class="mb-0 fw-bold" style="color:var(--navy);">
             <i class="bi bi-heart me-2"></i>My Wishlists
         </h4>
         <a href="{{ url_for('listings.index') }}" class="btn btn-outline-secondary btn-sm">
@@ -63,7 +63,7 @@
                  data-bs-parent="#wishlistAccordion">
                 <div class="accordion-body">
                     <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3" id="wl-grid-{{ wl.id }}">
-                        {% for listing in wl.listings %}
+                        {% for listing in wl.listings if not listing.is_removed %}
                         {% set pci = listing.price_change_info %}
                         <div class="col wl-card-col"
                              id="wl-item-{{ wl.id }}-{{ listing.id }}"

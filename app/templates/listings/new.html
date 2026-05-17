@@ -5,12 +5,28 @@
 <div class="row justify-content-center">
     <div class="col-md-7 col-lg-6">
         <div class="card p-4">
-            <h4 class="fw-bold mb-4" style="color:#1d3557;">
+            <h4 class="fw-bold mb-4" style="color:var(--navy);">
                 <i class="bi bi-plus-circle me-2"></i>Post a Listing
             </h4>
 
             <form method="POST" enctype="multipart/form-data">
                 {{ form.hidden_tag() }}
+
+                {% if current_user.is_store %}
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Post as</label>
+                    <div class="btn-group w-100" role="group">
+                        <input type="radio" class="btn-check" name="post_as" id="post-personal" value="personal" {{ 'checked' if default_post_as != 'store' else '' }}>
+                        <label class="btn btn-outline-secondary" for="post-personal">
+                            <i class="bi bi-person me-1"></i>Personal
+                        </label>
+                        <input type="radio" class="btn-check" name="post_as" id="post-store" value="store" {{ 'checked' if default_post_as == 'store' else '' }}>
+                        <label class="btn btn-outline-primary" for="post-store">
+                            <i class="bi bi-shop me-1"></i>{{ current_user.store_name or 'Store' }}
+                        </label>
+                    </div>
+                </div>
+                {% endif %}
 
                 <div class="mb-3">
                     <label class="form-label fw-semibold">{{ form.title.label.text }}</label>
@@ -39,6 +55,15 @@
                     </div>
                 </div>
 
+                {% if current_user.is_store %}
+                <div class="mb-3" id="stock-field" style="display:none;">
+                    <label class="form-label fw-semibold">{{ form.stock_quantity.label.text }}</label>
+                    {{ form.stock_quantity(class_="form-control", placeholder="Leave blank for unlimited") }}
+                    <div class="form-text">Optional. Enter a number to track stock. Leave blank for unlimited.</div>
+                    {% for e in form.stock_quantity.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+                </div>
+                {% endif %}
+
                 <div class="mb-4">
                     <label class="form-label fw-semibold">{{ form.image.label.text }}</label>
                     {{ form.image(class_="form-control") }}
@@ -54,4 +79,21 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+{% if current_user.is_store %}
+<script>
+(function() {
+    var stockField = document.getElementById('stock-field');
+    var radios = document.querySelectorAll('input[name="post_as"]');
+    function updateStock() {
+        var isStore = document.getElementById('post-store').checked;
+        if (stockField) stockField.style.display = isStore ? '' : 'none';
+    }
+    radios.forEach(function(r) { r.addEventListener('change', updateStock); });
+    updateStock();
+})();
+</script>
+{% endif %}
 {% endblock %}

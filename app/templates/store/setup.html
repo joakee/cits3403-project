@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Store Setup | UWA Marketplace{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-7 col-lg-6">
+        <div class="card p-4">
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <div class="avatar-circle" style="width:52px;height:52px;font-size:1.4rem;">
+                    <i class="bi bi-shop"></i>
+                </div>
+                <div>
+                    <h4 class="mb-0 fw-bold" style="color:var(--navy);">
+                        {% if current_user.is_store %}Edit Store Profile{% else %}Set Up Your Store{% endif %}
+                    </h4>
+                    <small class="text-muted">Add contact details and address so buyers can find you</small>
+                </div>
+            </div>
+
+            <form method="POST">
+                {{ form.hidden_tag() }}
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">{{ form.store_name.label.text }}</label>
+                    {{ form.store_name(class_="form-control", placeholder="e.g. Colin's Tech Shop") }}
+                    <div class="form-text">Leave blank to use your username.</div>
+                    {% for e in form.store_name.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">{{ form.store_address.label.text }}</label>
+                    {{ form.store_address(class_="form-control", placeholder="e.g. 35 Stirling Hwy, Crawley WA 6009") }}
+                    {% for e in form.store_address.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-sm-6">
+                        <label class="form-label fw-semibold">{{ form.contact_phone.label.text }}</label>
+                        {{ form.contact_phone(class_="form-control", placeholder="e.g. 0400 123 456") }}
+                        {% for e in form.contact_phone.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="form-label fw-semibold">{{ form.contact_email.label.text }}</label>
+                        {{ form.contact_email(class_="form-control", placeholder="store@example.com") }}
+                        {% for e in form.contact_email.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">{{ form.store_bio.label.text }}</label>
+                    {{ form.store_bio(class_="form-control", rows=4, placeholder="Tell buyers about your store…") }}
+                    <div class="form-text">Maximum 500 characters.</div>
+                    {% for e in form.store_bio.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+                </div>
+
+                <div class="d-flex gap-2 mt-4">
+                    {{ form.submit(class_="btn btn-primary flex-grow-1") }}
+                    <a href="{{ url_for('profile.view', user_id=current_user.id) }}"
+                       class="btn btn-outline-secondary flex-grow-1">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

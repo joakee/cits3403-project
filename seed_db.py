@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from app import create_app, db
 from app.models import User, Listing, ListingEdit, Wishlist
 from werkzeug.security import generate_password_hash

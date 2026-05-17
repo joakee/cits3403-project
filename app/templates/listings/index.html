@@ -5,7 +5,7 @@
 <div class="card p-4">
 
     <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
-        <h4 class="mb-0 fw-bold" style="color:#1d3557;">
+        <h4 class="mb-0 fw-bold" style="color:var(--navy);">
             <i class="bi bi-grid me-2"></i>Browse Listings
         </h4>
         {% if current_user.is_authenticated %}
@@ -17,7 +17,7 @@
 
     <form method="GET" action="{{ url_for('listings.index') }}" class="listings-filter-bar">
         <div class="row g-3">
-            <div class="col-12 col-md-4">
+            <div class="col-12 col-lg-2">
                 <input
                     id="listings-search"
                     name="q"
@@ -28,7 +28,7 @@
                 />
             </div>
 
-            <div class="col-12 col-md-2">
+            <div class="col-12 col-lg-2">
                 <select name="category" class="form-select">
                     <option value="">All Categories</option>
                     <option value="books" {{ 'selected' if cat == 'books' else '' }}>Books & Notes</option>
@@ -39,7 +39,7 @@
                 </select>
             </div>
 
-            <div class="col-6 col-md-2">
+            <div class="col-6 col-lg-2">
                 <input
                     type="number"
                     step="0.01"
@@ -51,7 +51,7 @@
                 />
             </div>
 
-            <div class="col-6 col-md-2">
+            <div class="col-6 col-lg-2">
                 <input
                     type="number"
                     step="0.01"
@@ -63,7 +63,17 @@
                 />
             </div>
 
-            <div class="col-12 col-md-2 listings-filter-actions">
+            <div class="col-12 col-lg-2">
+                <select name="sort" class="form-select">
+                    <option value="newest" {{ 'selected' if sort == 'newest' else '' }}>Latest Listings</option>
+                    <option value="oldest" {{ 'selected' if sort == 'oldest' else '' }}>Earliest Listings</option>
+                    <option value="price_low" {{ 'selected' if sort == 'price_low' else '' }}>Lowest Price</option>
+                    <option value="price_high" {{ 'selected' if sort == 'price_high' else '' }}>Highest Price</option>
+                    <option value="saves" {{ 'selected' if sort == 'saves' else '' }}>Most Saved</option>
+                </select>
+            </div>
+
+            <div class="col-12 col-lg-2 listings-filter-actions">
                 <button type="submit" class="btn btn-primary w-100">
                     <i class="bi bi-funnel me-1"></i>Apply
                 </button>
@@ -78,10 +88,74 @@
         Showing {{ listings|length }} listing{{ '' if listings|length == 1 else 's' }}
     </div>
 
+    <!-- Category pills -->
+    <div class="d-flex flex-wrap gap-1 mb-2">
+        <a href="{{ url_for('listings.index', q=q, sort=sort, source=source) }}"
+           class="btn btn-sm {{ 'btn-secondary' if not cat else 'btn-outline-secondary' }}">
+            All Categories
+        </a>
+        {% for key, label in categories %}
+            <a href="{{ url_for('listings.index', q=q, category=key, sort=sort, source=source) }}"
+               class="btn btn-sm {{ 'btn-secondary' if cat == key else 'btn-outline-secondary' }}">
+                {{ label }}
+            </a>
+        {% endfor %}
+    </div>
+
+    <!-- Source + sort row -->
+    <div class="d-flex flex-wrap gap-2 mb-3 align-items-center justify-content-between">
+        <div class="btn-group btn-group-sm" role="group" aria-label="Seller type">
+            {% for key, label in [('all', 'All'), ('users', 'Individuals'), ('stores', 'Stores')] %}
+                <a href="{{ url_for('listings.index', q=q, category=cat, sort=sort, source=key) }}"
+                   class="btn {{ 'btn-primary' if source == key else 'btn-outline-secondary' }}">
+                    {{ label }}
+                </a>
+            {% endfor %}
+        </div>
+
+        <div class="d-flex gap-1 flex-wrap">
+            {% set sort_labels = [('newest','Newest'),('oldest','Oldest'),('price_low','Price ↑'),('price_high','Price ↓'),('saves','Most Saved')] %}
+            {% for key, label in sort_labels %}
+                <a href="{{ url_for('listings.index', q=q, category=cat, sort=key, source=source) }}"
+                   class="btn btn-sm {{ 'btn-primary' if sort == key else 'btn-outline-secondary' }}">
+                    {{ label }}
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Active filter summary -->
+    {% if cat or source != 'all' or q %}
+    <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+        <span class="text-muted small">Filtering by:</span>
+        {% if q %}
+            <a href="{{ url_for('listings.index', category=cat, sort=sort, source=source) }}"
+               class="badge rounded-pill bg-primary text-decoration-none d-inline-flex align-items-center gap-1">
+                "{{ q }}" <i class="bi bi-x"></i>
+            </a>
+        {% endif %}
+        {% if cat %}
+            {% for key, label in categories %}{% if key == cat %}
+            <a href="{{ url_for('listings.index', q=q, sort=sort, source=source) }}"
+               class="badge rounded-pill bg-primary text-decoration-none d-inline-flex align-items-center gap-1">
+                {{ label }} <i class="bi bi-x"></i>
+            </a>
+            {% endif %}{% endfor %}
+        {% endif %}
+        {% if source != 'all' %}
+            <a href="{{ url_for('listings.index', q=q, category=cat, sort=sort) }}"
+               class="badge rounded-pill bg-primary text-decoration-none d-inline-flex align-items-center gap-1">
+                {{ 'Stores only' if source == 'stores' else 'Individuals only' }} <i class="bi bi-x"></i>
+            </a>
+        {% endif %}
+        <a href="{{ url_for('listings.index') }}" class="text-muted small ms-1">Clear all</a>
+    </div>
+    {% endif %}
+
     <div id="listings-grid" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
         {% for listing in listings %}
         <div class="col">
-            <div class="listing-card card">
+            <div class="listing-card card" data-listing-id="{{ listing.id }}">
                 {% if listing.image_url %}
                     <img src="{{ listing.image_url }}" class="listing-img" alt="{{ listing.title }}">
                 {% else %}
@@ -89,12 +163,14 @@
                         <i class="bi bi-box-seam"></i>
                     </div>
                 {% endif %}
+
                 <div class="card-body p-3">
                     <div class="d-flex justify-content-between align-items-start mb-1 gap-2">
                         <h6 class="card-title mb-0 text-truncate" title="{{ listing.title }}" style="flex: 1;">
                             <a href="{{ url_for('listings.detail', listing_id=listing.id) }}"
                                class="stretched-link text-decoration-none text-dark">{{ listing.title }}</a>
                         </h6>
+
                         <div class="position-relative" style="z-index: 2; white-space: nowrap;">
                             {% if current_user.is_authenticated and current_user.id != listing.seller_id %}
                             <button type="button"
@@ -104,24 +180,51 @@
                                     title="Save to Wishlist"
                                     style="line-height: 1;">
                                 <i class="bi {{ 'bi-heart-fill' if current_user.has_saved(listing) else 'bi-heart' }}"></i>
-                                <span class="wishlist-count ms-1 text-dark" style="font-size: 0.85em;">Saved by {{ listing.save_count }} {{ 'person' if listing.save_count == 1 else 'people' }}</span>
+                                <span class="wishlist-count ms-1 text-dark" style="font-size: 0.85em;">
+                                    Saved by {{ listing.save_count }} {{ 'person' if listing.save_count == 1 else 'people' }}
+                                </span>
                             </button>
                             {% else %}
                             <div class="text-danger" style="line-height: 1;">
                                 <i class="bi bi-heart-fill"></i>
-                                <span class="ms-1 text-dark" style="font-size: 0.85em;">Saved by {{ listing.save_count }} {{ 'person' if listing.save_count == 1 else 'people' }}</span>
+                                <span class="ms-1 text-dark" style="font-size: 0.85em;">
+                                    Saved by {{ listing.save_count }} {{ 'person' if listing.save_count == 1 else 'people' }}
+                                </span>
                             </div>
                             {% endif %}
                         </div>
                     </div>
-                    <div class="listing-price">${{ "%.2f"|format(listing.price) }}</div>
+
+                    <div class="d-flex align-items-center justify-content-between mt-2 gap-2">
+                        <div class="listing-price">${{ "%.2f"|format(listing.price) }}</div>
+
+                        {% if listing.is_active %}
+                            <span class="listing-status-badge status-active">Active</span>
+                        {% else %}
+                            <span class="listing-status-badge status-sold">Sold</span>
+                        {% endif %}
+                    </div>
+
                     <div class="d-flex align-items-center justify-content-between mt-2">
                         <span class="category-badge">{{ listing.category|title }}</span>
-                        <small class="text-muted">
-                            <a href="{{ url_for('profile.view', user_id=listing.seller.id) }}"
-                               class="text-muted text-decoration-none position-relative" style="z-index:2">
-                                {{ listing.seller.username.split()[0] }}
-                            </a>
+                        <small class="text-muted d-flex align-items-center gap-1">
+                            {% if listing.posted_as_store %}
+                                <a href="{{ url_for('store.storefront', user_id=listing.seller.id) }}"
+                                   class="text-muted text-decoration-none position-relative d-inline-flex align-items-center gap-1" style="z-index:2">
+                                    {{ (listing.seller.store_name or listing.seller.username).split()[0] }}
+                                    {% if listing.seller.is_verified %}
+                                        <i class="bi bi-patch-check-fill text-primary"></i>
+                                    {% endif %}
+                                </a>
+                            {% else %}
+                                <a href="{{ url_for('profile.view', user_id=listing.seller.id) }}"
+                                   class="text-muted text-decoration-none position-relative" style="z-index:2">
+                                    {{ listing.seller.username.split()[0] }}
+                                </a>
+                            {% endif %}
+                            <span class="text-muted" style="font-size:0.8em;" title="{{ listing.created_at.strftime('%d %b %Y') }}">
+                                · {{ listing.created_at | timeago }}
+                            </span>
                         </small>
                     </div>
                 </div>
@@ -136,6 +239,37 @@
         </div>
         {% endfor %}
     </div>
+
+    <!-- Pagination -->
+    {% if pagination and pagination.pages > 1 %}
+    <nav class="mt-4 d-flex justify-content-center" aria-label="Listings pages">
+        <ul class="pagination mb-0">
+            <li class="page-item {{ 'disabled' if not pagination.has_prev }}">
+                <a class="page-link"
+                   href="{{ url_for('listings.index', q=q, category=cat, sort=sort, source=source, min_price=min_price, max_price=max_price, page=pagination.prev_num) if pagination.has_prev else '#' }}">
+                    &laquo;
+                </a>
+            </li>
+
+            {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                {% if p %}
+                    <li class="page-item {{ 'active' if p == pagination.page }}">
+                        <a class="page-link" href="{{ url_for('listings.index', q=q, category=cat, sort=sort, source=source, min_price=min_price, max_price=max_price, page=p) }}">{{ p }}</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">…</span></li>
+                {% endif %}
+            {% endfor %}
+
+            <li class="page-item {{ 'disabled' if not pagination.has_next }}">
+                <a class="page-link"
+                   href="{{ url_for('listings.index', q=q, category=cat, sort=sort, source=source, min_price=min_price, max_price=max_price, page=pagination.next_num) if pagination.has_next else '#' }}">
+                    &raquo;
+                </a>
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
 
 </div>
 {% endblock %}

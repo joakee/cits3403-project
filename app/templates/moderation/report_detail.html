@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+{% block title %}Report #{{ report.id }} | UWA Marketplace{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <a href="{{ url_for('moderation.reports_list') }}" class="text-muted text-decoration-none d-inline-flex align-items-center mb-3">
+            <i class="bi bi-arrow-left me-1"></i> Back to reports
+        </a>
+
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold" style="color:var(--navy);">Report #{{ report.id }}</h5>
+                {% if report.status == 'open' %}
+                    <span class="badge bg-danger">Open</span>
+                {% elif report.status == 'under_review' %}
+                    <span class="badge bg-warning text-dark">Under Review</span>
+                {% elif report.status == 'resolved' %}
+                    <span class="badge bg-success">Resolved</span>
+                {% else %}
+                    <span class="badge bg-secondary">Dismissed</span>
+                {% endif %}
+            </div>
+            <div class="card-body p-4">
+                <div class="row mb-3">
+                    <div class="col-sm-4 text-muted">Type</div>
+                    <div class="col-sm-8">
+                        {% if report.target_type == 'listing' %}
+                            <span class="badge bg-info text-dark">Listing</span>
+                        {% else %}
+                            <span class="badge bg-secondary">User</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-sm-4 text-muted">Target</div>
+                    <div class="col-sm-8">
+                        {% if target %}
+                            {% if report.target_type == 'listing' %}
+                                <a href="{{ url_for('listings.detail', listing_id=target.id) }}">{{ target.title }}</a>
+                                <br><small class="text-muted">by {{ target.seller.username }}</small>
+                                {% if target.is_removed %}
+                                    <span class="badge bg-danger ms-2">Removed</span>
+                                {% elif not target.is_active %}
+                                    <span class="badge bg-warning text-dark ms-2">Inactive</span>
+                                {% endif %}
+                            {% else %}
+                                <a href="{{ url_for('profile.view', user_id=target.id) }}">{{ target.username }}</a>
+                                {% if not target.is_active %}
+                                    <span class="badge bg-danger ms-2">Banned</span>
+                                {% endif %}
+                            {% endif %}
+                        {% else %}
+                            <span class="text-muted">[deleted]</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-sm-4 text-muted">Reason</div>
+                    <div class="col-sm-8"><strong>{{ report.reason|title }}</strong></div>
+                </div>
+
+                {% if report.description %}
+                <div class="row mb-3">
+                    <div class="col-sm-4 text-muted">Description</div>
+                    <div class="col-sm-8">{{ report.description }}</div>
+                </div>
+                {% endif %}
+
+                <div class="row mb-3">
+                    <div class="col-sm-4 text-muted">Reporter</div>
+                    <div class="col-sm-8">
+                        <a href="{{ url_for('profile.view', user_id=report.reporter.id) }}">{{ report.reporter.username }}</a>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-sm-4 text-muted">Submitted</div>
+                    <div class="col-sm-8">{{ report.created_at.strftime('%d %B %Y at %H:%M') }}</div>
+                </div>
+
+                {% if report.handled_by %}
+                <div class="row mb-3">
+                    <div class="col-sm-4 text-muted">Handled by</div>
+                    <div class="col-sm-8">{{ report.handled_by.username }}</div>
+                </div>
+                {% endif %}
+
+                {% if report.admin_note %}
+                <div class="row mb-3">
+                    <div class="col-sm-4 text-muted">Admin note</div>
+                    <div class="col-sm-8">{{ report.admin_note }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Actions -->
+        {% if report.status in ('open', 'under_review') %}
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0 fw-bold">Actions</h6>
+            </div>
+            <div class="card-body p-4">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Admin note (optional)</label>
+                    <textarea id="admin-note" class="form-control" rows="2" placeholder="Add a note about your decision..."></textarea>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2">
+                    {% if report.target_type == 'listing' and target and not target.is_removed %}
+                    <form method="POST" action="{{ url_for('moderation.takedown_listing', report_id=report.id) }}"
+                          onsubmit="this.querySelector('[name=admin_note]').value = document.getElementById('admin-note').value;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="admin_note" value="">
+                        <button type="submit" class="btn btn-danger" onclick="return confirm('Take down this listing?')">
+                            <i class="bi bi-x-circle me-1"></i>Take Down Listing
+                        </button>
+                    </form>
+                    {% endif %}
+
+                    {% if report.target_type == 'listing' and target and target.is_removed %}
+                    <form method="POST" action="{{ url_for('moderation.restore_listing', report_id=report.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-success" onclick="return confirm('Restore this listing?')">
+                            <i class="bi bi-arrow-counterclockwise me-1"></i>Restore Listing
+                        </button>
+                    </form>
+                    {% endif %}
+
+                    {% set target_user = target.seller if (report.target_type == 'listing' and target) else target %}
+                    {% if target_user and target_user.is_active and not target_user.is_admin %}
+                    <form method="POST" action="{{ url_for('moderation.ban_user', report_id=report.id) }}"
+                          onsubmit="this.querySelector('[name=admin_note]').value = document.getElementById('admin-note').value;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="admin_note" value="">
+                        <button type="submit" class="btn btn-dark" onclick="return confirm('Ban this user? All their listings will be hidden.')">
+                            <i class="bi bi-person-x me-1"></i>Ban User
+                        </button>
+                    </form>
+                    {% elif target_user and not target_user.is_active %}
+                    <form method="POST" action="{{ url_for('moderation.unban_user', report_id=report.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-outline-success" onclick="return confirm('Unban this user?')">
+                            <i class="bi bi-person-check me-1"></i>Unban User
+                        </button>
+                    </form>
+                    {% endif %}
+
+                    <form method="POST" action="{{ url_for('moderation.resolve_report', report_id=report.id) }}"
+                          onsubmit="this.querySelector('[name=admin_note]').value = document.getElementById('admin-note').value;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="action" value="resolved">
+                        <input type="hidden" name="admin_note" value="">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-lg me-1"></i>Mark Resolved
+                        </button>
+                    </form>
+
+                    <form method="POST" action="{{ url_for('moderation.resolve_report', report_id=report.id) }}"
+                          onsubmit="this.querySelector('[name=admin_note]').value = document.getElementById('admin-note').value;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="action" value="dismissed">
+                        <input type="hidden" name="admin_note" value="">
+                        <button type="submit" class="btn btn-outline-secondary">
+                            <i class="bi bi-dash-circle me-1"></i>Dismiss
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

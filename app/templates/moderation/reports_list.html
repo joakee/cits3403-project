@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}Moderation Reports | UWA Marketplace{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <h3 class="fw-bold mb-0" style="color:var(--navy);">
+                <i class="bi bi-shield-exclamation me-2"></i>Moderation Reports
+            </h3>
+        </div>
+
+        <!-- Status filter tabs -->
+        <ul class="nav nav-pills mb-4">
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if status_filter == 'open' }}"
+                   href="{{ url_for('moderation.reports_list', status='open', target_type=target_filter) }}">
+                    Open <span class="badge bg-danger ms-1">{{ counts.open }}</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if status_filter == 'under_review' }}"
+                   href="{{ url_for('moderation.reports_list', status='under_review', target_type=target_filter) }}">
+                    Under Review <span class="badge bg-warning text-dark ms-1">{{ counts.under_review }}</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if status_filter == 'resolved' }}"
+                   href="{{ url_for('moderation.reports_list', status='resolved', target_type=target_filter) }}">
+                    Resolved <span class="badge bg-success ms-1">{{ counts.resolved }}</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if status_filter == 'dismissed' }}"
+                   href="{{ url_for('moderation.reports_list', status='dismissed', target_type=target_filter) }}">
+                    Dismissed <span class="badge bg-secondary ms-1">{{ counts.dismissed }}</span>
+                </a>
+            </li>
+        </ul>
+
+        <!-- Target type filter -->
+        <div class="mb-3 d-flex gap-2">
+            <a href="{{ url_for('moderation.reports_list', status=status_filter) }}"
+               class="btn btn-sm {{ 'btn-primary' if not target_filter else 'btn-outline-primary' }}">All</a>
+            <a href="{{ url_for('moderation.reports_list', status=status_filter, target_type='listing') }}"
+               class="btn btn-sm {{ 'btn-primary' if target_filter == 'listing' else 'btn-outline-primary' }}">Listings</a>
+            <a href="{{ url_for('moderation.reports_list', status=status_filter, target_type='user') }}"
+               class="btn btn-sm {{ 'btn-primary' if target_filter == 'user' else 'btn-outline-primary' }}">Users</a>
+        </div>
+
+        {% if reports %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Type</th>
+                        <th>Target</th>
+                        <th>Reason</th>
+                        <th>Reporter</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for report in reports %}
+                    <tr>
+                        <td>{{ report.id }}</td>
+                        <td>
+                            {% if report.target_type == 'listing' %}
+                                <span class="badge bg-info text-dark">Listing</span>
+                            {% else %}
+                                <span class="badge bg-secondary">User</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% set target = report.target %}
+                            {% if target %}
+                                {% if report.target_type == 'listing' %}
+                                    <a href="{{ url_for('listings.detail', listing_id=target.id) }}">{{ target.title|truncate(30) }}</a>
+                                {% else %}
+                                    <a href="{{ url_for('profile.view', user_id=target.id) }}">{{ target.username }}</a>
+                                {% endif %}
+                            {% else %}
+                                <span class="text-muted">[deleted]</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ report.reason|title }}</td>
+                        <td>{{ report.reporter.username }}</td>
+                        <td>{{ report.created_at.strftime('%d %b %Y') }}</td>
+                        <td>
+                            {% if report.status == 'open' %}
+                                <span class="badge bg-danger">Open</span>
+                            {% elif report.status == 'under_review' %}
+                                <span class="badge bg-warning text-dark">Under Review</span>
+                            {% elif report.status == 'resolved' %}
+                                <span class="badge bg-success">Resolved</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Dismissed</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('moderation.report_detail', report_id=report.id) }}" class="btn btn-sm btn-outline-primary">
+                                View
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5 text-muted">
+            <i class="bi bi-check-circle" style="font-size:3rem;"></i>
+            <p class="mt-2">No reports found with this filter.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

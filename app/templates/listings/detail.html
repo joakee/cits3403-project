@@ -8,28 +8,37 @@
             <i class="bi bi-arrow-left me-1"></i> Back to listings
         </a>
 
-        <div class="card overflow-hidden">
+        <div id="listing-detail" data-listing-id="{{ listing.id }}" class="card overflow-hidden">
             {% if current_user.is_authenticated and (current_user.is_admin or current_user.is_moderator) %}
-                <div class="m-4 alert alert-secondary mt-3 d-flex justify-content-between align-items-center">
+                <div class="m-4 alert {{ 'alert-danger' if listing.is_removed else 'alert-secondary' }} mt-3 d-flex justify-content-between align-items-center">
                     <span>
-                        <strong>Mod Control:</strong> This post is currently 
-                        {% if listing.is_active %}
+                        <strong>Mod Control:</strong> This post is currently
+                        {% if listing.is_removed %}
+                            <span class="badge bg-danger">Removed by Moderation</span>
+                            {% if listing.removed_reason %}
+                                <small class="text-muted ms-2">{{ listing.removed_reason }}</small>
+                            {% endif %}
+                        {% elif listing.is_active %}
                             <span class="badge bg-success">Active</span>
                         {% else %}
-                            <span class="badge bg-danger">Hidden</span>
+                            <span class="badge bg-warning text-dark">Hidden</span>
                         {% endif %}
                     </span>
-                    <form action="{{ url_for('listings.toggle_listing_active', listing_id=listing.id) }}" method="POST" style="margin:0;">
+                    {% if listing.is_removed %}
+                    <form action="{{ url_for('moderation.restore_listing_direct', listing_id=listing.id) }}" method="POST" style="margin:0;">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        
-                        {% if listing.is_active %}
-                            <button type="submit" class="btn btn-danger btn-sm">Take Down Post</button>
-                        {% else %}
-                            <button type="submit" class="btn btn-success btn-sm">Restore Post</button>
-                        {% endif %}
+                        <button type="submit" class="btn btn-success btn-sm">Restore Post</button>
                     </form>
+                    {% else %}
+                    <form action="{{ url_for('moderation.takedown_listing_direct', listing_id=listing.id) }}" method="POST" style="margin:0;"
+                          onsubmit="return confirm('Take down this listing?')">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-danger btn-sm">Take Down Post</button>
+                    </form>
+                    {% endif %}
                 </div>
             {% endif %}
+
             {% if listing.image_url %}
                 <img src="{{ listing.image_url }}" class="w-100" style="max-height: 380px; object-fit: cover;" alt="{{ listing.title }}">
             {% else %}
@@ -41,9 +50,29 @@
             <div class="card-body p-4">
                 <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap">
                     <div>
-                        <h3 class="fw-bold mb-1" style="color:#1d3557;">{{ listing.title }}</h3>
-                        <div class="d-flex align-items-center gap-3 mt-2">
+                        <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                            <h3 class="fw-bold mb-0" style="color:var(--navy);">{{ listing.title }}</h3>
+
+                            {% if listing.is_active %}
+                                {% if listing.stock_quantity is not none %}
+                                    {% if listing.stock_quantity == 0 %}
+                                        <span class="badge bg-danger" style="font-size:0.6em;"><i class="bi bi-x-circle me-1"></i>Out of stock</span>
+                                    {% elif listing.stock_quantity <= 5 %}
+                                        <span class="badge bg-warning text-dark" style="font-size:0.6em;"><i class="bi bi-exclamation-triangle me-1"></i>Only {{ listing.stock_quantity }} left!</span>
+                                    {% else %}
+                                        <span class="badge bg-success" style="font-size:0.6em;"><i class="bi bi-check-circle me-1"></i>{{ listing.stock_quantity }} in stock</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="listing-status-badge status-active">Active</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="listing-status-badge status-sold">Sold</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex align-items-center gap-3 mt-2 flex-wrap">
                             <span class="category-badge">{{ listing.category|title }}</span>
+
                             {% if current_user.is_authenticated and current_user.id != listing.seller_id %}
                                 <button type="button"
                                         class="btn btn-sm wishlist-btn {{ 'btn-outline-danger' if current_user.has_saved(listing) else 'btn-outline-secondary' }}"
@@ -55,16 +84,20 @@
                                     (<span class="wishlist-count">{{ listing.save_count }}</span>)
                                 </button>
                             {% else %}
-                                <span class="badge bg-light text-dark border"><i class="bi bi-heart-fill text-danger me-1"></i>Saved by {{ listing.save_count }} {{ 'person' if listing.save_count == 1 else 'people' }}</span>
+                                <span class="badge bg-light text-dark border">
+                                    <i class="bi bi-heart-fill text-danger me-1"></i>
+                                    Saved by {{ listing.save_count }} {{ 'person' if listing.save_count == 1 else 'people' }}
+                                </span>
                             {% endif %}
                         </div>
                     </div>
+
                     <div class="listing-price fs-3">${{ "%.2f"|format(listing.price) }}</div>
                 </div>
 
                 <hr>
 
-                <p style="white-space: pre-wrap; color:#374151;">{{ listing.description }}</p>
+                <p style="white-space: pre-wrap; color:var(--text-primary);">{{ listing.description }}</p>
 
                 <hr>
 
@@ -74,24 +107,41 @@
                         {{ listing.seller.username[0].upper() }}
                     </div>
                     <div>
-                        <a href="{{ url_for('profile.view', user_id=listing.seller.id) }}"
-                           class="fw-semibold text-decoration-none" style="color:#1d3557;">
-                            {{ listing.seller.username }}
-                        </a>
+                        {% if listing.posted_as_store %}
+                            <a href="{{ url_for('store.storefront', user_id=listing.seller.id) }}"
+                               class="fw-semibold text-decoration-none d-inline-flex align-items-center gap-1" style="color:var(--navy);">
+                                {{ listing.seller.store_name or listing.seller.username }}
+                                {% if listing.seller.is_verified %}
+                                    <i class="bi bi-patch-check-fill text-primary" title="Verified Store"></i>
+                                {% endif %}
+                            </a>
+                        {% else %}
+                            <a href="{{ url_for('profile.view', user_id=listing.seller.id) }}"
+                               class="fw-semibold text-decoration-none" style="color:var(--navy);">
+                                {{ listing.seller.username }}
+                            </a>
+                        {% endif %}
                         <div class="text-muted" style="font-size:12px;">
                             Listed {{ listing.created_at.strftime('%d %B %Y') }}
+                            &middot; <i class="bi bi-eye me-1"></i>{{ listing.views|length }} view{{ 's' if listing.views|length != 1 }}
                         </div>
                     </div>
-                    {% if current_user.id != listing.seller_id %}
-                        {% if listing.is_active %}
-                        <a href="{{ url_for('chat.start_chat', listing_id=listing.id) }}" class="ms-auto btn btn-success">
-                            Message Seller
-                        </a>
-                        {% else %}
-                        <span class="badge bg-secondary ms-auto">Sold</span>
-                        {% endif %}
-                    {% else %}
-                    <p class="text-muted ms-auto">This is your listing</p>
+                    {% if current_user.is_authenticated and current_user.id != listing.seller_id %}
+                        <div class="ms-auto d-flex gap-2 align-items-center">
+                            {% if listing.is_active %}
+                            <a href="{{ url_for('chat.start_chat', listing_id=listing.id) }}" class="btn btn-success">
+                                Message Seller
+                            </a>
+                            {% else %}
+                            <span class="listing-status-badge status-sold">Sold</span>
+                            {% endif %}
+                            <a href="{{ url_for('moderation.report_listing', listing_id=listing.id) }}"
+                               class="btn btn-outline-danger btn-sm" title="Report this listing">
+                                <i class="bi bi-flag me-1"></i>Report
+                            </a>
+                        </div>
+                    {% elif current_user.is_authenticated and current_user.id == listing.seller_id %}
+                        <p class="text-muted ms-auto">This is your listing</p>
                     {% endif %}
                 </div>
 
@@ -102,6 +152,15 @@
                     <a href="{{ url_for('listings.edit', listing_id=listing.id) }}" class="btn btn-outline-primary btn-sm">
                         <i class="bi bi-pencil me-1"></i>Edit Listing
                     </a>
+                    {% if listing.posted_as_store and listing.stock_quantity is not none %}
+                    <form method="POST" action="{{ url_for('listings.close', listing_id=listing.id) }}"
+                          onsubmit="return confirm('Record a sale? Stock will decrease by 1.')">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-cart-check me-1"></i>Record a Sale
+                        </button>
+                    </form>
+                    {% else %}
                     <form method="POST" action="{{ url_for('listings.close', listing_id=listing.id) }}"
                           onsubmit="return confirm('Mark this item as sold? It will no longer appear in search results.')">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -109,15 +168,15 @@
                             <i class="bi bi-check-circle me-1"></i>Mark as Sold
                         </button>
                     </form>
+                    {% endif %}
                 </div>
                 {% endif %}
             </div>
             
-            <!-- Edit History Timeline (Visible if toggle is ON and edits exist) -->
             {% set edits = listing.edits.all() %}
             {% if listing.show_history and edits %}
-            <div class="card-footer bg-light p-4" style="border-top: 1px solid #e5e7eb;">
-                <h6 class="fw-bold mb-3" style="color:#1d3557;">
+            <div class="card-footer bg-light p-4" style="border-top: 1px solid var(--border-light);">
+                <h6 class="fw-bold mb-3" style="color:var(--navy);">
                     <i class="bi bi-clock-history me-2"></i>Edit History
                 </h6>
                 <div class="timeline ps-2 border-start border-2 border-primary-subtle" style="margin-left: 6px;">
