@@ -89,14 +89,5 @@
         
 
     </div>
-    <script>
-        document.getElementById('search').addEventListener('input', function () {
-            const query = this.value.toLowerCase();
-            document.querySelectorAll('sellable-container').forEach(function (el) {
-                const name = (el.getAttribute('itemName') || '').toLowerCase();
-                el.parentElement.style.display = name.includes(query) ? '' : 'none';
-            });
-        });
-    </script>
   </body>
 </html>

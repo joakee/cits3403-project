@@ -2,8 +2,8 @@
 /app/routes/__pycache__
 /__pycache__/*
 marketplace.db
+/app/static/uploads/*
 *.db
 /.venv
 marketplace.db
 .env
-.claude/
