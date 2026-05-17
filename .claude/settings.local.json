@@ -5,7 +5,10 @@
       "Bash(git commit -m ' *)",
       "Bash(gh pr *)",
       "Bash(git push *)",
-      "Bash(git remote *)"
+      "Bash(git remote *)",
+      "Bash(Get-ChildItem -Path \"d:\\\\UWA\\\\Agile Web Dev\\\\cits3403-project\" -Recurse -Depth 2)",
+      "Bash(Select-Object FullName)",
+      "Bash(pip install *)"
     ]
   }
 }

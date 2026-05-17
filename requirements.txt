@@ -12,3 +12,5 @@ Flask-Admin>=2.1.0
 tzdata
 pytest 			# dev dependency, not needed 4 prod
 playwright>=1.40
+selenium>=4.18
+webdriver-manager>=4.0
