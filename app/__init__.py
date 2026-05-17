@@ -27,12 +27,16 @@ def create_app(config_class=Config):
     login_manager.init_app(app)
     csrf.init_app(app)
 
+    from app.oauth import init_oauth
+    init_oauth(app)
+
     from app.routes.auth import bp as auth_bp
     from app.routes.profile import bp as profile_bp
     from app.routes.listings import bp as listings_bp
     from app.routes.chat import bp as chat_bp
     from app.routes.moderation import bp as moderation_bp
     from app.routes.store import bp as store_bp
+    from app.routes.sso import bp as sso_bp
     from app.routes.legal import bp as legal_bp
 
     app.register_blueprint(auth_bp)
@@ -41,6 +45,7 @@ def create_app(config_class=Config):
     app.register_blueprint(chat_bp)
     app.register_blueprint(moderation_bp)
     app.register_blueprint(store_bp)
+    app.register_blueprint(sso_bp)
     app.register_blueprint(legal_bp)
 
     from app.admin import init_admin

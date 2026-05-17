@@ -21,3 +21,15 @@ class Config:
     MAIL_USERNAME = os.environ.get('BREVO_EMAIL')
     MAIL_PASSWORD = os.environ.get('BREVO_PASSWORD') 
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER')
+
+    # Microsoft Entra ID / Azure AD SSO
+    MICROSOFT_CLIENT_ID = os.environ.get('MICROSOFT_CLIENT_ID')
+    MICROSOFT_CLIENT_SECRET = os.environ.get('MICROSOFT_CLIENT_SECRET')
+    # Use 'common' for multi-tenant during dev. For UWA-only, set to UWA's tenant ID.
+    MICROSOFT_TENANT_ID = os.environ.get('MICROSOFT_TENANT_ID', 'common')
+    MICROSOFT_REDIRECT_URI = os.environ.get('MICROSOFT_REDIRECT_URI', 'http://localhost:5000/auth/microsoft/callback')
+    # Comma-separated allowlist of email domains
+    SSO_ALLOWED_EMAIL_DOMAINS = os.environ.get(
+        'SSO_ALLOWED_EMAIL_DOMAINS',
+        'uwa.edu.au,student.uwa.edu.au'
+    ).split(',')

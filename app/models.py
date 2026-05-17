@@ -63,6 +63,8 @@ class User(db.Model, UserMixin):
     otp_code = db.Column(db.String(6), nullable=True)
     otp_expiry = db.Column(db.DateTime, nullable=True)
 
+    microsoft_sub = db.Column(db.String(128), unique=True, nullable=True, index=True)
+
     banned_at = db.Column(db.DateTime, nullable=True)
     ban_reason = db.Column(db.Text, nullable=True)
 

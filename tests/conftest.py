@@ -12,6 +12,7 @@ class TestConfig:
     WTF_CSRF_ENABLED = False
     MAX_CONTENT_LENGTH = 2 * 1024 * 1024
     UPLOAD_FOLDER = '/tmp/test-uploads'
+    SSO_ALLOWED_EMAIL_DOMAINS = ['uwa.edu.au', 'student.uwa.edu.au']
 
 
 @pytest.fixture
