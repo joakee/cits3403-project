@@ -4,6 +4,7 @@
     <a href="{{ url_for('chat.inbox') }}" class="text-muted text-decoration-none d-inline-flex align-items-center mb-3">
         <i class="bi bi-arrow-left me-1"></i> Back to messages
     </a>
+
     <h3>
         <strong>
             {% if not conversation.listing.is_active %}
@@ -13,21 +14,33 @@
             {% else %}
             Buying:
             {% endif %}
-        </strong> 
+        </strong>
         <a class="text-dark font-weight-bold" href="{{ url_for('listings.detail', listing_id=conversation.listing.id) }}">
             {{ conversation.listing.title }}
         </a>
     </h3>
 
     <hr>
+
     <div id="chat-box"
         style="height: 400px; overflow-y: scroll; border: 1px solid var(--border-light); padding: 15px; margin-bottom: 20px; display: flex; flex-direction: column-reverse;">
+
         {% for msg in messages[::-1] %}
-        {% if msg.sender_id == current_user.id %}
-        <p style="align-self: flex-end; background-color: var(--navy); padding: 5px 10px; color: white; border-radius: 10px;">{{ msg.content }}</p>
-        {% else %}
-        <div><p style="max-width: fit-content; align-self: flex-start; background-color: var(--navy-light); padding: 5px 10px; border-radius: 10px;"> {{ msg.content }}</p></div>
-        {% endif %}
+            {% if msg.sender_id == current_user.id %}
+                <div style="align-self: flex-end; background-color: var(--navy); padding: 5px 10px; color: white; border-radius: 10px; margin-bottom: 8px; max-width: fit-content;">
+                    <div>{{ msg.content }}</div>
+                    <small style="display: block; font-size: 0.75rem; opacity: 0.8; margin-top: 3px;">
+                        {{ msg.display_timestamp }}
+                    </small>
+                </div>
+            {% else %}
+                <div style="align-self: flex-start; background-color: var(--navy-light); padding: 5px 10px; border-radius: 10px; margin-bottom: 8px; max-width: fit-content;">
+                    <div>{{ msg.content }}</div>
+                    <small style="display: block; font-size: 0.75rem; opacity: 0.8; margin-top: 3px;">
+                        {{ msg.display_timestamp }}
+                    </small>
+                </div>
+            {% endif %}
         {% endfor %}
     </div>
 
@@ -37,7 +50,7 @@
         <button id="submit" class="btn btn-primary">Send</button>
     </form>
     {% else %}
-    <p>this item has now been sold</p>
+    <p>This item has now been sold</p>
     {% endif %}
 </div>
 
@@ -45,38 +58,50 @@
 <script>
     const socket = io();
     const room = "{{ conversation.id }}";
-    const current_user = "{{ current_user.id }}"
+    const current_user = "{{ current_user.id }}";
+
     socket.emit('join', { room: room });
 
-    const message = document.getElementById('message');
-    message.addEventListener("submit", (event) => {
-        event.preventDefault();
-    });
-    document.getElementById('message').onsubmit = function () {
-        const input = document.getElementById('message-input');
-        if (input.value) {
-            socket.emit('send_message', {
-                room: room,
-                message: input.value
-            });
-            input.value = '';
-        }
+    const messageForm = document.getElementById('message');
 
-        document.getElementById('message-input').focus();
-    };
+    if (messageForm) {
+        messageForm.addEventListener("submit", function (event) {
+            event.preventDefault();
+
+            const input = document.getElementById('message-input');
+
+            if (input.value.trim()) {
+                socket.emit('send_message', {
+                    room: room,
+                    message: input.value.trim()
+                });
+
+                input.value = '';
+            }
+
+            input.focus();
+        });
+    }
 
     socket.on('receive_message', function (data) {
         const chatBox = document.getElementById('chat-box');
-        const msgElement = document.createElement('p');
-        console.log(data.sender, current_user)
+        const msgElement = document.createElement('div');
+
+        const timeText = data.timestamp;
+
         if (data.sender === Number(current_user)) {
-            msgElement.style = "align-self: flex-end; background-color: var(--navy); padding: 5px 10px; color: white; border-radius: 10px;"
-            msgElement.innerHTML = `${data.message}`;
+            msgElement.style = "align-self: flex-end; background-color: var(--navy); padding: 5px 10px; color: white; border-radius: 10px; margin-bottom: 8px; max-width: fit-content;";
         } else {
-            msgElement.style = "align-self: flex-start; background-color: var(--navy-light); padding: 5px 10px; border-radius: 10px;"
-            msgElement.innerHTML = `${data.message}`; 
+            msgElement.style = "align-self: flex-start; background-color: var(--navy-light); padding: 5px 10px; border-radius: 10px; margin-bottom: 8px; max-width: fit-content;";
         }
-        
+
+        msgElement.innerHTML = `
+            <div>${data.message}</div>
+            <small style="display: block; font-size: 0.75rem; opacity: 0.8; margin-top: 3px;">
+                ${timeText}
+            </small>
+        `;
+
         chatBox.prepend(msgElement);
     });
 </script>
