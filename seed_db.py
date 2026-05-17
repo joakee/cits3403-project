@@ -16,7 +16,8 @@ with app.app_context():
         u1 = User(
             username='alice',
             email='alice@example.com',
-            password_hash=generate_password_hash('password123', method='pbkdf2:sha256')
+            password_hash=generate_password_hash('password123', method='pbkdf2:sha256'),
+            is_verified=True
         )
         db.session.add(u1)
         
@@ -26,7 +27,8 @@ with app.app_context():
             username='bob',
             email='bob@example.com',
             password_hash=generate_password_hash('password123', method='pbkdf2:sha256'),
-            is_moderator=True
+            is_moderator=True,
+            is_verified=True
         )
         db.session.add(u2)
 
@@ -36,7 +38,8 @@ with app.app_context():
             username='admin',
             email='admin@admin.com',
             password_hash=generate_password_hash('password123', method='pbkdf2:sha256'),
-            is_admin=True
+            is_admin=True,
+            is_verified=True
         )
         db.session.add(u4)
 

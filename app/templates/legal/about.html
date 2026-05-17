@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}About Us | UWA Marketplace{% endblock %}
+
+{% block content %}
+<div class="about-page">
+
+    <!-- Hero -->
+    <div class="about-hero">
+        <div class="about-hero-content">
+            <div class="about-hero-badge"><i class="bi bi-mortarboard me-2"></i>Built by UWA Students</div>
+            <h1>About UWA Marketplace</h1>
+            <p class="about-hero-sub">A peer-to-peer marketplace built by students, for students — making campus life a little easier and a lot more sustainable.</p>
+        </div>
+    </div>
+
+    <!-- Mission -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-6">
+            <div class="about-mission-card card p-4 h-100">
+                <div class="about-icon-wrap"><i class="bi bi-bullseye"></i></div>
+                <h2>Our Mission</h2>
+                <p>UWA Marketplace was created to give students a trusted, simple way to buy and sell goods within the UWA community. Whether you're offloading last semester's textbooks or hunting for affordable furniture before move-in day, we're here to connect you with fellow students.</p>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="about-mission-card card p-4 h-100">
+                <div class="about-icon-wrap" style="background: var(--gold); color: #1a1a1a;"><i class="bi bi-recycle"></i></div>
+                <h2>Why We Built This</h2>
+                <p>Students spend a lot on study materials that end up unused after semester ends. UWA Marketplace reduces waste, saves money, and builds community — all at once. It's the circular economy, made simple for campus life.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats row -->
+    <div class="about-stats-row row g-3 mb-5 text-center">
+        <div class="col-6 col-md-3">
+            <div class="about-stat-card card p-3">
+                <div class="about-stat-number">{{ total_listings or '133+' }}</div>
+                <div class="about-stat-label">Active Listings</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="about-stat-card card p-3">
+                <div class="about-stat-number">{{ total_users or '50+' }}</div>
+                <div class="about-stat-label">Registered Students</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="about-stat-card card p-3">
+                <div class="about-stat-number">5</div>
+                <div class="about-stat-label">Categories</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="about-stat-card card p-3">
+                <div class="about-stat-number">100%</div>
+                <div class="about-stat-label">Student-Run</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Team -->
+    <h2 class="about-section-heading text-center mb-4">
+        <i class="bi bi-people me-2"></i>Meet the Team
+    </h2>
+    <div class="row g-4 mb-5 justify-content-center">
+        {% set team = [
+            ('Joachim', 'Project Lead & Backend', 'bi-code-slash', 'Coordinated the project architecture and led backend development, from the database models to the Flask routing layer.'),
+            ('Kai', 'Frontend & UI Design', 'bi-palette', 'Crafted the visual identity and CSS design system that gives UWA Marketplace its clean, modern feel.'),
+            ('Alex', 'Listings & Search', 'bi-search', 'Built the listings system, filter bar, and search functionality to make finding items effortless.'),
+            ('Sam', 'Auth & Messaging', 'bi-shield-check', 'Implemented secure authentication with OTP verification and the real-time chat messaging system.'),
+        ] %}
+        {% for name, role, icon, bio in team %}
+        <div class="col-sm-6 col-lg-3">
+            <div class="about-team-card card p-4 text-center h-100">
+                <div class="about-team-avatar mx-auto mb-3">
+                    <i class="bi {{ icon }}"></i>
+                </div>
+                <h5 class="mb-1">{{ name }}</h5>
+                <div class="about-team-role mb-2">{{ role }}</div>
+                <p class="small text-muted">{{ bio }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Tech stack -->
+    <div class="about-tech-strip card p-4 mb-5">
+        <h3 class="text-center mb-4">Built With</h3>
+        <div class="about-tech-grid">
+            <div class="about-tech-item"><i class="bi bi-filetype-py"></i><span>Python / Flask</span></div>
+            <div class="about-tech-item"><i class="bi bi-database"></i><span>SQLite / SQLAlchemy</span></div>
+            <div class="about-tech-item"><i class="bi bi-filetype-html"></i><span>Jinja2 Templates</span></div>
+            <div class="about-tech-item"><i class="bi bi-filetype-css"></i><span>Vanilla CSS</span></div>
+            <div class="about-tech-item"><i class="bi bi-bootstrap"></i><span>Bootstrap 5</span></div>
+            <div class="about-tech-item"><i class="bi bi-lightning-charge"></i><span>Flask-SocketIO</span></div>
+        </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="about-cta text-center">
+        <h2>Ready to start?</h2>
+        <p class="text-muted mb-4">Join thousands of UWA students buying and selling on campus.</p>
+        <div class="d-flex gap-3 justify-content-center flex-wrap">
+            {% if current_user.is_authenticated %}
+                <a href="{{ url_for('listings.index') }}" class="btn btn-primary btn-lg">
+                    <i class="bi bi-grid me-2"></i>Browse Listings
+                </a>
+                <a href="{{ url_for('listings.new') }}" class="btn btn-outline-primary btn-lg">
+                    <i class="bi bi-plus-lg me-2"></i>Post a Listing
+                </a>
+            {% else %}
+                <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">
+                    <i class="bi bi-person-plus me-2"></i>Join Free
+                </a>
+                <a href="{{ url_for('listings.index') }}" class="btn btn-outline-primary btn-lg">
+                    <i class="bi bi-grid me-2"></i>Browse Listings
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}
