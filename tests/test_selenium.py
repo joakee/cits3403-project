@@ -3,7 +3,7 @@ Selenium end-to-end tests for the UWA Marketplace.
 
 Prerequisites:
   - The live server must be running: `python run.py`
-  - Chrome must be installed (ChromeDriver is managed automatically by webdriver-manager)
+  - Chrome or Edge must be installed
 
 Run:
   pytest tests/test_selenium.py -v
@@ -15,19 +15,67 @@ Run against a different server URL:
   TEST_SERVER_URL=http://localhost:5001 pytest tests/test_selenium.py -v
 """
 import os
+import sys
 import pytest
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options as ChromeOptions
+from selenium.webdriver.edge.options import Options as EdgeOptions
 from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.chrome import ChromeDriverManager
 from werkzeug.security import generate_password_hash
 
 from app import create_app, db
-from app.models import User, Listing
+from app.models import User, Listing, ListingView
 from config import Config
+
+_CHROME_PATHS_WIN = [
+    r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+    r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+    os.path.expandvars(r"%LocalAppData%\Google\Chrome\Application\chrome.exe"),
+]
+
+
+def _find_chrome_binary():
+    if sys.platform != "win32":
+        return None
+    for path in _CHROME_PATHS_WIN:
+        if os.path.isfile(path):
+            return path
+    return None
+
+
+def _make_driver(headless: bool):
+    """Try Chrome first, then Edge using Selenium Manager. Returns a WebDriver or skips."""
+    common_args = ["--no-sandbox", "--disable-dev-shm-usage", "--window-size=1920,1080"]
+
+    # --- Chrome ---
+    chrome_bin = _find_chrome_binary()
+    if chrome_bin or sys.platform != "win32":
+        try:
+            opts = ChromeOptions()
+            if chrome_bin:
+                opts.binary_location = chrome_bin
+            if headless:
+                opts.add_argument("--headless=new")
+            for arg in common_args:
+                opts.add_argument(arg)
+            return webdriver.Chrome(options=opts)
+        except Exception:
+            pass
+
+    # --- Edge (pre-installed on Windows 11, managed by Selenium Manager) ---
+    try:
+        opts = EdgeOptions()
+        if headless:
+            opts.add_argument("--headless=new")
+        for arg in common_args:
+            opts.add_argument(arg)
+        return webdriver.Edge(options=opts)
+    except Exception:
+        pass
+
+    pytest.skip("No supported browser found (Chrome or Edge). Install one to run Selenium tests.")
 
 BASE_URL = os.environ.get('TEST_SERVER_URL', 'http://localhost:5001')
 
@@ -48,6 +96,7 @@ def test_db_user():
         existing = User.query.filter_by(email=_TEST_EMAIL).first()
         if existing:
             for lst in Listing.query.filter_by(seller_id=existing.id).all():
+                ListingView.query.filter_by(listing_id=lst.id).delete()
                 db.session.delete(lst)
             db.session.delete(existing)
             db.session.commit()
@@ -68,6 +117,7 @@ def test_db_user():
         user = db.session.get(User, user_id)
         if user:
             for lst in Listing.query.filter_by(seller_id=user_id).all():
+                ListingView.query.filter_by(listing_id=lst.id).delete()
                 db.session.delete(lst)
             db.session.delete(user)
             db.session.commit()
@@ -92,27 +142,19 @@ def test_db_listing(test_db_user):
     yield listing_id
 
     with app.app_context():
+        ListingView.query.filter_by(listing_id=listing_id).delete()
         lst = db.session.get(Listing, listing_id)
         if lst:
             db.session.delete(lst)
-            db.session.commit()
+        db.session.commit()
 
 
 @pytest.fixture(scope='module')
 def driver():
-    """Shared headless Chrome instance for all selenium tests in this module."""
+    """Shared browser instance for all selenium tests in this module (Chrome or Edge)."""
     headless = os.environ.get('SELENIUM_HEADLESS', '1') != '0'
-    options = Options()
-    if headless:
-        options.add_argument('--headless=new')
-    options.add_argument('--no-sandbox')
-    options.add_argument('--disable-dev-shm-usage')
-    options.add_argument('--window-size=1920,1080')
-
-    service = Service(ChromeDriverManager().install())
-    drv = webdriver.Chrome(service=service, options=options)
+    drv = _make_driver(headless)
     drv.implicitly_wait(10)
-
     yield drv
     drv.quit()
 
