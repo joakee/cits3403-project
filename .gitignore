@@ -4,4 +4,6 @@
 marketplace.db
 /app/static/uploads/*
 *.db
-/.venvmarketplace.db
+/.venv
+marketplace.db
+.env

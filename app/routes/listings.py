@@ -31,6 +31,14 @@ def _save_image(file_storage):
 
     return url_for('static', filename=f'uploads/{filename}')
 
+@bp.before_request
+def enforce_verification():
+    if current_user.is_authenticated:
+        # Routes an unverified user is ALLOWED to see
+        allowed_routes = ['auth.verify_email', 'auth.resend_otp', 'auth.logout', 'static']
+        
+        if not current_user.is_verified and request.endpoint not in allowed_routes:
+            return redirect(url_for('auth.verify_email'))
 
 VALID_SORTS = {
     'newest',
