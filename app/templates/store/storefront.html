@@ -19,7 +19,7 @@
         <!-- Store info -->
         <div class="flex-grow-1 min-width-0">
             <div class="d-flex align-items-center gap-2 flex-wrap">
-                <h2 class="mb-0 fw-bold" style="color:#1d3557;">
+                <h2 class="mb-0 fw-bold" style="color:var(--navy);">
                     {{ store_user.store_name or store_user.username }}
                 </h2>
                 {% if store_user.is_verified %}
@@ -104,7 +104,7 @@
             </div>
 
             {% if store_user.store_bio %}
-                <p class="mt-2 mb-0" style="color:#374151;">{{ store_user.store_bio }}</p>
+                <p class="mt-2 mb-0" style="color:var(--text-primary);">{{ store_user.store_bio }}</p>
             {% endif %}
         </div>
     </div>

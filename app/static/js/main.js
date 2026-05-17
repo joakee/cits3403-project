@@ -93,7 +93,7 @@ $(document).ready(function () {
 
     function buildPopoverContent(listingId, wishlists) {
         var html = '<div class="wishlist-popover-inner" style="min-width: 180px;">';
-        html += '<p class="fw-semibold mb-2" style="font-size: 0.9em; color: #1d3557;">Save to wishlist</p>';
+        html += '<p class="fw-semibold mb-2" style="font-size: 0.9em; color: var(--navy);">Save to wishlist</p>';
         wishlists.forEach(function(wl) {
             var checked = wl.checked ? 'checked' : '';
             html += '<div class="form-check mb-1">' +

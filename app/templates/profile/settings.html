@@ -11,7 +11,7 @@
                 {{ current_user.username[0].upper() }}
             </div>
             <div>
-                <h4 class="mb-0 fw-bold" style="color:#1d3557;">Account Settings</h4>
+                <h4 class="mb-0 fw-bold" style="color:var(--navy);">Account Settings</h4>
                 <small class="text-muted">
                     <a href="{{ url_for('profile.edit') }}" class="text-muted">Edit public profile</a>
                     &nbsp;·&nbsp;
@@ -22,7 +22,7 @@
 
         <!-- Change Email -->
         <div class="card p-4 mb-3">
-            <h6 class="fw-bold mb-3" style="color:#1d3557;">
+            <h6 class="fw-bold mb-3" style="color:var(--navy);">
                 <i class="bi bi-envelope me-2"></i>Change Email
             </h6>
             <p class="text-muted small mb-3">Current: <strong>{{ current_user.email }}</strong></p>
@@ -48,7 +48,7 @@
 
         <!-- Change Password -->
         <div class="card p-4 mb-3">
-            <h6 class="fw-bold mb-3" style="color:#1d3557;">
+            <h6 class="fw-bold mb-3" style="color:var(--navy);">
                 <i class="bi bi-lock me-2"></i>Change Password
             </h6>
             <form method="POST" action="{{ url_for('profile.settings_password') }}">

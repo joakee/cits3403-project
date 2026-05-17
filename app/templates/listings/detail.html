@@ -51,7 +51,7 @@
                 <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap">
                     <div>
                         <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
-                            <h3 class="fw-bold mb-0" style="color:#1d3557;">{{ listing.title }}</h3>
+                            <h3 class="fw-bold mb-0" style="color:var(--navy);">{{ listing.title }}</h3>
 
                             {% if listing.is_active %}
                                 {% if listing.stock_quantity is not none %}
@@ -97,7 +97,7 @@
 
                 <hr>
 
-                <p style="white-space: pre-wrap; color:#374151;">{{ listing.description }}</p>
+                <p style="white-space: pre-wrap; color:var(--text-primary);">{{ listing.description }}</p>
 
                 <hr>
 
@@ -109,7 +109,7 @@
                     <div>
                         {% if listing.posted_as_store %}
                             <a href="{{ url_for('store.storefront', user_id=listing.seller.id) }}"
-                               class="fw-semibold text-decoration-none d-inline-flex align-items-center gap-1" style="color:#1d3557;">
+                               class="fw-semibold text-decoration-none d-inline-flex align-items-center gap-1" style="color:var(--navy);">
                                 {{ listing.seller.store_name or listing.seller.username }}
                                 {% if listing.seller.is_verified %}
                                     <i class="bi bi-patch-check-fill text-primary" title="Verified Store"></i>
@@ -117,7 +117,7 @@
                             </a>
                         {% else %}
                             <a href="{{ url_for('profile.view', user_id=listing.seller.id) }}"
-                               class="fw-semibold text-decoration-none" style="color:#1d3557;">
+                               class="fw-semibold text-decoration-none" style="color:var(--navy);">
                                 {{ listing.seller.username }}
                             </a>
                         {% endif %}
@@ -175,8 +175,8 @@
             
             {% set edits = listing.edits.all() %}
             {% if listing.show_history and edits %}
-            <div class="card-footer bg-light p-4" style="border-top: 1px solid #e5e7eb;">
-                <h6 class="fw-bold mb-3" style="color:#1d3557;">
+            <div class="card-footer bg-light p-4" style="border-top: 1px solid var(--border-light);">
+                <h6 class="fw-bold mb-3" style="color:var(--navy);">
                     <i class="bi bi-clock-history me-2"></i>Edit History
                 </h6>
                 <div class="timeline ps-2 border-start border-2 border-primary-subtle" style="margin-left: 6px;">
