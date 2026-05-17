@@ -27,14 +27,15 @@ def login():
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
         if user and check_password_hash(user.password_hash, form.password.data):
-            login_user(user, remember=form.remember.data)
-            next_page = request.args.get('next')
             if not user.is_active:
                 flash("Your account has been suspended. Please contact support.", "danger")
                 return redirect(url_for('auth.login'))
             if not user.is_verified:
                 flash("Your account has not been verified. Please verify your account.", "danger")
                 return redirect(url_for('auth.verify_email'))
+            
+            login_user(user, remember=form.remember.data)
+            next_page = request.args.get('next')
             return redirect(next_page or url_for('listings.index'))
         flash('Invalid email or password.', 'error')
     

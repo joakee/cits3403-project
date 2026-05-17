@@ -1,4 +1,6 @@
-from app import create_app, db
+#!/usr/bin/env python3
+
+from app import create_app, db, socketio
 
 app = create_app()
 
@@ -20,10 +22,16 @@ def _migrate_columns():
         'contact_phone':  'VARCHAR(32)',
         'contact_email':  'VARCHAR(120)',
         'store_bio':      'TEXT',
+        'banned_at':      'DATETIME',
+        'ban_reason':     'TEXT',
     }
     new_listing_cols = {
-        'stock_quantity': 'INTEGER',
+        'stock_quantity':  'INTEGER',
         'posted_as_store': 'BOOLEAN DEFAULT 0',
+        'is_removed':      'BOOLEAN DEFAULT 0',
+        'removed_at':      'DATETIME',
+        'removed_reason':  'TEXT',
+        'removed_by_id':   'INTEGER',
     }
 
     message_cols = {c['name'] for c in inspector.get_columns('message')}
@@ -48,4 +56,4 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
         _migrate_columns()
-    app.run(debug=True, port=5001)
+    socketio.run(app, debug=True, port=5001, host='0.0.0.0', allow_unsafe_werkzeug=True)

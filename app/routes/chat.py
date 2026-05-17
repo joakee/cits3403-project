@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
 from flask_login import login_required, current_user
 from app import db, socketio
 from app.models import User, Message, Listing, Conversation
@@ -40,7 +40,8 @@ def enforce_verification():
 @login_required
 def start_chat(listing_id):
     listing = Listing.query.get_or_404(listing_id)
-
+    if listing.is_removed and not (current_user.is_admin or current_user.is_moderator):
+        abort(404)
     if listing.seller_id == current_user.id:
         return "You cannot buy your own item!", 400
 
