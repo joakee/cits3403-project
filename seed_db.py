@@ -67,9 +67,9 @@ with app.app_context():
     # ── Listings ─────────────────────────────────────────────────────────────
     print("Creating listings...")
 
-    def listing(title, desc, price, cat, seller, is_active=True):
+    def listing(title, desc, price, cat, seller, is_active=True, image_url=None):
         l = Listing(title=title, description=desc, price=price,
-                    category=cat, seller_id=seller.id, is_active=is_active)
+                    category=cat, seller_id=seller.id, is_active=is_active, image_url=image_url)
         db.session.add(l)
         return l
 
@@ -234,7 +234,7 @@ with app.app_context():
     listing('Funko Pop — Spider-Man', 'Unopened in box.', 14.0, 'other', nerdnook)
     listing('Dungeons & Dragons Starter Set', 'Complete, lightly used once.', 18.0, 'other', nerdnook)
     listing('Graphic Novel: Watchmen', 'Paperback. Good condition.', 10.0, 'other', nerdnook)
-    listing('Ticket to Ride (Europe)', 'Complete set. All cards and tokens present.', 30.0, 'other', nerdnook)
+    listing('Ticket to Ride (Europe)', 'Complete set. All cards and tokens present.', 30.0, 'other', nerdnook, image_url='/static/uploads/ticket_to_ride_europe.png')
 
     db.session.commit()
 
