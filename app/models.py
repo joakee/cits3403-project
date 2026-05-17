@@ -1,4 +1,6 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+UTC = timezone.utc
 from flask_login import UserMixin
 from app import db, login_manager
 import random
@@ -29,7 +31,7 @@ class Wishlist(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
 
     user = db.relationship('User', backref=db.backref('wishlists', lazy='dynamic'))
 
@@ -50,7 +52,7 @@ class User(db.Model, UserMixin):
     username = db.Column(db.String(64), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
-    member_since = db.Column(db.DateTime, default=datetime.utcnow)
+    member_since = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
     bio = db.Column(db.Text, default='')
     avatar_url = db.Column(db.String(256), nullable=True)
     is_admin = db.Column(db.Boolean, default=False)
@@ -89,7 +91,7 @@ class User(db.Model, UserMixin):
 
     def generate_otp(self):
         self.otp_code = f"{random.randint(100000, 999999)}"
-        self.otp_expiry = datetime.utcnow() + timedelta(minutes=10)
+        self.otp_expiry = datetime.now(UTC) + timedelta(minutes=10)
         return self.otp_code
 
     def has_saved(self, listing):
@@ -128,7 +130,7 @@ class Listing(db.Model):
     show_history = db.Column(db.Boolean, default=True)
     stock_quantity = db.Column(db.Integer, nullable=True)
     posted_as_store = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
     seller_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
     @property
@@ -184,7 +186,7 @@ class ListingImage(db.Model):
 class ListingEdit(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     listing_id = db.Column(db.Integer, db.ForeignKey('listing.id'), nullable=False)
-    edited_at = db.Column(db.DateTime, default=datetime.utcnow)
+    edited_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
     field_name = db.Column(db.String(64), nullable=False)
     old_value = db.Column(db.Text, nullable=True)
     new_value = db.Column(db.Text, nullable=True)
@@ -198,7 +200,7 @@ class Conversation(db.Model):
     listing_id = db.Column(db.Integer, db.ForeignKey('listing.id'), nullable=False)
     buyer_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     seller_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
 
     messages = db.relationship('Message', backref='conversation', lazy='dynamic')
     listing = db.relationship('Listing', backref='conversations')
@@ -212,7 +214,7 @@ class Message(db.Model):
 
     # Save message time in UTC.
     # chat.py converts this to AWST/Perth time for display.
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    timestamp = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
 
     is_read = db.Column(db.Boolean, default=False)
 
@@ -221,7 +223,7 @@ class Review(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     rating = db.Column(db.Integer, nullable=False)
     comment = db.Column(db.Text, nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
     reply_text = db.Column(db.Text, nullable=True)
     reply_at = db.Column(db.DateTime, nullable=True)
 
@@ -247,7 +249,7 @@ class Review(db.Model):
 class ListingView(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     listing_id = db.Column(db.Integer, db.ForeignKey('listing.id'), nullable=False)
-    viewed_at = db.Column(db.DateTime, default=datetime.utcnow)
+    viewed_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
 
     listing = db.relationship('Listing', backref='views')
 
@@ -260,8 +262,8 @@ class Report(db.Model):
     reason = db.Column(db.String(64), nullable=False)
     description = db.Column(db.Text, nullable=True)
     status = db.Column(db.String(20), default='open', nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
     handled_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     admin_note = db.Column(db.Text, nullable=True)
 
