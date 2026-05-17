@@ -36,6 +36,7 @@ def create_app(config_class=Config):
     from app.routes.chat import bp as chat_bp
     from app.routes.moderation import bp as moderation_bp
     from app.routes.store import bp as store_bp
+    from app.routes.sso import bp as sso_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(profile_bp)
@@ -43,6 +44,7 @@ def create_app(config_class=Config):
     app.register_blueprint(chat_bp)
     app.register_blueprint(moderation_bp)
     app.register_blueprint(store_bp)
+    app.register_blueprint(sso_bp)
 
     from app.admin import init_admin
     init_admin(app)
