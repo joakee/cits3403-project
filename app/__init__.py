@@ -33,6 +33,7 @@ def create_app(config_class=Config):
     from app.routes.chat import bp as chat_bp
     from app.routes.moderation import bp as moderation_bp
     from app.routes.store import bp as store_bp
+    from app.routes.legal import bp as legal_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(profile_bp)
@@ -40,6 +41,7 @@ def create_app(config_class=Config):
     app.register_blueprint(chat_bp)
     app.register_blueprint(moderation_bp)
     app.register_blueprint(store_bp)
+    app.register_blueprint(legal_bp)
 
     from app.admin import init_admin
     init_admin(app)
@@ -102,8 +104,8 @@ def create_app(config_class=Config):
                 Message.is_read == False
             ).scalar() or 0
 
-            return {'wishlist_total_count': wishlist_count, 'unread_count': unread_count}
-        return {'wishlist_total_count': 0, 'unread_count': 0}
+            return {'wishlist_total_count': wishlist_count, 'unread_count': unread_count, 'now': datetime.utcnow()}
+        return {'wishlist_total_count': 0, 'unread_count': 0, 'now': datetime.utcnow()}
 
     @app.route('/')
     def index():

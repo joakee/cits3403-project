@@ -26,6 +26,10 @@ class RegisterForm(FlaskForm):
         'Confirm Password',
         validators=[DataRequired(), EqualTo('password')]
     )
+    agree_tos = BooleanField(
+        'Agree to Terms',
+        validators=[DataRequired(message='You must accept the Terms of Service and Privacy Policy to continue.')]
+    )
     submit = SubmitField('Sign Up')
 
     def validate_email(self, field):
